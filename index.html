@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>晶片專車極速派單系統 (Dispatch Pro)</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* 高實用性、高對比、減少多餘花俏動畫 */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: 2px solid #2563eb;
+      background-color: #eff6ff;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col text-sm">
+
+  <!-- 頂部精簡導航與快捷鍵提示 -->
+  <header class="bg-slate-900 text-white px-4 py-2.5 flex flex-wrap items-center justify-between border-b-2 border-blue-500 shadow-sm">
+    <div class="flex items-center gap-2">
+      <span class="bg-blue-600 text-white font-black text-xs px-2 py-1 rounded">專車調度</span>
+      <h1 class="font-bold text-base tracking-wide">電子零組件／晶片高規專車派單平台</h1>
+    </div>
+    <div class="flex items-center gap-3 text-xs text-slate-300">
+      <span class="hidden md:inline bg-slate-800 px-2 py-1 rounded border border-slate-700">快捷送出：<kbd class="text-amber-400 font-mono">Ctrl + Enter</kbd></span>
+      <button onclick="toggleModal('modal-drivers')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded border border-slate-700 flex items-center gap-1">
+        👥 司機名單 (<span id="driverCountBadge">0</span>)
+      </button>
+      <button onclick="toggleModal('modal-factories')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded border border-slate-700 flex items-center gap-1">
+        🏭 常用廠區庫
+      </button>
+    </div>
+  </header>
+
+  <!-- 主工作區：左側電話開單表單 / 右側司機狀態與預覽 -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-2 sm:p-4 grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4">
+    
+    <!-- 左側主要表單 (佔 7 欄) -->
+    <div class="lg:col-span-7 bg-white rounded border border-slate-300 shadow-sm flex flex-col">
+      <div class="bg-slate-100 px-4 py-2 border-b border-slate-300 flex justify-between items-center">
+        <div class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          電話即時派單 (直觀鍵盤流)
+        </div>
+        <button type="button" onclick="resetForm()" class="text-xs text-slate-600 hover:text-red-600 underline">
+          清空重填
+        </button>
+      </div>
+
+      <form id="dispatchForm" onsubmit="handleFormSubmit(event)" class="p-3 sm:p-4 space-y-3 flex-1">
+        
+        <!-- 常用廠區快速帶入列 (極速電話用) -->
+        <div class="bg-blue-50/80 p-2 rounded border border-blue-200">
+          <div class="text-xs font-bold text-blue-900 mb-1 flex items-center justify-between">
+            <span>⚡ 常用起點/終點廠區點擊帶入：</span>
+            <span class="text-[11px] font-normal text-blue-700">點擊按鈕直接填入</span>
+          </div>
+          <div id="quickFactoryList" class="flex flex-wrap gap-1.5">
+            <!-- 動態生成常用廠區按鈕 -->
+          </div>
+        </div>
+
+        <!-- 起點：取貨廠區資訊 -->
+        <fieldset class="border border-slate-300 rounded p-2.5 bg-slate-50/50">
+          <legend class="text-xs font-bold text-blue-700 px-1 bg-white border border-slate-300 rounded">
+            🟢 起點｜取貨地 (起點廠區)
+          </legend>
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 mt-1">
+            <div class="sm:col-span-5">
+              <label class="block text-xs font-bold text-slate-700 mb-0.5">廠區 / 公司名稱 *</label>
+              <input type="text" id="originName" required placeholder="例: 台積電竹科二期" 
+                class="w-full border border-slate-300 rounded px-2 py-1 text-sm font-semibold">
+            </div>
+            <div class="sm:col-span-3">
+              <label class="block text-xs font-semibold text-slate-700 mb-0.5">卸貨碼頭 / 棟別</label>
+              <input type="text" id="originDock" placeholder="例: B棟 3號碼頭" 
+                class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+            </div>
+            <div class="sm:col-span-4">
+              <label class="block text-xs font-bold text-blue-800 mb-0.5">預計取貨時間 *</label>
+              <input type="text" id="originTime" required placeholder="例: 14:30 準時" 
+                class="w-full border border-blue-400 bg-white rounded px-2 py-1 text-sm font-bold text-blue-900">
+            </div>
+            <div class="sm:col-span-8">
+              <label class="block text-xs text-slate-600 mb-0.5">詳細地址 (點擊派單將自動轉為地圖導航連結)</label>
+              <input type="text" id="originAddress" placeholder="新竹市東區力行六路X號" 
+                class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+            </div>
+            <div class="sm:col-span-4">
+              <label class="block text-xs text-slate-600 mb-0.5">現場窗口姓名與電話</label>
+              <input type="text" id="originContact" placeholder="張工程師 0912-345678 #21" 
+                class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+            </div>
+            <div class="sm:col-span-12">
+              <label class="block text-xs text-amber-800 font-semibold mb-0.5">進廠換證／無塵特殊須知</label>
+              <input type="text" id="originNotes" placeholder="例: 需穿反光背心安全帽、備身分證更換臨時入廠證、預報車牌" 
+                class="w-full border border-amber-300 bg-amber-50/50 rounded px-2 py-1 text-xs text-slate-800">
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- 終點：卸貨送達資訊 -->
+        <fieldset class="border border-slate-300 rounded p-2.5 bg-slate-50/50">
+          <legend class="text-xs font-bold text-rose-700 px-1 bg-white border border-slate-300 rounded">
+            🎯 終點｜送達地 (卸貨廠區)
+          </legend>
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 mt-1">
+            <div class="sm:col-span-5">
+              <label class="block text-xs font-bold text-slate-700 mb-0.5">送達廠區 / 公司名稱 *</label>
+              <input type="text" id="destName" required placeholder="例: 日月光中壢廠" 
+                class="w-full border border-slate-300 rounded px-2 py-1 text-sm font-semibold">
+            </div>
+            <div class="sm:col-span-3">
+              <label class="block text-xs font-semibold text-slate-700 mb-0.5">收料庫房 / 碼頭</label>
+              <input type="text" id="destDock" placeholder="例: 晶圓物料一課庫房" 
+                class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+            </div>
+            <div class="sm:col-span-4">
+              <label class="block text-xs font-bold text-rose-800 mb-0.5">最晚送達期限 (產線承諾) *</label>
+              <input type="text" id="destTime" required placeholder="例: 17:00 前切斷料" 
+                class="w-full border border-rose-400 bg-white rounded px-2 py-1 text-sm font-bold text-rose-900">
+            </div>
+            <div class="sm:col-span-8">
+              <label class="block text-xs text-slate-600 mb-0.5">詳細地址</label>
+              <input type="text" id="destAddress" placeholder="桃園市中壢區中華路二段X號" 
+                class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+            </div>
+            <div class="sm:col-span-4">
+              <label class="block text-xs text-slate-600 mb-0.5">驗收窗口姓名與電話</label>
+              <input type="text" id="destContact" placeholder="李課長 0988-123456" 
+                class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- 電子晶片貨品規格與保全車況 (核心專門欄位) -->
+        <fieldset class="border border-slate-300 rounded p-2.5 bg-amber-50/30">
+          <legend class="text-xs font-bold text-amber-900 px-1 bg-white border border-slate-300 rounded">
+            🔒 晶片高規運送條件與貨物防護
+          </legend>
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 mt-1">
+            <div class="sm:col-span-5">
+              <label class="block text-xs font-bold text-slate-800 mb-0.5">貨物類型與件數 *</label>
+              <input type="text" id="cargoType" required placeholder="例: 晶圓盒(FOUP) x 2箱" 
+                class="w-full border border-slate-300 rounded px-2 py-1 text-sm font-semibold">
+            </div>
+            <div class="sm:col-span-3">
+              <label class="block text-xs font-semibold text-slate-700 mb-0.5">溫控條件</label>
+              <select id="cargoTemp" class="w-full border border-slate-300 rounded px-2 py-1 text-xs font-bold bg-white">
+                <option value="常溫 (避免日光直射)">常溫運送</option>
+                <option value="恆溫 (20~25°C 嚴格控制)" selected>恆溫 (20~25°C)</option>
+                <option value="低溫冷藏 (2~8°C)">冷藏 (2~8°C)</option>
+                <option value="其他指定溫區">其他指定溫區</option>
+              </select>
+            </div>
+            <div class="sm:col-span-4">
+              <label class="block text-xs font-semibold text-slate-700 mb-0.5">車體規格要求</label>
+              <select id="cargoVehicle" class="w-full border border-slate-300 rounded px-2 py-1 text-xs font-bold bg-white">
+                <option value="氣壓避震專車 (標準防震)" selected>氣壓避震專車 (標準防震)</option>
+                <option value="專車直達 (禁止併貨)">專車直達 (禁止併貨)</option>
+                <option value="一般貨車 (有防雨棚)">一般箱型貨車</option>
+              </select>
+            </div>
+            <div class="sm:col-span-4">
+              <label class="block text-xs text-slate-700 mb-0.5">保全封條編號 (Seal No.)</label>
+              <input type="text" id="cargoSeal" placeholder="例: SL-889021" 
+                class="w-full border border-slate-300 rounded px-2 py-1 text-xs font-mono">
+            </div>
+            <div class="sm:col-span-8">
+              <label class="block text-xs text-slate-700 mb-0.5">防傾斜/包裝特別交代</label>
+              <input type="text" id="cargoNotes" placeholder="例: 嚴禁堆疊、禁止傾斜、過彎減速、需打緊防晃拉帶" 
+                class="w-full border border-slate-300 rounded px-2 py-1 text-xs">
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- 指派司機選單 -->
+        <div class="bg-slate-100 p-2.5 rounded border border-slate-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+          <div class="w-full sm:w-auto flex-1">
+            <label class="block text-xs font-bold text-slate-800 mb-0.5">指派本趟執行司機 *</label>
+            <select id="selectedDriver" required onchange="updateDriverPreview()" 
+              class="w-full border-2 border-blue-600 rounded px-2.5 py-1.5 text-sm font-bold bg-white text-blue-900">
+              <!-- 動態生成司機列表 -->
+            </select>
+          </div>
+          <div class="w-full sm:w-auto flex items-center justify-end gap-2 pt-2 sm:pt-0">
+            <button type="submit" 
+              class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-sm px-6 py-2 rounded shadow flex items-center justify-center gap-1.5">
+              <span>📋 建立派單並準備發送</span>
+            </button>
+          </div>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- 右側：即時產生之 LINE 訊息預覽 & 司機即時狀態 (佔 5 欄) -->
+    <div class="lg:col-span-5 flex flex-col gap-3">
+      
+      <!-- 派單完成即時發送看板 (大按鈕、極致清晰) -->
+      <div class="bg-white rounded border-2 border-slate-800 shadow-sm p-3 sm:p-4 flex flex-col">
+        <div class="flex items-center justify-between border-b pb-2 mb-2">
+          <h2 class="font-bold text-slate-900 text-sm flex items-center gap-1">
+            📱 一對一 LINE 派單發送預覽
+          </h2>
+          <span id="currentOrderNo" class="text-xs font-mono bg-slate-200 px-2 py-0.5 rounded text-slate-700">尚未開單</span>
+        </div>
+
+        <p class="text-xs text-slate-500 mb-2">
+          建立後可直接點擊發送，將自動調用 LINE 私聊發給該司機，或直接一鍵複製文字：
+        </p>
+
+        <!-- 訊息文字預覽區 -->
+        <textarea id="lineMessagePreview" rows="11" readonly 
+          class="w-full font-mono text-xs bg-slate-50 border border-slate-300 rounded p-2.5 text-slate-800 leading-relaxed resize-none focus:outline-none"
+          placeholder="【接聽電話開單完成後，標準格式派工文字將自動在此處生成】&#10;包含完整廠區、導航連結、聯絡人點擊撥號、溫控與防震需求。"></textarea>
+
+        <!-- 發送動作按鈕組 (特大、易點擊) -->
+        <div class="mt-3 grid grid-cols-2 gap-2">
+          <button type="button" onclick="sendToLineDirect()" id="btnSendLine" disabled 
+            class="disabled:opacity-50 disabled:cursor-not-allowed bg-[#06C755] hover:bg-[#05b34c] text-white font-black text-sm py-2.5 px-3 rounded flex items-center justify-center gap-1.5 shadow">
+            <span>💬 喚起 LINE 私傳司機</span>
+          </button>
+          <button type="button" onclick="copyDispatchText()" id="btnCopyText" disabled 
+            class="disabled:opacity-50 disabled:cursor-not-allowed bg-slate-800 hover:bg-slate-900 text-white font-bold text-sm py-2.5 px-3 rounded flex items-center justify-center gap-1.5">
+            <span>📋 複製派工文字</span>
+          </button>
+        </div>
+        <div id="copyToast" class="hidden text-center text-xs font-bold text-emerald-600 mt-1">
+          ✓ 已複製到剪貼簿，可直接貼至 LINE 聊天室！
+        </div>
+      </div>
+
+      <!-- 司機車隊即時狀況一覽 (10-20位司機監控) -->
+      <div class="bg-white rounded border border-slate-300 shadow-sm p-3 flex-1 flex flex-col">
+        <div class="flex items-center justify-between border-b pb-2 mb-2">
+          <div class="font-bold text-slate-800 text-xs">
+            🚚 車隊司機即時狀態 (<span id="driverStatusCount">20</span> 位)
+          </div>
+          <span class="text-[11px] text-slate-500">點擊司機可快速切換</span>
+        </div>
+        <div id="driverStatusList" class="space-y-1.5 overflow-y-auto max-h-56 pr-1 text-xs">
+          <!-- 動態生成司機狀態條 -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 下方：歷史派單資料表 (含搜尋、切換狀態、匯出 CSV 對帳) (佔滿 12 欄) -->
+    <div class="lg:col-span-12 bg-white rounded border border-slate-300 shadow-sm p-3 sm:p-4">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b pb-3 mb-3">
+        <div>
+          <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+            📑 歷史派單紀錄
+            <span id="historyCount" class="text-xs bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-mono">0 筆</span>
+          </h3>
+          <p class="text-xs text-slate-500">資料已自動即時儲存於本機瀏覽器，關閉或重整不會消失。</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <input type="text" id="searchKeyword" oninput="renderHistoryTable()" placeholder="搜尋單號 / 廠區 / 司機..." 
+            class="text-xs border border-slate-300 rounded px-2.5 py-1.5 w-full sm:w-48">
+          <select id="filterStatus" onchange="renderHistoryTable()" class="text-xs border border-slate-300 rounded px-2 py-1.5 bg-white font-medium">
+            <option value="ALL">全部狀態</option>
+            <option value="已指派">已指派</option>
+            <option value="運送中">運送中</option>
+            <option value="已送達">已送達</option>
+            <option value="已取消">已取消</option>
+          </select>
+          <button onclick="exportToCSV()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1 shadow-sm">
+            📥 匯出 Excel (CSV) 對帳
+          </button>
+        </div>
+      </div>
+
+      <!-- 響應式表格 -->
+      <div class="overflow-x-auto border border-slate-200 rounded">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-100 text-slate-700 uppercase font-semibold border-b border-slate-200">
+            <tr>
+              <th class="py-2.5 px-3">單號 / 建立時間</th>
+              <th class="py-2.5 px-3">指派司機 (車牌)</th>
+              <th class="py-2.5 px-3">起點取貨 (廠區 / 時間)</th>
+              <th class="py-2.5 px-3">終點送達 (廠區 / 期限)</th>
+              <th class="py-2.5 px-3">貨品類型與條件</th>
+              <th class="py-2.5 px-3">狀態切換</th>
+              <th class="py-2.5 px-3 text-right">操作</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody" class="divide-y divide-slate-200 font-normal text-slate-800">
+            <!-- 動態注入紀錄 -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- 彈窗 1：司機名單管理 (可增刪司機、車牌、電話) -->
+  <div id="modal-drivers" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-3 z-50">
+    <div class="bg-white rounded-lg max-w-xl w-full p-4 max-h-[90vh] flex flex-col shadow-2xl">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-slate-900 text-base">👥 司機車隊名單管理 (10-20位)</h3>
+        <button onclick="toggleModal('modal-drivers')" class="text-slate-400 hover:text-slate-700 text-lg font-bold">✕</button>
+      </div>
+      <div class="py-3 flex-1 overflow-y-auto space-y-3">
+        <!-- 新增司機迷你表單 -->
+        <div class="bg-slate-100 p-2.5 rounded border border-slate-300">
+          <div class="text-xs font-bold text-slate-700 mb-1.5">新增司機人員</div>
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs">
+            <input type="text" id="newDriverName" placeholder="司機姓名" class="border p-1.5 rounded bg-white">
+            <input type="text" id="newDriverCar" placeholder="車牌 (如 888-AB)" class="border p-1.5 rounded bg-white">
+            <input type="text" id="newDriverPhone" placeholder="手機 (如 0912...)" class="border p-1.5 rounded bg-white">
+            <button onclick="addDriver()" class="bg-blue-600 text-white font-bold rounded py-1.5 hover:bg-blue-700">
+              ＋ 加入名單
+            </button>
+          </div>
+        </div>
+        <!-- 現有名單 -->
+        <div class="border rounded divide-y" id="driverManageList">
+          <!-- JS 渲染 -->
+        </div>
+      </div>
+      <div class="border-t pt-2 flex justify-between items-center text-xs text-slate-500">
+        <span>儲存於本機瀏覽器，隨時可增修</span>
+        <button onclick="toggleModal('modal-drivers')" class="bg-slate-800 text-white px-4 py-1.5 rounded font-bold">關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 彈窗 2：常用廠區管理 (可新增台積電、聯電、艾司摩爾等廠區) -->
+  <div id="modal-factories" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-3 z-50">
+    <div class="bg-white rounded-lg max-w-2xl w-full p-4 max-h-[90vh] flex flex-col shadow-2xl">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-slate-900 text-base">🏭 常用半導體/電子廠區庫維護</h3>
+        <button onclick="toggleModal('modal-factories')" class="text-slate-400 hover:text-slate-700 text-lg font-bold">✕</button>
+      </div>
+      <div class="py-3 flex-1 overflow-y-auto space-y-3 text-xs">
+        <!-- 新增常用廠區 -->
+        <div class="bg-blue-50 p-2.5 rounded border border-blue-200 space-y-2">
+          <div class="font-bold text-blue-900">快速新增常用廠區點位</div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <input type="text" id="newFacName" placeholder="廠區簡稱 (如 台積中科十五廠)" class="border p-1.5 rounded bg-white">
+            <input type="text" id="newFacDock" placeholder="常用碼頭/棟別" class="border p-1.5 rounded bg-white">
+            <input type="text" id="newFacContact" placeholder="聯絡窗口與分機" class="border p-1.5 rounded bg-white">
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+            <input type="text" id="newFacAddress" placeholder="完整廠區地址" class="sm:col-span-8 border p-1.5 rounded bg-white">
+            <input type="text" id="newFacNotes" placeholder="進廠換證/安全著裝規定" class="sm:col-span-4 border p-1.5 rounded bg-white">
+          </div>
+          <button onclick="addFactory()" class="w-full bg-blue-700 text-white font-bold py-1.5 rounded hover:bg-blue-800">
+            ＋ 新增至快捷廠區庫
+          </button>
+        </div>
+        <!-- 廠區列表清單 -->
+        <div class="border rounded divide-y" id="factoryManageList">
+          <!-- JS 渲染 -->
+        </div>
+      </div>
+      <div class="border-t pt-2 flex justify-end">
+        <button onclick="toggleModal('modal-factories')" class="bg-slate-800 text-white px-4 py-1.5 rounded text-xs font-bold">關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript 邏輯：即時儲存、預先載入台灣半導體代表廠區與司機 -->
+  <script>
+    // 預設 12 位專車司機名冊 (10~20 人規模)
+    const DEFAULT_DRIVERS = [
+      { id: 'D01', name: '陳建銘', car: 'KJA-5821', phone: '0912-345-671', status: '空車 (新竹待命)' },
+      { id: 'D02', name: '林志豪', car: 'RFB-7712', phone: '0922-881-232', status: '空車 (竹南待命)' },
+      { id: 'D03', name: '王國華', car: 'BQD-9018', phone: '0933-412-553', status: '運送中 (往中科)' },
+      { id: 'D04', name: '張家榮', car: 'KPA-1102', phone: '0911-667-884', status: '空車 (林口待命)' },
+      { id: 'D05', name: '黃俊傑', car: 'TDA-3391', phone: '0928-112-995', status: '空車 (南科待命)' },
+      { id: 'D06', name: '劉冠宇', car: 'EAG-5503', phone: '0988-771-006', status: '運送中 (往竹科)' },
+      { id: 'D07', name: '許峰銘', car: 'RAC-6682', phone: '0972-334-117', status: '空車 (中壢待命)' },
+      { id: 'D08', name: '蔡宗翰', car: 'KJA-9923', phone: '0935-882-338', status: '空車 (台中待命)' },
+      { id: 'D09', name: '吳政達', car: 'BVF-1209', phone: '0919-445-669', status: '運送中 (往南科)' },
+      { id: 'D10', name: '謝明宏', car: 'RFB-3310', phone: '0963-771-880', status: '空車 (高雄待命)' },
+      { id: 'D11', name: '鄭士翔', car: 'EAF-8811', phone: '0920-551-221', status: '空車 (新竹待命)' },
+      { id: 'D12', name: '楊大慶', car: 'TDA-2212', phone: '0981-663-772', status: '休息中' },
+    ];
+
+    // 預設台灣電子半導體代表性廠區 (點擊一鍵帶入)
+    const DEFAULT_FACTORIES = [
+      {
+        name: '台積電竹科二期(12廠)',
+        dock: '3號卸貨碼頭 (晶圓專用)',
+        address: '新竹市科學園區力行六路8號',
+        contact: '晶圓課值班 03-5781688 #2140',
+        notes: '入廠需著反光背心、安全帽、押身分證換臨時卡、嚴禁拍照帶入無標籤儲存裝置'
+      },
+      {
+        name: '台積電中科十五廠',
+        dock: 'C棟 貨梯卸貨區',
+        address: '台中市大雅區科雅六路1號',
+        contact: '物料收貨組 04-25671888 #3312',
+        notes: '預先報備車號與身分證號，換證後需專人引導'
+      },
+      {
+        name: '台積電南科十八廠',
+        dock: 'P1棟 專車碼頭',
+        address: '台南市善化區北園一路18號',
+        contact: '南科收發科 06-5051888 #1105',
+        notes: '換證嚴格，司機需出示派工簡訊與證件'
+      },
+      {
+        name: '日月光中壢廠',
+        dock: 'B棟 物料倉庫碼頭',
+        address: '桃園市中壢區中華路二段550號',
+        contact: '李課長 03-4526828 #551',
+        notes: '需停靠指定碼頭，通知驗收窗口下樓'
+      },
+      {
+        name: '聯電南科十二廠',
+        dock: 'Fab 12A 裝卸貨口',
+        address: '台南市新市區南科二路18號',
+        contact: '生管收料 06-5054888 #6120',
+        notes: '需穿包鞋及反光背心'
+      },
+      {
+        name: '艾司摩爾林口廠 (ASML)',
+        dock: '1號倉儲物流門',
+        address: '新北市林口區工二工業區工四路38號',
+        contact: 'Logistics Desk 02-86018800',
+        notes: '機密等級高，需確認隨車封條號碼完好無損'
+      }
+    ];
+
+    // 本地持久化資料存取
+    let drivers = JSON.parse(localStorage.getItem('DISPATCH_DRIVERS')) || DEFAULT_DRIVERS;
+    let factories = JSON.parse(localStorage.getItem('DISPATCH_FACTORIES')) || DEFAULT_FACTORIES;
+    let orderHistory = JSON.parse(localStorage.getItem('DISPATCH_ORDERS')) || [];
+    let currentPreparedOrder = null;
+
+    // 初始化頁面
+    window.onload = function () {
+      renderDriverDropdown();
+      renderDriverStatusList();
+      renderQuickFactoryButtons();
+      renderHistoryTable();
+      updateBadgeCounts();
+
+      // 監聽鍵盤快捷鍵 (Ctrl + Enter 快速送出)
+      document.addEventListener('keydown', function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          const form = document.getElementById('dispatchForm');
+          if (form) form.requestSubmit();
+        }
+      });
+    };
+
+    function updateBadgeCounts() {
+      document.getElementById('driverCountBadge').innerText = drivers.length;
+      document.getElementById('driverStatusCount').innerText = drivers.length;
+      document.getElementById('historyCount').innerText = `${orderHistory.length} 筆`;
+    }
+
+    // 渲染司機下拉選單
+    function renderDriverDropdown() {
+      const select = document.getElementById('selectedDriver');
+      select.innerHTML = '<option value="">-- 請選擇指派司機 --</option>';
+      drivers.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.id;
+        opt.textContent = `【${d.name}】 車牌: ${d.car} ｜ ${d.status}`;
+        select.appendChild(opt);
+      });
+    }
+
+    // 渲染右側車隊即時狀況
+    function renderDriverStatusList() {
+      const container = document.getElementById('driverStatusList');
+      container.innerHTML = '';
+      drivers.forEach(d => {
+        const isFree = d.status.includes('空車');
+        const isBusy = d.status.includes('運送中');
+        const badgeColor = isFree ? 'bg-emerald-100 text-emerald-800 border-emerald-300' :
+                           isBusy ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-slate-200 text-slate-700';
+
+        const row = document.createElement('div');
+        row.className = "flex items-center justify-between p-1.5 rounded border border-slate-200 hover:bg-blue-50 cursor-pointer transition";
+        row.onclick = () => {
+          document.getElementById('selectedDriver').value = d.id;
+        };
+        row.innerHTML = `
+          <div class="flex items-center gap-1.5">
+            <span class="font-bold text-slate-800">${d.name}</span>
+            <span class="text-slate-500 font-mono text-[11px]">${d.car}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[11px] border px-1.5 py-0.5 rounded font-medium ${badgeColor}">${d.status}</span>
+            <a href="tel:${d.phone}" onclick="event.stopPropagation()" class="text-blue-600 hover:underline text-[11px]">📞 撥打</a>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    // 渲染常用廠區快捷按鈕
+    function renderQuickFactoryButtons() {
+      const container = document.getElementById('quickFactoryList');
+      container.innerHTML = '';
+      factories.forEach((fac, idx) => {
+        const btn = document.createElement('div');
+        btn.className = "inline-flex rounded-md shadow-sm border border-slate-300 overflow-hidden text-xs bg-white";
+        btn.innerHTML = `
+          <button type="button" onclick="applyFactory('${idx}', 'origin')" title="填入起點取貨" 
+            class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 font-bold border-r border-slate-200">
+            起: ${fac.name.split('(')[0]}
+          </button>
+          <button type="button" onclick="applyFactory('${idx}', 'dest')" title="填入終點送達" 
+            class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-900 font-bold">
+            迄
+          </button>
+        `;
+        container.appendChild(btn);
+      });
+    }
+
+    // 一鍵帶入廠區資料到起點或終點
+    function applyFactory(index, target) {
+      const fac = factories[index];
+      if (!fac) return;
+
+      if (target === 'origin') {
+        document.getElementById('originName').value = fac.name;
+        document.getElementById('originDock').value = fac.dock || '';
+        document.getElementById('originAddress').value = fac.address || '';
+        document.getElementById('originContact').value = fac.contact || '';
+        document.getElementById('originNotes').value = fac.notes || '';
+        // 自動聚焦至取貨時間，電話接單一氣呵成
+        document.getElementById('originTime').focus();
+      } else {
+        document.getElementById('destName').value = fac.name;
+        document.getElementById('destDock').value = fac.dock || '';
+        document.getElementById('destAddress').value = fac.address || '';
+        document.getElementById('destContact').value = fac.contact || '';
+        document.getElementById('destTime').focus();
+      }
+    }
+
+    // 表單送出處理：生成訂單與 LINE 標準字串
+    function handleFormSubmit(e) {
+      e.preventDefault();
+
+      const driverId = document.getElementById('selectedDriver').value;
+      if (!driverId) {
+        alert('請先指派執行的司機！');
+        document.getElementById('selectedDriver').focus();
+        return;
+      }
+
+      const assignedDriver = drivers.find(d => d.id === driverId);
+      const now = new Date();
+      const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+      const timeStr = String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
+      const randomCode = Math.floor(100 + Math.random() * 900);
+      const orderNo = `EXP-${dateStr}-${timeStr}-${randomCode}`;
+
+      const orderData = {
+        orderNo: orderNo,
+        createdAt: now.toLocaleString('zh-TW', { hour12: false }),
+        driver: assignedDriver,
+        origin: {
+          name: document.getElementById('originName').value.trim(),
+          dock: document.getElementById('originDock').value.trim(),
+          time: document.getElementById('originTime').value.trim(),
+          address: document.getElementById('originAddress').value.trim(),
+          contact: document.getElementById('originContact').value.trim(),
+          notes: document.getElementById('originNotes').value.trim(),
+        },
+        dest: {
+          name: document.getElementById('destName').value.trim(),
+          dock: document.getElementById('destDock').value.trim(),
+          time: document.getElementById('destTime').value.trim(),
+          address: document.getElementById('destAddress').value.trim(),
+          contact: document.getElementById('destContact').value.trim(),
+        },
+        cargo: {
+          type: document.getElementById('cargoType').value.trim(),
+          temp: document.getElementById('cargoTemp').value,
+          vehicle: document.getElementById('cargoVehicle').value,
+          seal: document.getElementById('cargoSeal').value.trim(),
+          notes: document.getElementById('cargoNotes').value.trim(),
+        },
+        status: '已指派'
+      };
+
+      currentPreparedOrder = orderData;
+      orderHistory.unshift(orderData);
+      localStorage.setItem('DISPATCH_ORDERS', JSON.stringify(orderHistory));
+
+      // 同步更新司機狀態為出車中
+      assignedDriver.status = `運送中 (單號: ${orderNo.slice(-7)})`;
+      localStorage.setItem('DISPATCH_DRIVERS', JSON.stringify(drivers));
+      renderDriverStatusList();
+      renderDriverDropdown();
+      document.getElementById('selectedDriver').value = assignedDriver.id;
+
+      // 生成 LINE 格式文字
+      generateLineText(orderData);
+
+      // 啟用發送與複製按鈕
+      document.getElementById('btnSendLine').disabled = false;
+      document.getElementById('btnCopyText').disabled = false;
+      document.getElementById('currentOrderNo').innerText = orderNo;
+
+      renderHistoryTable();
+      updateBadgeCounts();
+
+      // 自動聚焦到發送按鈕
+      document.getElementById('btnSendLine').focus();
+    }
+
+    // 組裝專業、結構化的 LINE 派單文字 (包含地圖連結與一鍵導航)
+    function generateLineText(ord) {
+      const originNavUrl = ord.origin.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ord.origin.address)}` : '';
+      const destNavUrl = ord.dest.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ord.dest.address)}` : '';
+
+      let text = `【🚨 晶片急件專車派工單】\n`;
+      text += `單號：#${ord.orderNo}\n`;
+      text += `指派司機：${ord.driver.name}（車牌：${ord.driver.car}）\n`;
+      text += `──────────────────────\n`;
+      text += `🟢【起點・取貨廠區】\n`;
+      text += `• 廠區公司：${ord.origin.name} ${ord.origin.dock ? '(' + ord.origin.dock + ')' : ''}\n`;
+      text += `• 預計取貨：${ord.origin.time}\n`;
+      if (ord.origin.address) text += `• 取貨地址：${ord.origin.address}\n`;
+      if (ord.origin.contact) text += `• 現場窗口：${ord.origin.contact}\n`;
+      if (ord.origin.notes) text += `• 進廠須知：⚠️ ${ord.origin.notes}\n`;
+      if (originNavUrl) text += `🗺️ 取貨導航：${originNavUrl}\n`;
+      text += `──────────────────────\n`;
+      text += `🎯【終點・送達卸貨】\n`;
+      text += `• 送達廠區：${ord.dest.name} ${ord.dest.dock ? '(' + ord.dest.dock + ')' : ''}\n`;
+      text += `• 最晚抵達：${ord.dest.time}（不可延誤）\n`;
+      if (ord.dest.address) text += `• 卸貨地址：${ord.dest.address}\n`;
+      if (ord.dest.contact) text += `• 驗收窗口：${ord.dest.contact}\n`;
+      if (destNavUrl) text += `🗺️ 送達導航：${destNavUrl}\n`;
+      text += `──────────────────────\n`;
+      text += `🔒【晶片高規運送防護】\n`;
+      text += `• 貨品類型：${ord.cargo.type}\n`;
+      text += `• 溫控標準：${ord.cargo.temp}\n`;
+      text += `• 車型指定：${ord.cargo.vehicle}\n`;
+      if (ord.cargo.seal) text += `• 保全封條：${ord.cargo.seal}\n`;
+      if (ord.cargo.notes) text += `• 特別囑咐：${ord.cargo.notes}\n`;
+      text += `──────────────────────\n`;
+      text += `※ 收到本單請立即回覆【確認接單】，抵達起訖點請回報！`;
+
+      document.getElementById('lineMessagePreview').value = text;
+    }
+
+    // 一對一直接喚起 LINE 應用程式
+    function sendToLineDirect() {
+      const text = document.getElementById('lineMessagePreview').value;
+      if (!text) return;
+      // 使用 LINE 深度連結發送訊息至聊天室選擇頁
+      const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(text)}`;
+      window.open(lineUrl, '_blank');
+    }
+
+    // 複製文字功能 (向下相容)
+    function copyDispatchText() {
+      const textarea = document.getElementById('lineMessagePreview');
+      textarea.select();
+      textarea.setSelectionRange(0, 99999);
+      try {
+        document.execCommand('copy');
+        const toast = document.getElementById('copyToast');
+        toast.classList.remove('hidden');
+        setTimeout(() => toast.classList.add('hidden'), 2500);
+      } catch (err) {
+        console.error('Copy failed', err);
+      }
+    }
+
+    // 渲染歷史派單紀錄表格
+    function renderHistoryTable() {
+      const tbody = document.getElementById('historyTableBody');
+      const keyword = document.getElementById('searchKeyword').value.trim().toLowerCase();
+      const statusFilter = document.getElementById('filterStatus').value;
+
+      tbody.innerHTML = '';
+
+      const filtered = orderHistory.filter(ord => {
+        const matchesStatus = (statusFilter === 'ALL') || (ord.status === statusFilter);
+        const searchStr = `${ord.orderNo} ${ord.driver.name} ${ord.driver.car} ${ord.origin.name} ${ord.dest.name} ${ord.cargo.type}`.toLowerCase();
+        const matchesKeyword = !keyword || searchStr.includes(keyword);
+        return matchesStatus && matchesKeyword;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400">查無派單紀錄</td></tr>`;
+        return;
+      }
+
+      filtered.forEach(ord => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition border-b border-slate-200";
+
+        let statusClass = "bg-blue-100 text-blue-800";
+        if (ord.status === '運送中') statusClass = "bg-amber-100 text-amber-800";
+        if (ord.status === '已送達') statusClass = "bg-emerald-100 text-emerald-800";
+        if (ord.status === '已取消') statusClass = "bg-slate-200 text-slate-600";
+
+        tr.innerHTML = `
+          <td class="py-2.5 px-3">
+            <div class="font-mono font-bold text-blue-700">${ord.orderNo}</div>
+            <div class="text-[11px] text-slate-500">${ord.createdAt}</div>
+          </td>
+          <td class="py-2.5 px-3">
+            <div class="font-bold text-slate-900">${ord.driver.name}</div>
+            <div class="text-[11px] font-mono text-slate-500">${ord.driver.car}</div>
+          </td>
+          <td class="py-2.5 px-3">
+            <div class="font-semibold text-slate-800">${ord.origin.name}</div>
+            <div class="text-[11px] text-blue-700 font-bold">取: ${ord.origin.time}</div>
+          </td>
+          <td class="py-2.5 px-3">
+            <div class="font-semibold text-slate-800">${ord.dest.name}</div>
+            <div class="text-[11px] text-rose-700 font-bold">限: ${ord.dest.time}</div>
+          </td>
+          <td class="py-2.5 px-3">
+            <div>${ord.cargo.type}</div>
+            <div class="text-[11px] text-slate-500">${ord.cargo.temp}</div>
+          </td>
+          <td class="py-2.5 px-3">
+            <select onchange="updateOrderStatus('${ord.orderNo}', this.value)" 
+              class="text-xs font-bold rounded px-1.5 py-1 border ${statusClass}">
+              <option value="已指派" ${ord.status === '已指派' ? 'selected' : ''}>已指派</option>
+              <option value="運送中" ${ord.status === '運送中' ? 'selected' : ''}>運送中</option>
+              <option value="已送達" ${ord.status === '已送達' ? 'selected' : ''}>已送達</option>
+              <option value="已取消" ${ord.status === '已取消' ? 'selected' : ''}>已取消</option>
+            </select>
+          </td>
+          <td class="py-2.5 px-3 text-right space-x-1">
+            <button onclick="reloadOrderToLine('${ord.orderNo}')" class="text-xs text-blue-600 hover:underline font-bold">調出文字</button>
+            <span class="text-slate-300">|</span>
+            <button onclick="deleteOrder('${ord.orderNo}')" class="text-xs text-red-500 hover:underline">刪除</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // 切換訂單狀態並聯動司機狀態
+    function updateOrderStatus(orderNo, newStatus) {
+      const ord = orderHistory.find(o => o.orderNo === orderNo);
+      if (ord) {
+        ord.status = newStatus;
+        localStorage.setItem('DISPATCH_ORDERS', JSON.stringify(orderHistory));
+
+        // 如果是已送達或已取消，讓司機變回空車
+        if (newStatus === '已送達' || newStatus === '已取消') {
+          const d = drivers.find(dr => dr.id === ord.driver.id);
+          if (d) {
+            d.status = '空車 (任務完成)';
+            localStorage.setItem('DISPATCH_DRIVERS', JSON.stringify(drivers));
+            renderDriverStatusList();
+            renderDriverDropdown();
+          }
+        }
+        renderHistoryTable();
+      }
+    }
+
+    // 調出歷史訂單內容至預覽面板
+    function reloadOrderToLine(orderNo) {
+      const ord = orderHistory.find(o => o.orderNo === orderNo);
+      if (ord) {
+        currentPreparedOrder = ord;
+        generateLineText(ord);
+        document.getElementById('currentOrderNo').innerText = ord.orderNo;
+        document.getElementById('btnSendLine').disabled = false;
+        document.getElementById('btnCopyText').disabled = false;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    // 刪除歷史派單
+    function deleteOrder(orderNo) {
+      if (confirm(`確定要刪除派單 ${orderNo} 嗎？`)) {
+        orderHistory = orderHistory.filter(o => o.orderNo !== orderNo);
+        localStorage.setItem('DISPATCH_ORDERS', JSON.stringify(orderHistory));
+        renderHistoryTable();
+        updateBadgeCounts();
+      }
+    }
+
+    // 匯出 CSV (Excel 友善，含 UTF-8 BOM 避免亂碼)
+    function exportToCSV() {
+      if (orderHistory.length === 0) {
+        alert('目前無任何歷史派單紀錄可匯出');
+        return;
+      }
+
+      let csv = '\uFEFF'; // UTF-8 BOM
+      csv += '派單編號,建立時間,司機姓名,車牌號碼,司機電話,起點廠區,起點碼頭,取貨時間,起點地址,起點窗口,終點廠區,終點碼頭,最晚送達,終點地址,終點窗口,貨物類型,溫控要求,車型要求,封條號碼,防護囑咐,訂單狀態\n';
+
+      orderHistory.forEach(o => {
+        const row = [
+          `"${o.orderNo}"`,
+          `"${o.createdAt}"`,
+          `"${o.driver.name}"`,
+          `"${o.driver.car}"`,
+          `"${o.driver.phone}"`,
+          `"${o.origin.name.replace(/"/g, '""')}"`,
+          `"${(o.origin.dock || '').replace(/"/g, '""')}"`,
+          `"${o.origin.time}"`,
+          `"${(o.origin.address || '').replace(/"/g, '""')}"`,
+          `"${(o.origin.contact || '').replace(/"/g, '""')}"`,
+          `"${o.dest.name.replace(/"/g, '""')}"`,
+          `"${(o.dest.dock || '').replace(/"/g, '""')}"`,
+          `"${o.dest.time}"`,
+          `"${(o.dest.address || '').replace(/"/g, '""')}"`,
+          `"${(o.dest.contact || '').replace(/"/g, '""')}"`,
+          `"${o.cargo.type.replace(/"/g, '""')}"`,
+          `"${o.cargo.temp}"`,
+          `"${o.cargo.vehicle}"`,
+          `"${(o.cargo.seal || '').replace(/"/g, '""')}"`,
+          `"${(o.cargo.notes || '').replace(/"/g, '""')}"`,
+          `"${o.status}"`
+        ];
+        csv += row.join(',') + '\n';
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const now = new Date().toISOString().slice(0, 10);
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute('download', `晶片專車派單對帳表_${now}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // 清空表單
+    function resetForm() {
+      document.getElementById('dispatchForm').reset();
+      document.getElementById('originTime').value = '';
+      document.getElementById('destTime').value = '';
+      document.getElementById('originName').focus();
+    }
+
+    // 司機名單管理彈窗
+    function renderDriverManageList() {
+      const container = document.getElementById('driverManageList');
+      container.innerHTML = '';
+      drivers.forEach((d, idx) => {
+        const item = document.createElement('div');
+        item.className = "flex items-center justify-between p-2 hover:bg-slate-50 text-xs";
+        item.innerHTML = `
+          <div>
+            <span class="font-bold text-slate-800">${d.name}</span>
+            <span class="text-slate-500 font-mono ml-2">車牌: ${d.car}</span>
+            <span class="text-slate-500 ml-2">電話: ${d.phone}</span>
+          </div>
+          <button onclick="removeDriver(${idx})" class="text-red-500 hover:text-red-700 font-bold">刪除</button>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function addDriver() {
+      const name = document.getElementById('newDriverName').value.trim();
+      const car = document.getElementById('newDriverCar').value.trim();
+      const phone = document.getElementById('newDriverPhone').value.trim();
+      if (!name || !car) {
+        alert('請填寫司機姓名與車牌號碼');
+        return;
+      }
+      const newD = {
+        id: 'D' + String(drivers.length + 1).padStart(2, '0'),
+        name,
+        car,
+        phone: phone || '未留手機',
+        status: '空車 (待命)'
+      };
+      drivers.push(newD);
+      localStorage.setItem('DISPATCH_DRIVERS', JSON.stringify(drivers));
+      document.getElementById('newDriverName').value = '';
+      document.getElementById('newDriverCar').value = '';
+      document.getElementById('newDriverPhone').value = '';
+      renderDriverManageList();
+      renderDriverDropdown();
+      renderDriverStatusList();
+      updateBadgeCounts();
+    }
+
+    function removeDriver(idx) {
+      if (confirm(`確定移除此司機？`)) {
+        drivers.splice(idx, 1);
+        localStorage.setItem('DISPATCH_DRIVERS', JSON.stringify(drivers));
+        renderDriverManageList();
+        renderDriverDropdown();
+        renderDriverStatusList();
+        updateBadgeCounts();
+      }
+    }
+
+    // 廠區庫管理彈窗
+    function renderFactoryManageList() {
+      const container = document.getElementById('factoryManageList');
+      container.innerHTML = '';
+      factories.forEach((f, idx) => {
+        const item = document.createElement('div');
+        item.className = "p-2 hover:bg-slate-50 flex justify-between items-start text-xs";
+        item.innerHTML = `
+          <div>
+            <div class="font-bold text-slate-900">${f.name} <span class="text-slate-400 font-normal">(${f.dock || '無指定碼頭'})</span></div>
+            <div class="text-slate-600">${f.address || '無地址'} ｜ ${f.contact || '無聯絡人'}</div>
+            ${f.notes ? `<div class="text-amber-800 text-[11px]">規定: ${f.notes}</div>` : ''}
+          </div>
+          <button onclick="removeFactory(${idx})" class="text-red-500 hover:text-red-700 font-bold ml-2">刪除</button>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function addFactory() {
+      const name = document.getElementById('newFacName').value.trim();
+      if (!name) {
+        alert('請填寫廠區名稱');
+        return;
+      }
+      const newF = {
+        name,
+        dock: document.getElementById('newFacDock').value.trim(),
+        contact: document.getElementById('newFacContact').value.trim(),
+        address: document.getElementById('newFacAddress').value.trim(),
+        notes: document.getElementById('newFacNotes').value.trim(),
+      };
+      factories.push(newF);
+      localStorage.setItem('DISPATCH_FACTORIES', JSON.stringify(factories));
+      document.getElementById('newFacName').value = '';
+      document.getElementById('newFacDock').value = '';
+      document.getElementById('newFacContact').value = '';
+      document.getElementById('newFacAddress').value = '';
+      document.getElementById('newFacNotes').value = '';
+      renderFactoryManageList();
+      renderQuickFactoryButtons();
+    }
+
+    function removeFactory(idx) {
+      if (confirm('確定刪除此廠區？')) {
+        factories.splice(idx, 1);
+        localStorage.setItem('DISPATCH_FACTORIES', JSON.stringify(factories));
+        renderFactoryManageList();
+        renderQuickFactoryButtons();
+      }
+    }
+
+    // 彈窗開關控制
+    function toggleModal(modalId) {
+      const modal = document.getElementById(modalId);
+      const isHidden = modal.classList.contains('hidden');
+      if (isHidden) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        if (modalId === 'modal-drivers') renderDriverManageList();
+        if (modalId === 'modal-factories') renderFactoryManageList();
+      } else {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+  </script>
+</body>
+</html>
