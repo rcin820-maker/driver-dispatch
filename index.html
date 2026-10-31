@@ -62,6 +62,15 @@
       padding-bottom: 6px;
     }
 
+    /* 通話快記大文字框 */
+    .scratchpad-box {
+      background: #eff6ff;
+      border: 1.5px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+
     .flow-indicator {
       display: flex;
       align-items: center;
@@ -173,7 +182,6 @@
     }
     .driver-item:hover { border-color: #0284c7; background: #f0f9ff; }
 
-    /* 表格樣式 */
     table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 8px; }
     th, td { border: 1px solid #e2e8f0; padding: 7px 8px; text-align: left; }
     th { background: #f8fafc; font-weight: 700; color: #334155; }
@@ -192,7 +200,16 @@
   <div class="main-container">
     <div>
 
-      <!-- 快速點選區：第 1 下選起點，第 2 下選終點 -->
+      <!-- 1. 通話快記大文字框（保留原汁原味） -->
+      <div class="scratchpad-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <strong style="color:#1e40af; font-size:0.85rem;">💬 通話隨手記（通話中隨手敲，點擊自動提取關鍵字）</strong>
+          <button type="button" class="btn-quick" style="background:#0284c7; color:#fff; border:none;" onclick="parseScratchpad()">✨ 提取並填入表單</button>
+        </div>
+        <textarea id="scratchpad" style="width:100%; height:65px; padding:8px; border:1px solid #93c5fd; border-radius:5px; font-size:0.85rem; outline:none;" placeholder="通話中隨手輸入，例如：竹科十二廠送中壢日月光，李先生 0912345678，兩箱晶圓盒要溫控"></textarea>
+      </div>
+
+      <!-- 2. 廠區連點選單 -->
       <div class="card">
         <div class="card-title">
           <span>⚡ 廠區連點選單</span>
@@ -205,28 +222,27 @@
         </div>
 
         <div class="factory-grid" id="factoryButtons"></div>
-
-        <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
-          <span style="font-size:0.75rem; color:#64748b; font-weight:600;">時間快選：</span>
-          <button type="button" class="btn-quick" onclick="applyTime(0, 'pickup')">⚡ 即刻取貨</button>
-          <button type="button" class="btn-quick" onclick="applyTime(30, 'pickup')">+30 分鐘取</button>
-          <button type="button" class="btn-quick" onclick="applyTime(60, 'pickup')">+1 小時取</button>
-          <span style="color:#cbd5e1;">|</span>
-          <button type="button" class="btn-quick" onclick="applyTime(60, 'dropoff')">+1 小時送到</button>
-          <button type="button" class="btn-quick" onclick="applyTime(120, 'dropoff')">+2 小時送到</button>
-          <button type="button" class="btn-quick" onclick="applyTime(180, 'dropoff')">+3 小時送到</button>
-        </div>
       </div>
 
-      <!-- 表單細節確認 -->
+      <!-- 3. 表單細節確認 -->
       <form id="dispatchForm" class="card" onsubmit="event.preventDefault(); submitDispatch();">
         <div class="card-title">
           <span>📋 派單資料核對</span>
-          <button type="button" onclick="clearAllForm()" class="btn-quick">清空</button>
+          <button type="button" onclick="clearAllForm()" class="btn-quick">清空重填</button>
         </div>
 
         <!-- 起點 -->
-        <div style="font-size:0.8rem; font-weight:700; color:#065f46; margin-bottom:4px;">🟢 取貨起點</div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <span style="font-size:0.8rem; font-weight:700; color:#065f46;">🟢 取貨起點</span>
+          <!-- 取貨時間微調快捷（預設即為現在） -->
+          <div style="display:flex; gap:4px; align-items:center;">
+            <span style="font-size:0.75rem; color:#64748b;">取貨：</span>
+            <button type="button" class="btn-quick" onclick="setPickupOffset(0)">⚡ 現在 (即刻)</button>
+            <button type="button" class="btn-quick" onclick="setPickupOffset(15)">+15 分鐘</button>
+            <button type="button" class="btn-quick" onclick="setPickupOffset(30)">+30 分鐘</button>
+          </div>
+        </div>
+        
         <div class="form-grid-3">
           <div class="form-group">
             <label>廠區名稱 *</label>
@@ -237,8 +253,8 @@
             <input type="text" id="originDock" placeholder="例: 3號卸貨口">
           </div>
           <div class="form-group">
-            <label>預計取貨時間 *</label>
-            <input type="text" id="pickupTime" required placeholder="點時間快速填入">
+            <label>預計取貨時間 (已預設當下) *</label>
+            <input type="text" id="pickupTime" required>
           </div>
         </div>
         <div class="form-grid-2">
@@ -255,7 +271,17 @@
         <hr style="border:0; border-top:1px dashed #e2e8f0; margin:12px 0;">
 
         <!-- 終點 -->
-        <div style="font-size:0.8rem; font-weight:700; color:#991b1b; margin-bottom:4px;">🎯 送達終點</div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <span style="font-size:0.8rem; font-weight:700; color:#991b1b;">🎯 送達終點</span>
+          <!-- 送達時間預估快捷 -->
+          <div style="display:flex; gap:4px; align-items:center;">
+            <span style="font-size:0.75rem; color:#64748b;">車程預估：</span>
+            <button type="button" class="btn-quick" onclick="setDropoffOffset(60)">+1 小時 (短程)</button>
+            <button type="button" class="btn-quick" onclick="setDropoffOffset(120)">+2 小時 (中程)</button>
+            <button type="button" class="btn-quick" onclick="setDropoffOffset(210)">+3.5 小時 (南科)</button>
+          </div>
+        </div>
+
         <div class="form-grid-3">
           <div class="form-group">
             <label>廠區名稱 *</label>
@@ -266,8 +292,8 @@
             <input type="text" id="destDock" placeholder="例: 晶圓一課庫房">
           </div>
           <div class="form-group">
-            <label>送達期限 *</label>
-            <input type="text" id="dropoffTime" required placeholder="點時間快速填入">
+            <label>送達期限 (預設2小時) *</label>
+            <input type="text" id="dropoffTime" required>
           </div>
         </div>
         <div class="form-grid-2">
@@ -336,7 +362,6 @@
           </div>
         </div>
 
-        <!-- AI 報表輸出展示框 -->
         <div id="aiReportCard" style="display:none; background:#faf5ff; border:1px solid #d8b4fe; border-radius:6px; padding:12px; margin-bottom:12px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
             <strong style="color:#6b21a8; font-size:0.85rem;">📊 每週營運 AI 摘要報表</strong>
@@ -419,10 +444,35 @@
     let currentClickStep = 1;
     let orderHistory = JSON.parse(localStorage.getItem('dispatch_orders') || '[]');
 
+    // 核心初始化：載入廠區、司機、並「預設填入當下時間」
     function init() {
       renderFactories();
       renderDrivers();
       renderHistoryTable();
+      setDefaultTimes(); // 頁面一開，自動設定當前時間！
+    }
+
+    // 💡 時間運算邏輯：抓當前時分，並可加上分鐘偏移
+    function getTimeString(addMinutes = 0) {
+      const d = new Date();
+      d.setMinutes(d.getMinutes() + addMinutes);
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      return `${hh}:${mm}`;
+    }
+
+    // 預設時間：起點為「現在」，終點預設為「2小時後」
+    function setDefaultTimes() {
+      document.getElementById('pickupTime').value = `${getTimeString(0)} (即刻取貨)`;
+      document.getElementById('dropoffTime').value = `${getTimeString(120)} 前送達`;
+    }
+
+    function setPickupOffset(mins) {
+      document.getElementById('pickupTime').value = mins === 0 ? `${getTimeString(0)} (即刻取貨)` : `${getTimeString(mins)} 準時`;
+    }
+
+    function setDropoffOffset(mins) {
+      document.getElementById('dropoffTime').value = `${getTimeString(mins)} 前送達`;
     }
 
     function renderFactories() {
@@ -464,17 +514,40 @@
       document.getElementById('currentStepText').style.background = "#0284c7";
     }
 
-    function applyTime(addMinutes, type) {
-      const now = new Date();
-      now.setMinutes(now.getMinutes() + addMinutes);
-      const h = String(now.getHours()).padStart(2, '0');
-      const m = String(now.getMinutes()).padStart(2, '0');
-      const str = `${h}:${m}`;
-      if (type === 'pickup') {
-        document.getElementById('pickupTime').value = addMinutes === 0 ? `${str} 即刻取貨` : `${str} 準時`;
-      } else {
-        document.getElementById('dropoffTime').value = `${str} 前務必送達`;
+    // 隨手記文字提取
+    function parseScratchpad() {
+      const raw = document.getElementById('scratchpad').value;
+      if (!raw) return;
+
+      let found = [];
+      FACTORIES.forEach(f => {
+        const shortName = f.name.replace(/台積|廠/g, '');
+        if (raw.includes(f.name) || (shortName.length >= 2 && raw.includes(shortName))) {
+          found.push(f);
+        }
+      });
+
+      if (found.length >= 1) {
+        document.getElementById('originName').value = found[0].name;
+        document.getElementById('originAddr').value = found[0].addr;
+        document.getElementById('originDock').value = found[0].dock;
       }
+      if (found.length >= 2) {
+        document.getElementById('destName').value = found[1].name;
+        document.getElementById('destAddr').value = found[1].addr;
+        document.getElementById('destDock').value = found[1].dock;
+      }
+
+      const phoneMatch = raw.match(/09\d{2}-?\d{3}-?\d{3}/);
+      if (phoneMatch) {
+        document.getElementById('destContact').value = `窗口 ${phoneMatch[0]}`;
+      }
+
+      if (/FOUP|晶圓/i.test(raw)) document.getElementById('cargoType').value = "晶圓盒(FOUP) x 2箱";
+      if (/光罩|POD/i.test(raw)) document.getElementById('cargoType').value = "極紫外光罩(Pod) x 1";
+      if (/溫控|恆溫|22度/i.test(raw)) document.getElementById('tempControl').value = "恆溫 (20~25°C)";
+
+      alert("✨ 已從通話文字中帶入廠區與規格！");
     }
 
     function renderDrivers() {
@@ -529,7 +602,6 @@
       const orderNo = "EXP-" + new Date().toISOString().slice(0,10).replace(/-/g,'') + "-" + Math.floor(100 + Math.random()*900);
       const createdAt = new Date().toLocaleString('zh-TW', { hour12: false });
 
-      // 儲存進歷史紀錄
       const newOrder = {
         orderNo, createdAt, oName, oAddr, oDock, pTime, oContact,
         dName, dAddr, dDock, dTime, dContact,
@@ -592,13 +664,9 @@ ${seal ? `🔐 封條編號：${seal}\n` : ''}───────────�
       });
     }
 
-    // 📥 匯出 Excel (CSV)
     function exportToExcel() {
       if (orderHistory.length === 0) { alert("目前沒有任何歷史紀錄可供匯出！"); return; }
-
-      let csv = "\uFEFF"; // UTF-8 BOM 避免 Excel 亂碼
-      csv += "單號,開單時間,起點廠區,起點地址,取貨時間,送達廠區,送達地址,送達期限,司機姓名,車牌號碼,司機電話,貨品名稱,溫控條件,車輛規格,封條編號\n";
-
+      let csv = "\uFEFF單號,開單時間,起點廠區,起點地址,取貨時間,送達廠區,送達地址,送達期限,司機姓名,車牌號碼,司機電話,貨品名稱,溫控條件,車輛規格,封條編號\n";
       orderHistory.forEach(o => {
         const row = [
           o.orderNo, o.createdAt, o.oName, o.oAddr, o.pTime,
@@ -607,7 +675,6 @@ ${seal ? `🔐 封條編號：${seal}\n` : ''}───────────�
         ].map(val => `"${String(val).replace(/"/g, '""')}"`).join(",");
         csv += row + "\n";
       });
-
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
@@ -615,12 +682,9 @@ ${seal ? `🔐 封條編號：${seal}\n` : ''}───────────�
       link.click();
     }
 
-    // 🤖 AI 生成每週營運報表
     let latestAiReport = "";
     function generateAiWeeklyReport() {
       if (orderHistory.length === 0) { alert("歷史紀錄為空，無法生成報表！"); return; }
-
-      // 統計數據
       const totalOrders = orderHistory.length;
       const driverCounts = {};
       const routeCounts = {};
@@ -633,7 +697,6 @@ ${seal ? `🔐 封條編號：${seal}\n` : ''}───────────�
         if (o.temp && o.temp.includes("恆溫")) tempControlledCount++;
       });
 
-      // 排行與格式化
       let driverRank = Object.entries(driverCounts)
         .sort((a,b) => b[1] - a[1])
         .map(([name, count]) => `  • ${name}: ${count} 趟 (${Math.round(count/totalOrders*100)}%)`).join("\n");
@@ -666,11 +729,11 @@ ${routeRank}
 
     function copyAiReport() {
       if (!latestAiReport) return;
-      navigator.clipboard.writeText(latestAiReport).then(() => alert("已複製每週報表！可直接貼至 LINE 群組彙報。"));
+      navigator.clipboard.writeText(latestAiReport).then(() => alert("已複製每週報表！"));
     }
 
     function clearHistory() {
-      if (confirm("確定要清空所有歷史派單紀錄嗎？（建議先匯出 Excel 備份）")) {
+      if (confirm("確定要清空所有歷史派單紀錄嗎？")) {
         orderHistory = [];
         localStorage.removeItem('dispatch_orders');
         renderHistoryTable();
@@ -690,7 +753,9 @@ ${routeRank}
 
     function clearAllForm() {
       document.getElementById('dispatchForm').reset();
+      document.getElementById('scratchpad').value = "";
       resetClickStep();
+      setDefaultTimes();
     }
 
     document.addEventListener('keydown', e => {
