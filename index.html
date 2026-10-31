@@ -224,4 +224,389 @@
 
         <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
           <span style="font-size:0.75rem; color:#64748b; font-weight:600;">快速時間：</span>
-          <button type
+          <button type="button" class="btn-quick" onclick="applyTime(0, 'pickup')">⚡ 即刻取貨</button>
+          <button type="button" class="btn-quick" onclick="applyTime(30, 'pickup')">+30 分鐘取</button>
+          <button type="button" class="btn-quick" onclick="applyTime(60, 'pickup')">+1 小時取</button>
+          <span style="color:#cbd5e1;">|</span>
+          <button type="button" class="btn-quick" onclick="applyTime(60, 'dropoff')">+1 小時送到</button>
+          <button type="button" class="btn-quick" onclick="applyTime(120, 'dropoff')">+2 小時送到</button>
+          <button type="button" class="btn-quick" onclick="applyTime(180, 'dropoff')">+3 小時送到</button>
+        </div>
+      </div>
+
+      <!-- 表單細節確認 -->
+      <form id="dispatchForm" class="card" onsubmit="event.preventDefault(); submitDispatch();">
+        <div class="card-title">
+          <span>📋 派單資料核對</span>
+          <button type="button" onclick="clearAllForm()" class="btn-quick">清空</button>
+        </div>
+
+        <!-- 起點 -->
+        <div style="font-size:0.8rem; font-weight:700; color:#065f46; margin-bottom:4px;">🟢 取貨起點</div>
+        <div class="form-grid-3">
+          <div class="form-group">
+            <label>廠區名稱 *</label>
+            <input type="text" id="originName" required placeholder="點上方廠區自動填入">
+          </div>
+          <div class="form-group">
+            <label>碼頭 / 棟別</label>
+            <input type="text" id="originDock" placeholder="例: 3號卸貨口">
+          </div>
+          <div class="form-group">
+            <label>預計取貨時間 *</label>
+            <input type="text" id="pickupTime" required placeholder="點時間快速填入">
+          </div>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>詳細地址</label>
+            <input type="text" id="originAddr" placeholder="自動帶入">
+          </div>
+          <div class="form-group">
+            <label>現場窗口電話</label>
+            <input type="text" id="originContact" placeholder="聯絡窗口">
+          </div>
+        </div>
+
+        <hr style="border:0; border-top:1px dashed #e2e8f0; margin:12px 0;">
+
+        <!-- 終點 -->
+        <div style="font-size:0.8rem; font-weight:700; color:#991b1b; margin-bottom:4px;">🎯 送達終點</div>
+        <div class="form-grid-3">
+          <div class="form-group">
+            <label>廠區名稱 *</label>
+            <input type="text" id="destName" required placeholder="點上方廠區自動填入">
+          </div>
+          <div class="form-group">
+            <label>庫房 / 碼頭</label>
+            <input type="text" id="destDock" placeholder="例: 晶圓一課庫房">
+          </div>
+          <div class="form-group">
+            <label>送達期限 *</label>
+            <input type="text" id="dropoffTime" required placeholder="點時間快速填入">
+          </div>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>詳細地址</label>
+            <input type="text" id="destAddr" placeholder="自動帶入">
+          </div>
+          <div class="form-group">
+            <label>收貨窗口電話</label>
+            <input type="text" id="destContact" placeholder="驗收窗口">
+          </div>
+        </div>
+
+        <hr style="border:0; border-top:1px dashed #e2e8f0; margin:12px 0;">
+
+        <!-- 貨況規格 -->
+        <div style="font-size:0.8rem; font-weight:700; color:#92400e; margin-bottom:4px;">🔒 規格與司機指派</div>
+        <div class="form-grid-3">
+          <div class="form-group">
+            <label>貨品類型 *</label>
+            <input type="text" id="cargoType" required value="晶圓盒(FOUP) x 2箱">
+          </div>
+          <div class="form-group">
+            <label>溫控條件</label>
+            <select id="tempControl">
+              <option value="恆溫 (20~25°C)">恆溫 (20~25°C)</option>
+              <option value="常溫專車">常溫專車</option>
+              <option value="冷藏 (2~8°C)">冷藏 (2~8°C)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>車體規格</label>
+            <select id="truckSpec">
+              <option value="氣壓避震專車 (標準防震)">氣壓避震專車 (標準防震)</option>
+              <option value="專車直達 (禁止併貨)">專車直達 (禁止併貨)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>指派司機 *</label>
+            <select id="driverSelect" required>
+              <option value="">-- 請點右側司機或下拉選擇 --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>保全封條編號 (Seal No.)</label>
+            <input type="text" id="sealNo" placeholder="例: SL-992102">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit" style="margin-top:8px;">
+          📋 產出派單並組裝 LINE 訊息
+        </button>
+      </form>
+    </div>
+
+    <!-- 右側面板 -->
+    <div>
+      <div class="card">
+        <div class="card-title">
+          <span>📱 LINE 派工訊息</span>
+          <span id="targetDriverLabel" style="font-size:0.75rem; color:#0284c7;"></span>
+        </div>
+        <div id="previewBox" class="preview-box">【點擊派單後產生訊息】</div>
+        <div style="display:flex; gap:6px;">
+          <button type="button" class="btn-submit" style="background:#06c755;" onclick="sendToLine()">💬 喚起 LINE 私傳</button>
+          <button type="button" class="btn-quick" style="flex:1;" onclick="copyText()">📋 複製</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>🚚 司機清單 (點擊指派)</span>
+        </div>
+        <div id="driverList" style="max-height: 420px; overflow-y: auto;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 預設廠區點位資料庫（可自行擴增）
+    const FACTORIES = [
+      { name: "台積竹科十二廠", addr: "新竹市東區力行六路8號", dock: "P8碼頭", contact: "現場窗口 #214" },
+      { name: "台積竹科二期", addr: "新竹市東區力行路2號", dock: "3號卸貨口", contact: "張工程師" },
+      { name: "台積晶圓八廠", addr: "新竹市科學園區創新一路25號", dock: "1號碼頭", contact: "物料課" },
+      { name: "台積中科十五廠", addr: "台中市大雅區科雅六路1號", dock: "物流中心碼頭", contact: "收貨課" },
+      { name: "台積南科十八廠", addr: "台南市善化區南科九路16號", dock: "P1卸貨碼頭", contact: "黃副理" },
+      { name: "台積南科十四廠", addr: "台南市新市區南科北路1號", dock: "2號碼頭", contact: "林主任" },
+      { name: "日月光中壢廠", addr: "桃園市中壢區中華路二段550號", dock: "B棟庫房", contact: "李課長" },
+      { name: "日月光高雄廠", addr: "高雄市楠梓加工出口區經三路5號", dock: "K11收貨區", contact: "驗收組" },
+      { name: "聯電南科十二廠", addr: "台南市新市區南科二路18號", dock: "Fab 12A碼頭", contact: "設備課" },
+      { name: "聯電竹科八廠", addr: "新竹科學園區力行二路3號", dock: "出貨碼頭", contact: "調度組" },
+      { name: "艾司摩爾林口", addr: "新北市林口區工四路10號", dock: "客戶收貨碼頭", contact: "ASML Logistics" },
+      { name: "艾司摩爾南科", addr: "台南市新市區南科三路8號", dock: "維修配件碼頭", contact: "客服組" },
+      { name: "力積電銅鑼廠", addr: "苗栗縣銅鑼鄉銅科北路1號", dock: "1號出入口", contact: "收發室" },
+      { name: "世界先進二廠", addr: "新竹市科學園區研發三路1號", dock: "倉儲碼頭", contact: "驗收組" }
+    ];
+
+    let drivers = [
+      { id: 1, name: "陳建銘", phone: "0912-111222", plate: "KJA-5821", loc: "新竹待命" },
+      { id: 2, name: "林志豪", phone: "0922-333444", plate: "RFB-7712", loc: "竹南待命" },
+      { id: 3, name: "王國華", phone: "0933-555666", plate: "BQD-9018", loc: "中科運送中" },
+      { id: 4, name: "張家榮", phone: "0944-777888", plate: "KPA-1102", loc: "林口待命" },
+      { id: 5, name: "黃俊傑", phone: "0955-999000", plate: "TDA-3391", loc: "南科待命" },
+      { id: 6, name: "許峰銘", phone: "0977-456123", plate: "RAC-6682", loc: "中壢待命" }
+    ];
+
+    let currentClickStep = 1; // 1: 點起點, 2: 點終點
+
+    function init() {
+      renderFactories();
+      renderDrivers();
+    }
+
+    function renderFactories() {
+      const container = document.getElementById('factoryButtons');
+      container.innerHTML = '';
+      FACTORIES.forEach(f => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'factory-chip';
+        chip.textContent = f.name;
+        chip.onclick = () => handleFactoryClick(f);
+        container.appendChild(chip);
+      });
+    }
+
+    // 連點邏輯：第 1 下填起點，第 2 下填終點，依此循環
+    function handleFactoryClick(f) {
+      if (currentClickStep === 1) {
+        document.getElementById('originName').value = f.name;
+        document.getElementById('originAddr').value = f.addr;
+        document.getElementById('originDock').value = f.dock;
+        document.getElementById('originContact').value = f.contact;
+        
+        // 切換到終點模式
+        currentClickStep = 2;
+        document.getElementById('currentStepText').textContent = "👉 請點擊【終點／送達廠區】";
+        document.getElementById('currentStepText').style.background = "#dc2626";
+      } else {
+        document.getElementById('destName').value = f.name;
+        document.getElementById('destAddr').value = f.addr;
+        document.getElementById('destDock').value = f.dock;
+        document.getElementById('destContact').value = f.contact;
+        
+        // 重設回起點模式
+        currentClickStep = 1;
+        document.getElementById('currentStepText').textContent = "👉 請點擊【起點／取貨廠區】";
+        document.getElementById('currentStepText').style.background = "#0284c7";
+      }
+    }
+
+    function resetClickStep() {
+      currentClickStep = 1;
+      document.getElementById('currentStepText').textContent = "👉 請點擊【起點／取貨廠區】";
+      document.getElementById('currentStepText').style.background = "#0284c7";
+    }
+
+    // 時間快捷填入
+    function applyTime(addMinutes, type) {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() + addMinutes);
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const str = `${h}:${m}`;
+
+      if (type === 'pickup') {
+        document.getElementById('pickupTime').value = addMinutes === 0 ? `${str} 即刻取貨` : `${str} 準時`;
+      } else {
+        document.getElementById('dropoffTime').value = `${str} 前務必送達`;
+      }
+    }
+
+    // 通話筆記語意提取引擎
+    function parseScratchpad() {
+      const raw = document.getElementById('scratchpad').value;
+      if (!raw) return;
+
+      // 提取起訖點（遍歷廠庫名單比對）
+      let found = [];
+      FACTORIES.forEach(f => {
+        const shortName = f.name.replace(/台積|廠/g, '');
+        if (raw.includes(f.name) || (shortName.length >= 2 && raw.includes(shortName))) {
+          found.push(f);
+        }
+      });
+
+      if (found.length >= 1) {
+        document.getElementById('originName').value = found[0].name;
+        document.getElementById('originAddr').value = found[0].addr;
+        document.getElementById('originDock').value = found[0].dock;
+      }
+      if (found.length >= 2) {
+        document.getElementById('destName').value = found[1].name;
+        document.getElementById('destAddr').value = found[1].addr;
+        document.getElementById('destDock').value = found[1].dock;
+      }
+
+      // 抓電話
+      const phoneMatch = raw.match(/09\d{2}-?\d{3}-?\d{3}/);
+      if (phoneMatch) {
+        document.getElementById('destContact').value = `窗口 ${phoneMatch[0]}`;
+      }
+
+      // 抓貨物
+      if (/FOUP|晶圓/i.test(raw)) document.getElementById('cargoType').value = "晶圓盒(FOUP) x 2箱";
+      if (/光罩|POD/i.test(raw)) document.getElementById('cargoType').value = "極紫外光罩(Pod) x 1";
+
+      // 溫控
+      if (/溫控|恆溫|22度/i.test(raw)) document.getElementById('tempControl').value = "恆溫 (20~25°C)";
+
+      // 時間預設
+      if (!document.getElementById('pickupTime').value) applyTime(30, 'pickup');
+      if (!document.getElementById('dropoffTime').value) applyTime(120, 'dropoff');
+
+      alert("✨ 已自動從通話文字中帶入符合的廠區與規格！");
+    }
+
+    function renderDrivers() {
+      const sel = document.getElementById('driverSelect');
+      const list = document.getElementById('driverList');
+      sel.innerHTML = '<option value="">-- 請選擇指派司機 --</option>';
+      list.innerHTML = '';
+
+      drivers.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.id;
+        opt.textContent = `${d.name} (${d.plate}) - ${d.loc}`;
+        sel.appendChild(opt);
+
+        const item = document.createElement('div');
+        item.className = 'driver-item';
+        item.onclick = () => { sel.value = d.id; };
+        item.innerHTML = `
+          <div>
+            <strong>${d.name}</strong> <span style="color:#64748b; font-size:0.75rem;">${d.plate}</span>
+            <div style="font-size:0.75rem; color:#475569;">${d.loc}</div>
+          </div>
+          <span style="font-size:0.75rem; color:#0284c7; font-weight:600;">選擇</span>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    let generatedText = "";
+    function submitDispatch() {
+      const driverId = document.getElementById('driverSelect').value;
+      const driver = drivers.find(d => d.id == driverId);
+      if (!driver) { alert("請先選擇指派司機！"); return; }
+
+      const oName = document.getElementById('originName').value;
+      const oDock = document.getElementById('originDock').value;
+      const oAddr = document.getElementById('originAddr').value;
+      const pTime = document.getElementById('pickupTime').value;
+      const oContact = document.getElementById('originContact').value;
+
+      const dName = document.getElementById('destName').value;
+      const dDock = document.getElementById('destDock').value;
+      const dAddr = document.getElementById('destAddr').value;
+      const dTime = document.getElementById('dropoffTime').value;
+      const dContact = document.getElementById('destContact').value;
+
+      const cargo = document.getElementById('cargoType').value;
+      const temp = document.getElementById('tempControl').value;
+      const spec = document.getElementById('truckSpec').value;
+      const seal = document.getElementById('sealNo').value;
+
+      const orderNo = "EXP-" + new Date().toISOString().slice(0,10).replace(/-/g,'') + "-" + Math.floor(100 + Math.random()*900);
+      const oNav = oAddr ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(oAddr)}` : "";
+      const dNav = dAddr ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dAddr)}` : "";
+
+      generatedText = `🚨【急件專車派工單】#${orderNo}
+👤 指定司機：${driver.name} 先生 (${driver.plate})
+──────────────────────
+🟢【取貨起點】
+🏢 廠區：${oName} ${oDock ? `(${oDock})` : ''}
+⏱️ 取貨時間：${pTime}
+📍 地址：${oAddr || '現場確認'}
+${oNav ? `🗺️ 導航：${oNav}\n` : ''}👤 現場窗口：${oContact || '無'}
+──────────────────────
+🎯【送達終點】
+🏢 卸貨廠區：${dName} ${dDock ? `(${dDock})` : ''}
+⏱️ 送達期限：${dTime}
+📍 地址：${dAddr || '現場確認'}
+${dNav ? `🗺️ 導航：${dNav}\n` : ''}👤 驗收窗口：${dContact || '無'}
+──────────────────────
+🔒【貨況要求】
+📦 貨品品名：${cargo}
+🌡️ 溫控條件：${temp}
+🛡️ 車輛規格：${spec}
+${seal ? `🔐 封條編號：${seal}\n` : ''}──────────────────────
+收到請回覆「確認接單」並依時前往！`;
+
+      document.getElementById('previewBox').textContent = generatedText;
+      document.getElementById('targetDriverLabel').textContent = `已指派：${driver.name} (${driver.phone})`;
+    }
+
+    function sendToLine() {
+      if (!generatedText) { alert("請先建立派單！"); return; }
+      window.location.href = "https://line.me/R/msg/text/?" + encodeURIComponent(generatedText);
+    }
+
+    function copyText() {
+      if (!generatedText) { alert("請先建立派單！"); return; }
+      navigator.clipboard.writeText(generatedText).then(() => alert("已複製文字！"));
+    }
+
+    function clearAllForm() {
+      document.getElementById('dispatchForm').reset();
+      document.getElementById('scratchpad').value = "";
+      resetClickStep();
+    }
+
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        submitDispatch();
+      }
+    });
+
+    window.onload = init;
+  </script>
+</body>
+</html>
