@@ -743,8 +743,21 @@ ${routeRank}
 
     function sendToLine() {
       if (!generatedText) { alert("請先建立派單！"); return; }
+      navigator.clipboard.writeText(generatedText).catch(() => {});
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       window.location.href = "https://line.me/R/msg/text/?" + encodeURIComponent(generatedText);
+      if (isMobile) {
+
+        window.location.href = "https://line.me/R/msg/text/?" + encodeURIComponent(generatedText);
+      } else {
+        const lineUrl = "line://msg/text/" + encodeURIComponent(generatedText);
+        window.open(lineUrl, '_blank');
+        setTimeout(() => {
+          alert("💬 已喚起電腦版 LINE！\n（若電腦未自動帶入文字，派工內容已自動複製，可直接在司機聊天室按 Ctrl + V 貼上）");
+        }, 300);
+      }
     }
+      
 
     function copyText() {
       if (!generatedText) { alert("請先建立派單！"); return; }
