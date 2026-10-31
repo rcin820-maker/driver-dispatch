@@ -6,41 +6,37 @@
   <title>晶片專車極速派單系統 (Dispatch Pro)</title>
   <style>
     :root {
-      --bg: #f8fafc;
+      --bg: #f1f5f9;
       --card-bg: #ffffff;
-      --border: #e2e8f0;
+      --border: #cbd5e1;
       --primary: #0284c7;
       --primary-hover: #0369a1;
       --accent-green: #10b981;
       --accent-orange: #f59e0b;
-      --accent-purple: #8b5cf6;
       --text: #0f172a;
       --text-muted: #64748b;
-      --danger: #ef4444;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding-bottom: 60px; line-height: 1.5; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding-bottom: 40px; }
 
     header {
       background: #0f172a;
       color: #fff;
-      padding: 12px 20px;
+      padding: 10px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    header h1 { font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-    .badge-pro { background: var(--primary); color: #fff; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; }
-    
+    header h1 { font-size: 1.15rem; font-weight: 700; }
+
     .main-container {
-      max-width: 1350px;
-      margin: 16px auto;
-      padding: 0 16px;
+      max-width: 1400px;
+      margin: 14px auto;
+      padding: 0 14px;
       display: grid;
       grid-template-columns: 1fr 380px;
-      gap: 20px;
+      gap: 16px;
     }
     @media (max-width: 1024px) {
       .main-container { grid-template-columns: 1fr; }
@@ -50,662 +46,182 @@
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 18px;
-      margin-bottom: 18px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
     .card-title {
-      font-size: 1.05rem;
+      font-size: 0.95rem;
       font-weight: 700;
-      margin-bottom: 14px;
+      margin-bottom: 10px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 8px;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 6px;
     }
 
-    /* 通話筆記 AI 快記框 */
-    .scratchpad-box {
-      background: #eff6ff;
-      border: 1.5px solid #bfdbfe;
-      border-radius: 8px;
-      padding: 14px;
-      margin-bottom: 16px;
-    }
-    .scratchpad-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-    .scratchpad-title {
-      font-weight: 700;
-      color: #1e40af;
+    /* 點擊流指示標籤 */
+    .flow-indicator {
       display: flex;
       align-items: center;
       gap: 6px;
-      font-size: 0.95rem;
-    }
-    .scratchpad-textarea {
-      width: 100%;
-      height: 75px;
-      border: 1px solid #93c5fd;
+      background: #e0f2fe;
+      border: 1px solid #bae6fd;
+      padding: 6px 12px;
       border-radius: 6px;
-      padding: 10px;
-      font-size: 0.9rem;
-      resize: vertical;
-      outline: none;
-      background: #fff;
+      font-size: 0.85rem;
+      color: #0369a1;
+      font-weight: 600;
+      margin-bottom: 10px;
     }
-    .scratchpad-textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2); }
-    .scratchpad-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
+    .flow-step-active {
+      background: #0284c7;
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 4px;
     }
 
-    /* 快捷大按鈕組 */
-    .quick-group {
+    /* 常用廠區標籤網格 */
+    .factory-grid {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      margin-bottom: 12px;
+      max-height: 150px;
+      overflow-y: auto;
+      padding: 4px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      margin-bottom: 14px;
     }
-    .btn-quick {
-      background: #f1f5f9;
+    .factory-chip {
+      background: #fff;
       border: 1px solid #cbd5e1;
-      padding: 5px 10px;
+      padding: 6px 10px;
       font-size: 0.8rem;
       border-radius: 4px;
       cursor: pointer;
       font-weight: 600;
-      color: #334155;
       transition: all 0.15s;
     }
-    .btn-quick:hover { background: #e2e8f0; color: #0f172a; border-color: #94a3b8; }
-    .btn-route { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
-    .btn-route:hover { background: #dcfce7; border-color: #86efac; }
-    .btn-time { background: #fefce8; border-color: #fef08a; color: #854d0e; }
-    .btn-time:hover { background: #fef9c3; border-color: #fde047; }
-
-    /* 表單柵格 */
-    .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-    .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-    @media (max-width: 640px) {
-      .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; }
+    .factory-chip:hover {
+      border-color: #0284c7;
+      background: #f0f9ff;
+      color: #0284c7;
     }
 
-    .form-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
-    .form-group label { font-size: 0.85rem; font-weight: 600; color: #334155; }
+    /* 表單佈局 */
+    .form-grid-3 { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+    .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+    @media (max-width: 640px) {
+      .form-grid-3, .form-grid-2 { grid-template-columns: 1fr; }
+    }
+    .form-group { display: flex; flex-direction: column; gap: 3px; }
+    .form-group label { font-size: 0.8rem; font-weight: 600; color: #475569; }
     .form-group input, .form-group select {
-      padding: 9px 12px;
+      padding: 7px 10px;
       border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      font-size: 0.9rem;
+      border-radius: 5px;
+      font-size: 0.85rem;
       outline: none;
     }
     .form-group input:focus, .form-group select:focus {
       border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
     }
 
-    .section-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 0.85rem;
-      font-weight: 700;
-      padding: 3px 8px;
+    .active-target {
+      border: 2px solid #0284c7 !important;
+      background: #f0f9ff;
+    }
+
+    .btn-quick {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      padding: 4px 8px;
+      font-size: 0.75rem;
       border-radius: 4px;
-      margin-bottom: 8px;
-    }
-    .tag-origin { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
-    .tag-dest { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
-    .tag-spec { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
-
-    /* 主要按鈕 */
-    .btn-primary {
-      background: var(--primary);
-      color: #fff;
-      font-weight: 700;
-      padding: 12px 18px;
-      border: none;
-      border-radius: 6px;
-      font-size: 1rem;
       cursor: pointer;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 8px;
+      font-weight: 600;
+    }
+    .btn-quick:hover { background: #e2e8f0; }
+
+    .btn-submit {
+      background: #0284c7;
+      color: #fff;
+      border: none;
+      padding: 12px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
       width: 100%;
     }
-    .btn-primary:hover { background: var(--primary-hover); }
-    .btn-ai {
-      background: var(--accent-purple);
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      padding: 6px 12px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .btn-ai:hover { opacity: 0.9; }
+    .btn-submit:hover { background: #0369a1; }
 
-    /* 司機清單邊欄 */
+    .preview-box {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 10px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.8rem;
+      white-space: pre-wrap;
+      word-break: break-all;
+      height: 220px;
+      overflow-y: auto;
+      margin-bottom: 8px;
+    }
     .driver-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 8px 10px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      margin-bottom: 6px;
-      font-size: 0.85rem;
+      padding: 7px 10px;
+      border: 1px solid #e2e8f0;
+      border-radius: 5px;
+      margin-bottom: 5px;
+      font-size: 0.8rem;
       cursor: pointer;
       background: #fff;
     }
-    .driver-item:hover { background: #f8fafc; border-color: #94a3b8; }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
-    .status-free { background: var(--accent-green); }
-    .status-busy { background: var(--accent-orange); }
-    .status-rest { background: #94a3b8; }
-
-    /* 輸出預覽區 */
-    .preview-box {
-      background: #0f172a;
-      color: #f1f5f9;
-      padding: 12px;
-      border-radius: 6px;
-      font-family: monospace;
-      font-size: 0.85rem;
-      white-space: pre-wrap;
-      word-break: break-all;
-      height: 180px;
-      overflow-y: auto;
-      margin-bottom: 10px;
-    }
+    .driver-item:hover { border-color: #0284c7; background: #f0f9ff; }
   </style>
 </head>
 <body>
 
   <header>
-    <h1><span>🚚 晶片專車極速派單</span> <span class="badge-pro">Dispatch Pro</span></h1>
-    <div style="font-size: 0.85rem; color: #94a3b8;">
-      按 <kbd style="background:#334155; padding:2px 6px; border-radius:3px; color:#fff;">Ctrl + Enter</kbd> 極速開單
-    </div>
+    <h1>🚚 晶片專車極速派單 (點擊直覺流)</h1>
+    <div style="font-size: 0.8rem; color: #94a3b8;">按 <kbd style="background:#334155; padding:2px 5px; border-radius:3px; color:#fff;">Ctrl + Enter</kbd> 開單</div>
   </header>
 
   <div class="main-container">
-    <!-- 左側主要開單區 -->
     <div>
-      
-      <!-- 通話即時隨手記 / AI 自動填表框 -->
-      <div class="scratchpad-box">
-        <div class="scratchpad-header">
-          <div class="scratchpad-title">
-            <span>💬 通話快記 / AI 自動填表</span>
-            <span style="font-size: 0.75rem; color: #64748b; font-weight: normal;">(通話中隨手輸入關鍵字，點擊自動提取填滿表單)</span>
-          </div>
-          <button type="button" class="btn-ai" onclick="runAiExtract()">✨ 解析並填入表單</button>
+
+      <!-- 通話筆記 / 智能填入 -->
+      <div class="card" style="background:#f8fafc; border:1.5px solid #bfdbfe;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <strong style="font-size:0.85rem; color:#1e40af;">💬 通話隨手記（貼上或輸入關鍵字即刻自動帶入）</strong>
+          <button type="button" class="btn-quick" style="background:#3b82f6; color:#fff; border:none;" onclick="parseScratchpad()">✨ 提取並填入</button>
         </div>
-        <textarea id="callScratchpad" class="scratchpad-textarea" placeholder="通話中隨手貼上或輸入，例如：&#10;『竹科十二廠送中壢日月光，兩箱晶圓盒，恆溫避震，下午三點取，窗口李先生 0912345678』"></textarea>
+        <textarea id="scratchpad" style="width:100%; height:60px; padding:8px; border:1px solid #93c5fd; border-radius:5px; font-size:0.85rem;" placeholder="例如：竹科十二廠到日月光中壢，下午兩點半取，李先生0912345678，兩箱晶圓盒要溫控"></textarea>
       </div>
 
-      <!-- 開單表單 -->
-      <form id="dispatchForm" class="card" onsubmit="event.preventDefault(); handleCreateDispatch();">
-        <div class="card-title">
-          <span>📋 電話即時派單</span>
-          <button type="button" onclick="resetForm()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.85rem;">清空重填</button>
-        </div>
-
-        <!-- ⚡ 常用整組路線組合快捷鍵 -->
-        <div style="margin-bottom: 12px;">
-          <div style="font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 4px;">⚡ 高頻常用路線套餐（一鍵填妥起訖與規格）：</div>
-          <div class="quick-group">
-            <button type="button" class="btn-quick btn-route" onclick="applyPreset('TSMC_ASE')">⚡ 竹科 ➔ 中壢日月光 (急件FOUP)</button>
-            <button type="button" class="btn-quick btn-route" onclick="applyPreset('TSMC_FAB18')">⚡ 竹科 ➔ 南科十八廠 (光罩專車)</button>
-            <button type="button" class="btn-quick btn-route" onclick="applyPreset('UMC_ASML')">⚡ 聯電南科 ➔ 林口ASML (返修品)</button>
-            <button type="button" class="btn-quick btn-route" onclick="applyPreset('TSMC_LOCAL')">⚡ 竹科二期 ➔ 晶圓八廠 (園區短程)</button>
-          </div>
-        </div>
-
-        <!-- 起點資訊 -->
-        <div class="section-tag tag-origin">🟢 起點｜取貨地</div>
-        <div class="form-grid-3">
-          <div class="form-group">
-            <label>廠區 / 公司名稱 *</label>
-            <input type="text" id="originName" required placeholder="例: 台積電竹科二期">
-          </div>
-          <div class="form-group">
-            <label>卸貨碼頭 / 棟別</label>
-            <input type="text" id="originDock" placeholder="例: 3號碼頭 B棟">
-          </div>
-          <div class="form-group">
-            <label>預計取貨時間 *</label>
-            <input type="text" id="pickupTime" required placeholder="例: 14:30 準時">
-          </div>
-        </div>
-
-        <!-- 取貨時間快速鍵 -->
-        <div class="quick-group" style="margin-top:-6px; margin-bottom:12px;">
-          <span style="font-size:0.75rem; color:#64748b; line-height:24px;">時間快選：</span>
-          <button type="button" class="btn-quick btn-time" onclick="setQuickTime('pickup', 0)">⚡ 即刻取貨</button>
-          <button type="button" class="btn-quick btn-time" onclick="setQuickTime('pickup', 30)">+30 分鐘後</button>
-          <button type="button" class="btn-quick btn-time" onclick="setQuickTime('pickup', 60)">+1 小時後</button>
-          <button type="button" class="btn-quick btn-time" onclick="setCustomPickup('今日 17:00 前')">今日下班前</button>
-        </div>
-
-        <div class="form-grid-2">
-          <div class="form-group">
-            <label>詳細地址 (將自動帶出導航)</label>
-            <input type="text" id="originAddress" placeholder="新竹市東區力行六路X號">
-          </div>
-          <div class="form-group">
-            <label>現場窗口姓名與電話</label>
-            <input type="text" id="originContact" placeholder="張工程師 0912-345678 #21">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>進廠換證／無塵特殊須知</label>
-          <input type="text" id="originNotice" placeholder="例: 需穿反光背心安全帽、備身分證換證、預報車牌">
-        </div>
-
-        <hr style="border:0; border-top:1px dashed var(--border); margin: 16px 0;">
-
-        <!-- 終點資訊 -->
-        <div class="section-tag tag-dest">🎯 終點｜送達地</div>
-        <div class="form-grid-3">
-          <div class="form-group">
-            <label>送達廠區 / 公司名稱 *</label>
-            <input type="text" id="destName" required placeholder="例: 日月光中壢廠">
-          </div>
-          <div class="form-group">
-            <label>收料庫房 / 碼頭</label>
-            <input type="text" id="destDock" placeholder="例: 晶圓物料一課庫房">
-          </div>
-          <div class="form-group">
-            <label>最晚送達期限 (產線承諾) *</label>
-            <input type="text" id="dropoffDeadline" required placeholder="例: 17:00 前切斷料">
-          </div>
-        </div>
-
-        <!-- 送達期限快速鍵 -->
-        <div class="quick-group" style="margin-top:-6px; margin-bottom:12px;">
-          <span style="font-size:0.75rem; color:#64748b; line-height:24px;">送達快選：</span>
-          <button type="button" class="btn-quick btn-time" onclick="setQuickTime('dropoff', 60)">+1 小時內送達</button>
-          <button type="button" class="btn-quick btn-time" onclick="setQuickTime('dropoff', 120)">+2 小時內送達</button>
-          <button type="button" class="btn-quick btn-time" onclick="setQuickTime('dropoff', 180)">+3 小時內送達</button>
-        </div>
-
-        <div class="form-grid-2">
-          <div class="form-group">
-            <label>詳細地址</label>
-            <input type="text" id="destAddress" placeholder="桃園市中壢區中華路二段X號">
-          </div>
-          <div class="form-group">
-            <label>驗收窗口姓名與電話</label>
-            <input type="text" id="destContact" placeholder="李課長 0988-123456">
-          </div>
-        </div>
-
-        <hr style="border:0; border-top:1px dashed var(--border); margin: 16px 0;">
-
-        <!-- 規格與司機指派 -->
-        <div class="section-tag tag-spec">🔒 晶片高規運送條件與防護</div>
-        <div class="form-grid-3">
-          <div class="form-group">
-            <label>貨物類型與件數 *</label>
-            <input type="text" id="cargoType" required placeholder="例: 晶圓盒(FOUP) x 2箱">
-          </div>
-          <div class="form-group">
-            <label>溫控條件</label>
-            <select id="tempControl">
-              <option value="恆溫 (20~25°C)">恆溫 (20~25°C)</option>
-              <option value="常溫專車">常溫專車</option>
-              <option value="冷藏 (2~8°C)">冷藏 (2~8°C)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>車體規格要求</label>
-            <select id="truckSpec">
-              <option value="氣壓避震專車 (標準防震)">氣壓避震專車 (標準防震)</option>
-              <option value="專車直達 (禁止併貨)">專車直達 (禁止併貨)</option>
-              <option value="一般箱型貨車">一般箱型貨車</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-grid-2">
-          <div class="form-group">
-            <label>指派本趟執行司機 *</label>
-            <select id="assignedDriver" required>
-              <option value="">-- 請選擇指派司機 --</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>保全封條編號 (Seal No.)</label>
-            <input type="text" id="sealNo" placeholder="例: SL-889021">
-          </div>
-        </div>
-
-        <button type="submit" class="btn-primary" style="margin-top:10px;">
-          📋 建立派單並生成 LINE 訊息
-        </button>
-      </form>
-    </div>
-
-    <!-- 右側操作與司機監控 -->
-    <div>
-      <!-- LINE 派單輸出預覽 -->
+      <!-- 快速點選區：點第 1 下選起點，點第 2 下選終點 -->
       <div class="card">
         <div class="card-title">
-          <span>📱 一對一 LINE 派單預覽</span>
-          <span id="targetDriverBadge" style="font-size:0.75rem; color:var(--primary); font-weight:normal;">尚未開單</span>
+          <span>⚡ 廠區點擊流（直覺連點）</span>
+          <button type="button" class="btn-quick" onclick="resetClickStep()">重設點選狀態</button>
         </div>
-        <div id="linePreview" class="preview-box">【開單後標準派工文字將自動在此生成】</div>
-        <div style="display:flex; gap:8px;">
-          <button type="button" class="btn-primary" style="background:#06c755;" onclick="triggerLineShare()">
-            💬 喚起 LINE 私傳司機
-          </button>
-          <button type="button" class="btn-quick" style="flex:1;" onclick="copyLineText()">
-            📋 複製文字
-          </button>
+        
+        <div class="flow-indicator" id="flowStatus">
+          <span>當前點選模式：</span>
+          <span class="flow-step-active" id="currentStepText">👉 請點擊【起點／取貨廠區】</span>
         </div>
-      </div>
 
-      <!-- 司機車隊即時狀態 -->
-      <div class="card">
-        <div class="card-title">
-          <span>🚚 司機車隊狀態 (<span id="driverCount">0</span>)</span>
+        <div class="factory-grid" id="factoryButtons">
+          <!-- 廠區按鈕將由 JS 自動生成 -->
         </div>
-        <div id="driverListContainer" style="max-height: 480px; overflow-y: auto;"></div>
-      </div>
-    </div>
-  </div>
 
-  <script>
-    // 司機名冊預設資料
-    let drivers = [
-      { id: 1, name: "陳建銘", phone: "0912-111222", plate: "KJA-5821", status: "free", loc: "新竹待命" },
-      { id: 2, name: "林志豪", phone: "0922-333444", plate: "RFB-7712", status: "free", loc: "竹南待命" },
-      { id: 3, name: "王國華", phone: "0933-555666", plate: "BQD-9018", status: "busy", loc: "運送中 (往中科)" },
-      { id: 4, name: "張家榮", phone: "0944-777888", plate: "KPA-1102", status: "free", loc: "林口待命" },
-      { id: 5, name: "黃俊傑", phone: "0955-999000", plate: "TDA-3391", status: "free", loc: "南科待命" },
-      { id: 6, name: "劉冠宇", phone: "0966-123789", plate: "EAG-5503", status: "busy", loc: "運送中 (往竹科)" },
-      { id: 7, name: "許峰銘", phone: "0977-456123", plate: "RAC-6682", status: "free", loc: "中壢待命" },
-      { id: 8, name: "蔡宗翰", phone: "0988-789456", plate: "KJA-9923", status: "free", loc: "台中待命" }
-    ];
-
-    // 初始化渲染
-    function init() {
-      renderDriverSelect();
-      renderDriverList();
-    }
-
-    function renderDriverSelect() {
-      const select = document.getElementById('assignedDriver');
-      select.innerHTML = '<option value="">-- 請選擇指派司機 --</option>';
-      drivers.forEach(d => {
-        const opt = document.createElement('option');
-        opt.value = d.id;
-        opt.textContent = `【${d.name}】 車牌: ${d.plate} ｜ ${d.loc}`;
-        select.appendChild(opt);
-      });
-    }
-
-    function renderDriverList() {
-      const container = document.getElementById('driverListContainer');
-      document.getElementById('driverCount').textContent = drivers.length;
-      container.innerHTML = '';
-      drivers.forEach(d => {
-        const item = document.createElement('div');
-        item.className = 'driver-item';
-        item.onclick = () => {
-          document.getElementById('assignedDriver').value = d.id;
-        };
-        item.innerHTML = `
-          <div>
-            <span class="status-dot status-${d.status}"></span>
-            <strong>${d.name}</strong> <span style="color:#64748b; font-size:0.75rem;">${d.plate}</span>
-            <div style="font-size:0.75rem; color:#475569; margin-left:12px;">${d.loc}</div>
-          </div>
-          <a href="tel:${d.phone}" style="font-size:0.75rem; color:var(--primary); text-decoration:none;" onclick="event.stopPropagation();">📞 撥打</a>
-        `;
-        container.appendChild(item);
-      });
-    }
-
-    // ⚡ 路線套裝預設
-    const PRESETS = {
-      TSMC_ASE: {
-        originName: "台積電竹科二期",
-        originDock: "晶圓十二廠 3號碼頭",
-        originAddress: "新竹市東區力行六路X號",
-        originContact: "張工程師 0912-345678 #21",
-        originNotice: "需備身分證換證、需著反光背心",
-        destName: "日月光中壢廠",
-        destDock: "B棟 晶圓庫房",
-        destAddress: "桃園市中壢區中華路二段X號",
-        destContact: "李課長 0988-123456",
-        cargoType: "晶圓盒(FOUP) x 2箱",
-        tempControl: "恆溫 (20~25°C)",
-        truckSpec: "氣壓避震專車 (標準防震)"
-      },
-      TSMC_FAB18: {
-        originName: "台積電竹科十二廠",
-        originDock: "P8 光罩出貨碼頭",
-        originAddress: "新竹市東區力行六路X號",
-        originContact: "陳課長 0933-221144",
-        originNotice: "高度機密件、需押運登記、全車鉛封",
-        destName: "台積電南科十八廠",
-        destDock: "P1 卸貨碼頭",
-        destAddress: "台南市善化區南科九路X號",
-        destContact: "黃副理 0955-887766",
-        cargoType: "極紫外光罩(EUV Pod) x 1",
-        tempControl: "恆溫 (20~25°C)",
-        truckSpec: "氣壓避震專車 (標準防震)"
-      },
-      UMC_ASML: {
-        originName: "聯電南科十二廠",
-        originDock: "Fab 12A 設備課",
-        originAddress: "台南市新市區南科二路X號",
-        originContact: "林工程師 0922-665544",
-        originNotice: "精密部件返修、需打防晃拉帶",
-        destName: "台灣艾司摩爾 (ASML) 林口廠",
-        destDock: "客戶收貨碼頭",
-        destAddress: "新北市林口區工四路X號",
-        destContact: "ASML Logistics 02-8601xxxx",
-        cargoType: "光學感測模組配件 x 1箱",
-        tempControl: "常溫專車",
-        truckSpec: "氣壓避震專車 (標準防震)"
-      },
-      TSMC_LOCAL: {
-        originName: "台積電竹科二期",
-        originDock: "十二廠",
-        originAddress: "新竹市東區力行六路X號",
-        originContact: "現場調度 0911-000111",
-        originNotice: "園區廠對廠直達",
-        destName: "台積電晶圓八廠",
-        destDock: "一號卸貨口",
-        destAddress: "新竹科學園區創新一路X號",
-        destContact: "收貨碼頭 0922-000222",
-        cargoType: "急件測試晶圓片 x 4盒",
-        tempControl: "常溫專車",
-        truckSpec: "專車直達 (禁止併貨)"
-      }
-    };
-
-    function applyPreset(key) {
-      const p = PRESETS[key];
-      if (!p) return;
-      Object.keys(p).forEach(k => {
-        const el = document.getElementById(k);
-        if (el) el.value = p[k];
-      });
-      // 自動填入合理時間
-      setQuickTime('pickup', 30);
-      setQuickTime('dropoff', 120);
-    }
-
-    // ⏱️ 時間快捷設定
-    function setQuickTime(target, addMinutes) {
-      const now = new Date();
-      now.setMinutes(now.getMinutes() + addMinutes);
-      const hours = String(now.getHours()).padStart(2, '0');
-      const mins = String(now.getMinutes()).padStart(2, '0');
-      const formatted = `${hours}:${mins}`;
-
-      if (target === 'pickup') {
-        document.getElementById('pickupTime').value = addMinutes === 0 ? `${formatted} (即刻取貨)` : `${formatted} 準時`;
-      } else {
-        document.getElementById('dropoffDeadline').value = `${formatted} 前務必送達`;
-      }
-    }
-    function setCustomPickup(text) {
-      document.getElementById('pickupTime').value = text;
-    }
-
-    // ✨ 通話快記 AI 關鍵字萃取引擎
-    function runAiExtract() {
-      const text = document.getElementById('callScratchpad').value.trim();
-      if (!text) {
-        alert("請先在快記框中輸入關鍵字或通話內容！");
-        return;
-      }
-
-      // 起點比對
-      if (/竹科|台積電竹科|力行/i.test(text)) {
-        document.getElementById('originName').value = "台積電竹科二期";
-        document.getElementById('originAddress').value = "新竹市東區力行六路X號";
-      } else if (/中科|十五廠/i.test(text)) {
-        document.getElementById('originName').value = "台積電中科十五廠";
-        document.getElementById('originAddress').value = "台中市大雅區科雅六路X號";
-      } else if (/南科|十八廠/i.test(text)) {
-        document.getElementById('originName').value = "台積電南科十八廠";
-        document.getElementById('originAddress').value = "台南市善化區南科九路X號";
-      }
-
-      // 終點比對
-      if (/日月光|中壢/i.test(text)) {
-        document.getElementById('destName').value = "日月光中壢廠";
-        document.getElementById('destAddress').value = "桃園市中壢區中華路二段X號";
-      } else if (/艾司摩爾|ASML|林口/i.test(text)) {
-        document.getElementById('destName').value = "艾司摩爾林口廠";
-        document.getElementById('destAddress').value = "新北市林口區工四路X號";
-      }
-
-      // 貨品比對
-      if (/FOUP|晶圓盒|晶圓/i.test(text)) {
-        document.getElementById('cargoType').value = "晶圓盒(FOUP) x 2箱";
-      } else if (/光罩|POD/i.test(text)) {
-        document.getElementById('cargoType').value = "光罩盒(Pod) x 1";
-      }
-
-      // 溫控與車況
-      if (/恆溫|溫控|20度|22度/i.test(text)) {
-        document.getElementById('tempControl').value = "恆溫 (20~25°C)";
-      }
-      if (/避震|氣壓/i.test(text)) {
-        document.getElementById('truckSpec').value = "氣壓避震專車 (標準防震)";
-      }
-
-      // 電話號碼擷取 (09xx-xxx-xxx 或 09xxxxxxxx)
-      const phoneMatch = text.match(/09\d{2}-?\d{3}-?\d{3}/);
-      if (phoneMatch) {
-        document.getElementById('destContact').value = `窗口 ${phoneMatch[0]}`;
-      }
-
-      // 預設時間帶入
-      if (!document.getElementById('pickupTime').value) setQuickTime('pickup', 30);
-      if (!document.getElementById('dropoffDeadline').value) setQuickTime('dropoff', 120);
-
-      alert("✨ AI 已從通話筆記中自動辨識並填妥表單！請檢視核對。");
-    }
-
-    // 建立派單與 LINE 文字生成
-    let currentGeneratedText = "";
-    function handleCreateDispatch() {
-      const driverId = document.getElementById('assignedDriver').value;
-      const driver = drivers.find(d => d.id == driverId);
-      if (!driver) { alert("請選擇指派司機"); return; }
-
-      const oName = document.getElementById('originName').value;
-      const oDock = document.getElementById('originDock').value;
-      const oAddr = document.getElementById('originAddress').value;
-      const pTime = document.getElementById('pickupTime').value;
-      const oContact = document.getElementById('originContact').value;
-      const oNotice = document.getElementById('originNotice').value;
-
-      const dName = document.getElementById('destName').value;
-      const dDock = document.getElementById('destDock').value;
-      const dAddr = document.getElementById('destAddress').value;
-      const dDead = document.getElementById('dropoffDeadline').value;
-      const dContact = document.getElementById('destContact').value;
-
-      const cargo = document.getElementById('cargoType').value;
-      const temp = document.getElementById('tempControl').value;
-      const spec = document.getElementById('truckSpec').value;
-      const seal = document.getElementById('sealNo').value;
-
-      const orderNo = "EXP-" + new Date().toISOString().slice(0,10).replace(/-/g,'') + "-" + Math.floor(100 + Math.random()*900);
-
-      const oNav = oAddr ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(oAddr)}` : "";
-      const dNav = dAddr ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dAddr)}` : "";
-
-      currentGeneratedText = `🚨【急件專車派工單】#${orderNo}
-👤 指定司機：${driver.name} 先生 (${driver.plate})
-──────────────────────
-🟢【起點｜取貨地】
-🏢 廠區：${oName} ${oDock ? `(${oDock})` : ''}
-⏱️ 取貨時間：${pTime}
-📍 地址：${oAddr || '現場確認'}
-${oNav ? `🗺️ 導航：${oNav}\n` : ''}👤 現場窗口：${oContact || '無'}
-⚠️ 進廠須知：${oNotice || '標準換證規章'}
-──────────────────────
-🎯【終點｜送達地】
-🏢 卸貨廠區：${dName} ${dDock ? `(${dDock})` : ''}
-⏱️ 送達期限：${dDead}
-📍 地址：${dAddr || '現場確認'}
-${dNav ? `🗺️ 導航：${dNav}\n` : ''}👤 驗收窗口：${dContact || '無'}
-──────────────────────
-🔒【貨況要求】
-📦 貨品品名：${cargo}
-🌡️ 溫控條件：${temp}
-🛡️ 車輛規格：${spec}
-${seal ? `🔐 封條編號：${seal}\n` : ''}──────────────────────
-收到請回覆「確認接單」並依時前往！`;
-
-      document.getElementById('linePreview').textContent = currentGeneratedText;
-      document.getElementById('targetDriverBadge').textContent = `指派：${driver.name} (${driver.phone})`;
-    }
-
-    function triggerLineShare() {
-      if (!currentGeneratedText) { alert("請先建立派單！"); return; }
-      window.location.href = "https://line.me/R/msg/text/?" + encodeURIComponent(currentGeneratedText);
-    }
-
-    function copyLineText() {
-      if (!currentGeneratedText) { alert("請先建立派單！"); return; }
-      navigator.clipboard.writeText(currentGeneratedText).then(() => alert("已複製派工文字！可以直接貼給司機。"));
-    }
-
-    function resetForm() {
-      document.getElementById('dispatchForm').reset();
-      document.getElementById('callScratchpad').value = "";
-    }
-
-    // 鍵盤快速監聽 (Ctrl + Enter 開單)
-    document.addEventListener('keydown', function(e) {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-        e.preventDefault();
-        handleCreateDispatch();
-      }
-    });
-
-    window.onload = init;
-  </script>
-</body>
-</html>
+        <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+          <span style="font-size:0.75rem; color:#64748b; font-weight:600;">快速時間：</span>
+          <button type
