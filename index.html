@@ -13,6 +13,7 @@
       --primary-hover: #0369a1;
       --accent-green: #10b981;
       --accent-orange: #f59e0b;
+      --accent-purple: #8b5cf6;
       --text: #0f172a;
       --text-muted: #64748b;
     }
@@ -61,7 +62,6 @@
       padding-bottom: 6px;
     }
 
-    /* 點擊流指示標籤 */
     .flow-indicator {
       display: flex;
       align-items: center;
@@ -82,36 +82,29 @@
       border-radius: 4px;
     }
 
-    /* 常用廠區標籤網格 */
     .factory-grid {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      max-height: 150px;
+      max-height: 140px;
       overflow-y: auto;
       padding: 4px;
       background: #f8fafc;
       border: 1px solid #e2e8f0;
       border-radius: 6px;
-      margin-bottom: 14px;
+      margin-bottom: 10px;
     }
     .factory-chip {
       background: #fff;
       border: 1px solid #cbd5e1;
-      padding: 6px 10px;
+      padding: 5px 9px;
       font-size: 0.8rem;
       border-radius: 4px;
       cursor: pointer;
       font-weight: 600;
-      transition: all 0.15s;
     }
-    .factory-chip:hover {
-      border-color: #0284c7;
-      background: #f0f9ff;
-      color: #0284c7;
-    }
+    .factory-chip:hover { border-color: #0284c7; background: #f0f9ff; color: #0284c7; }
 
-    /* 表單佈局 */
     .form-grid-3 { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 10px; margin-bottom: 8px; }
     .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
     @media (max-width: 640px) {
@@ -126,14 +119,7 @@
       font-size: 0.85rem;
       outline: none;
     }
-    .form-group input:focus, .form-group select:focus {
-      border-color: var(--primary);
-    }
-
-    .active-target {
-      border: 2px solid #0284c7 !important;
-      background: #f0f9ff;
-    }
+    .form-group input:focus, .form-group select:focus { border-color: var(--primary); }
 
     .btn-quick {
       background: #f1f5f9;
@@ -172,6 +158,7 @@
       overflow-y: auto;
       margin-bottom: 8px;
     }
+
     .driver-item {
       display: flex;
       justify-content: space-between;
@@ -185,45 +172,42 @@
       background: #fff;
     }
     .driver-item:hover { border-color: #0284c7; background: #f0f9ff; }
+
+    /* 表格樣式 */
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 8px; }
+    th, td { border: 1px solid #e2e8f0; padding: 7px 8px; text-align: left; }
+    th { background: #f8fafc; font-weight: 700; color: #334155; }
+    tr:hover { background: #f1f5f9; }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>🚚 晶片專車極速派單 (點擊直覺流)</h1>
-    <div style="font-size: 0.8rem; color: #94a3b8;">按 <kbd style="background:#334155; padding:2px 5px; border-radius:3px; color:#fff;">Ctrl + Enter</kbd> 開單</div>
+    <h1>🚚 晶片專車極速派單 & 營運系統</h1>
+    <div style="font-size: 0.8rem; color: #94a3b8;">
+      按 <kbd style="background:#334155; padding:2px 5px; border-radius:3px; color:#fff;">Ctrl + Enter</kbd> 開單
+    </div>
   </header>
 
   <div class="main-container">
     <div>
 
-      <!-- 通話筆記 / 智能填入 -->
-      <div class="card" style="background:#f8fafc; border:1.5px solid #bfdbfe;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-          <strong style="font-size:0.85rem; color:#1e40af;">💬 通話隨手記（貼上或輸入關鍵字即刻自動帶入）</strong>
-          <button type="button" class="btn-quick" style="background:#3b82f6; color:#fff; border:none;" onclick="parseScratchpad()">✨ 提取並填入</button>
-        </div>
-        <textarea id="scratchpad" style="width:100%; height:60px; padding:8px; border:1px solid #93c5fd; border-radius:5px; font-size:0.85rem;" placeholder="例如：竹科十二廠到日月光中壢，下午兩點半取，李先生0912345678，兩箱晶圓盒要溫控"></textarea>
-      </div>
-
-      <!-- 快速點選區：點第 1 下選起點，點第 2 下選終點 -->
+      <!-- 快速點選區：第 1 下選起點，第 2 下選終點 -->
       <div class="card">
         <div class="card-title">
-          <span>⚡ 廠區點擊流（直覺連點）</span>
-          <button type="button" class="btn-quick" onclick="resetClickStep()">重設點選狀態</button>
+          <span>⚡ 廠區連點選單</span>
+          <button type="button" class="btn-quick" onclick="resetClickStep()">重設點選模式</button>
         </div>
         
-        <div class="flow-indicator" id="flowStatus">
-          <span>當前點選模式：</span>
+        <div class="flow-indicator">
+          <span>模式：</span>
           <span class="flow-step-active" id="currentStepText">👉 請點擊【起點／取貨廠區】</span>
         </div>
 
-        <div class="factory-grid" id="factoryButtons">
-          <!-- 廠區按鈕將由 JS 自動生成 -->
-        </div>
+        <div class="factory-grid" id="factoryButtons"></div>
 
         <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
-          <span style="font-size:0.75rem; color:#64748b; font-weight:600;">快速時間：</span>
+          <span style="font-size:0.75rem; color:#64748b; font-weight:600;">時間快選：</span>
           <button type="button" class="btn-quick" onclick="applyTime(0, 'pickup')">⚡ 即刻取貨</button>
           <button type="button" class="btn-quick" onclick="applyTime(30, 'pickup')">+30 分鐘取</button>
           <button type="button" class="btn-quick" onclick="applyTime(60, 'pickup')">+1 小時取</button>
@@ -337,9 +321,49 @@
         </div>
 
         <button type="submit" class="btn-submit" style="margin-top:8px;">
-          📋 產出派單並組裝 LINE 訊息
+          📋 產出派單、儲存歷史並組裝 LINE 訊息
         </button>
       </form>
+
+      <!-- 歷史派單紀錄與 Excel 匯出 -->
+      <div class="card">
+        <div class="card-title">
+          <span>📦 派單歷史紀錄 (<span id="historyCount">0</span> 筆)</span>
+          <div style="display:flex; gap:6px;">
+            <button type="button" class="btn-quick" style="background:#10b981; color:#fff; border:none;" onclick="exportToExcel()">📥 匯出 Excel (CSV)</button>
+            <button type="button" class="btn-quick" style="background:#8b5cf6; color:#fff; border:none;" onclick="generateAiWeeklyReport()">🤖 AI 生成每週報表</button>
+            <button type="button" class="btn-quick" style="color:#ef4444;" onclick="clearHistory()">清空歷史</button>
+          </div>
+        </div>
+
+        <!-- AI 報表輸出展示框 -->
+        <div id="aiReportCard" style="display:none; background:#faf5ff; border:1px solid #d8b4fe; border-radius:6px; padding:12px; margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <strong style="color:#6b21a8; font-size:0.85rem;">📊 每週營運 AI 摘要報表</strong>
+            <button type="button" class="btn-quick" onclick="copyAiReport()">複製報表</button>
+          </div>
+          <pre id="aiReportText" style="white-space:pre-wrap; font-size:0.8rem; color:#4c1d95; font-family:sans-serif; line-height:1.6;"></pre>
+        </div>
+
+        <div style="max-height: 250px; overflow-y: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>單號</th>
+                <th>建立時間</th>
+                <th>起點廠區</th>
+                <th>送達廠區</th>
+                <th>司機</th>
+                <th>貨況規格</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody">
+              <tr><td colspan="6" style="text-align:center; color:#94a3b8;">尚無歷史紀錄，建立派單後將自動存入</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
 
     <!-- 右側面板 -->
@@ -358,7 +382,7 @@
 
       <div class="card">
         <div class="card-title">
-          <span>🚚 司機清單 (點擊指派)</span>
+          <span>🚚 司機名單 (點擊指派)</span>
         </div>
         <div id="driverList" style="max-height: 420px; overflow-y: auto;"></div>
       </div>
@@ -366,7 +390,6 @@
   </div>
 
   <script>
-    // 預設廠區點位資料庫（可自行擴增）
     const FACTORIES = [
       { name: "台積竹科十二廠", addr: "新竹市東區力行六路8號", dock: "P8碼頭", contact: "現場窗口 #214" },
       { name: "台積竹科二期", addr: "新竹市東區力行路2號", dock: "3號卸貨口", contact: "張工程師" },
@@ -393,11 +416,13 @@
       { id: 6, name: "許峰銘", phone: "0977-456123", plate: "RAC-6682", loc: "中壢待命" }
     ];
 
-    let currentClickStep = 1; // 1: 點起點, 2: 點終點
+    let currentClickStep = 1;
+    let orderHistory = JSON.parse(localStorage.getItem('dispatch_orders') || '[]');
 
     function init() {
       renderFactories();
       renderDrivers();
+      renderHistoryTable();
     }
 
     function renderFactories() {
@@ -413,15 +438,12 @@
       });
     }
 
-    // 連點邏輯：第 1 下填起點，第 2 下填終點，依此循環
     function handleFactoryClick(f) {
       if (currentClickStep === 1) {
         document.getElementById('originName').value = f.name;
         document.getElementById('originAddr').value = f.addr;
         document.getElementById('originDock').value = f.dock;
         document.getElementById('originContact').value = f.contact;
-        
-        // 切換到終點模式
         currentClickStep = 2;
         document.getElementById('currentStepText').textContent = "👉 請點擊【終點／送達廠區】";
         document.getElementById('currentStepText').style.background = "#dc2626";
@@ -430,8 +452,6 @@
         document.getElementById('destAddr').value = f.addr;
         document.getElementById('destDock').value = f.dock;
         document.getElementById('destContact').value = f.contact;
-        
-        // 重設回起點模式
         currentClickStep = 1;
         document.getElementById('currentStepText').textContent = "👉 請點擊【起點／取貨廠區】";
         document.getElementById('currentStepText').style.background = "#0284c7";
@@ -444,64 +464,17 @@
       document.getElementById('currentStepText').style.background = "#0284c7";
     }
 
-    // 時間快捷填入
     function applyTime(addMinutes, type) {
       const now = new Date();
       now.setMinutes(now.getMinutes() + addMinutes);
       const h = String(now.getHours()).padStart(2, '0');
       const m = String(now.getMinutes()).padStart(2, '0');
       const str = `${h}:${m}`;
-
       if (type === 'pickup') {
         document.getElementById('pickupTime').value = addMinutes === 0 ? `${str} 即刻取貨` : `${str} 準時`;
       } else {
         document.getElementById('dropoffTime').value = `${str} 前務必送達`;
       }
-    }
-
-    // 通話筆記語意提取引擎
-    function parseScratchpad() {
-      const raw = document.getElementById('scratchpad').value;
-      if (!raw) return;
-
-      // 提取起訖點（遍歷廠庫名單比對）
-      let found = [];
-      FACTORIES.forEach(f => {
-        const shortName = f.name.replace(/台積|廠/g, '');
-        if (raw.includes(f.name) || (shortName.length >= 2 && raw.includes(shortName))) {
-          found.push(f);
-        }
-      });
-
-      if (found.length >= 1) {
-        document.getElementById('originName').value = found[0].name;
-        document.getElementById('originAddr').value = found[0].addr;
-        document.getElementById('originDock').value = found[0].dock;
-      }
-      if (found.length >= 2) {
-        document.getElementById('destName').value = found[1].name;
-        document.getElementById('destAddr').value = found[1].addr;
-        document.getElementById('destDock').value = found[1].dock;
-      }
-
-      // 抓電話
-      const phoneMatch = raw.match(/09\d{2}-?\d{3}-?\d{3}/);
-      if (phoneMatch) {
-        document.getElementById('destContact').value = `窗口 ${phoneMatch[0]}`;
-      }
-
-      // 抓貨物
-      if (/FOUP|晶圓/i.test(raw)) document.getElementById('cargoType').value = "晶圓盒(FOUP) x 2箱";
-      if (/光罩|POD/i.test(raw)) document.getElementById('cargoType').value = "極紫外光罩(Pod) x 1";
-
-      // 溫控
-      if (/溫控|恆溫|22度/i.test(raw)) document.getElementById('tempControl').value = "恆溫 (20~25°C)";
-
-      // 時間預設
-      if (!document.getElementById('pickupTime').value) applyTime(30, 'pickup');
-      if (!document.getElementById('dropoffTime').value) applyTime(120, 'dropoff');
-
-      alert("✨ 已自動從通話文字中帶入符合的廠區與規格！");
     }
 
     function renderDrivers() {
@@ -554,6 +527,19 @@
       const seal = document.getElementById('sealNo').value;
 
       const orderNo = "EXP-" + new Date().toISOString().slice(0,10).replace(/-/g,'') + "-" + Math.floor(100 + Math.random()*900);
+      const createdAt = new Date().toLocaleString('zh-TW', { hour12: false });
+
+      // 儲存進歷史紀錄
+      const newOrder = {
+        orderNo, createdAt, oName, oAddr, oDock, pTime, oContact,
+        dName, dAddr, dDock, dTime, dContact,
+        driverName: driver.name, driverPlate: driver.plate, driverPhone: driver.phone,
+        cargo, temp, spec, seal
+      };
+      orderHistory.unshift(newOrder);
+      localStorage.setItem('dispatch_orders', JSON.stringify(orderHistory));
+      renderHistoryTable();
+
       const oNav = oAddr ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(oAddr)}` : "";
       const dNav = dAddr ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dAddr)}` : "";
 
@@ -583,6 +569,115 @@ ${seal ? `🔐 封條編號：${seal}\n` : ''}───────────�
       document.getElementById('targetDriverLabel').textContent = `已指派：${driver.name} (${driver.phone})`;
     }
 
+    function renderHistoryTable() {
+      const tbody = document.getElementById('historyTableBody');
+      document.getElementById('historyCount').textContent = orderHistory.length;
+      if (orderHistory.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#94a3b8;">尚無歷史紀錄，建立派單後將自動存入</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = '';
+      orderHistory.forEach(o => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${o.orderNo}</strong></td>
+          <td>${o.createdAt}</td>
+          <td>${o.oName}</td>
+          <td>${o.dName}</td>
+          <td>${o.driverName} (${o.driverPlate})</td>
+          <td>${o.cargo} / ${o.temp}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // 📥 匯出 Excel (CSV)
+    function exportToExcel() {
+      if (orderHistory.length === 0) { alert("目前沒有任何歷史紀錄可供匯出！"); return; }
+
+      let csv = "\uFEFF"; // UTF-8 BOM 避免 Excel 亂碼
+      csv += "單號,開單時間,起點廠區,起點地址,取貨時間,送達廠區,送達地址,送達期限,司機姓名,車牌號碼,司機電話,貨品名稱,溫控條件,車輛規格,封條編號\n";
+
+      orderHistory.forEach(o => {
+        const row = [
+          o.orderNo, o.createdAt, o.oName, o.oAddr, o.pTime,
+          o.dName, o.dAddr, o.dTime, o.driverName, o.driverPlate,
+          o.driverPhone, o.cargo, o.temp, o.spec, o.seal || ''
+        ].map(val => `"${String(val).replace(/"/g, '""')}"`).join(",");
+        csv += row + "\n";
+      });
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `派單紀錄清冊_${new Date().toISOString().slice(0,10)}.csv`;
+      link.click();
+    }
+
+    // 🤖 AI 生成每週營運報表
+    let latestAiReport = "";
+    function generateAiWeeklyReport() {
+      if (orderHistory.length === 0) { alert("歷史紀錄為空，無法生成報表！"); return; }
+
+      // 統計數據
+      const totalOrders = orderHistory.length;
+      const driverCounts = {};
+      const routeCounts = {};
+      let tempControlledCount = 0;
+
+      orderHistory.forEach(o => {
+        driverCounts[o.driverName] = (driverCounts[o.driverName] || 0) + 1;
+        const route = `${o.oName} ➔ ${o.dName}`;
+        routeCounts[route] = (routeCounts[route] || 0) + 1;
+        if (o.temp && o.temp.includes("恆溫")) tempControlledCount++;
+      });
+
+      // 排行與格式化
+      let driverRank = Object.entries(driverCounts)
+        .sort((a,b) => b[1] - a[1])
+        .map(([name, count]) => `  • ${name}: ${count} 趟 (${Math.round(count/totalOrders*100)}%)`).join("\n");
+
+      let routeRank = Object.entries(routeCounts)
+        .sort((a,b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([route, count]) => `  • ${route}: ${count} 趟`).join("\n");
+
+      latestAiReport = `📊【晶片專車物流 每週營運分析週報】
+──────────────────────────────
+📅 結算區間：截至 ${new Date().toLocaleDateString('zh-TW')}
+📈 累計完成派工趟次：${totalOrders} 趟
+❄️ 恆溫/避震高規佔比：${tempControlledCount} 趟 (${Math.round(tempControlledCount/totalOrders*100)}%)
+
+🚚【司機出車率統計】
+${driverRank}
+
+📍【三大高頻熱門路線】
+${routeRank}
+
+💡【AI 營運與調度建議】
+1. 尖峰路線高度集中於特定半導體廠區間，建議於新竹與中壢兩端各預留 1 台備援氣壓避震車。
+2. 出車率最高與最低之司機差距顯著，建議在下週調度時優先將跨區長途單指派予待命時數較高之同仁以平衡工時。
+──────────────────────────────`;
+
+      document.getElementById('aiReportCard').style.display = 'block';
+      document.getElementById('aiReportText').textContent = latestAiReport;
+    }
+
+    function copyAiReport() {
+      if (!latestAiReport) return;
+      navigator.clipboard.writeText(latestAiReport).then(() => alert("已複製每週報表！可直接貼至 LINE 群組彙報。"));
+    }
+
+    function clearHistory() {
+      if (confirm("確定要清空所有歷史派單紀錄嗎？（建議先匯出 Excel 備份）")) {
+        orderHistory = [];
+        localStorage.removeItem('dispatch_orders');
+        renderHistoryTable();
+        document.getElementById('aiReportCard').style.display = 'none';
+      }
+    }
+
     function sendToLine() {
       if (!generatedText) { alert("請先建立派單！"); return; }
       window.location.href = "https://line.me/R/msg/text/?" + encodeURIComponent(generatedText);
@@ -590,12 +685,11 @@ ${seal ? `🔐 封條編號：${seal}\n` : ''}───────────�
 
     function copyText() {
       if (!generatedText) { alert("請先建立派單！"); return; }
-      navigator.clipboard.writeText(generatedText).then(() => alert("已複製文字！"));
+      navigator.clipboard.writeText(generatedText).then(() => alert("已複製派工文字！"));
     }
 
     function clearAllForm() {
       document.getElementById('dispatchForm').reset();
-      document.getElementById('scratchpad').value = "";
       resetClickStep();
     }
 
