@@ -200,7 +200,7 @@
   <div class="main-container">
     <div>
 
-      <!-- 1. 通話快記大文字框（保留原汁原味） -->
+      <!-- 1. 通話快記大文字框 -->
       <div class="scratchpad-box">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
           <strong style="color:#1e40af; font-size:0.85rem;">💬 通話隨手記（通話中隨手敲，點擊自動提取關鍵字）</strong>
@@ -221,7 +221,9 @@
           <span class="flow-step-active" id="currentStepText">👉 請點擊【起點／取貨廠區】</span>
         </div>
 
-        <div class="factory-grid" id="factoryButtons"></div>
+        <div class="factory-grid" id="factoryButtons">
+          <div style="color:#64748b; font-size:0.8rem; padding:4px;">🔄 正在從 Google 試算表連線同步廠區...</div>
+        </div>
       </div>
 
       <!-- 3. 表單細節確認 -->
@@ -234,7 +236,6 @@
         <!-- 起點 -->
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
           <span style="font-size:0.8rem; font-weight:700; color:#065f46;">🟢 取貨起點</span>
-          <!-- 取貨時間微調快捷（預設即為現在） -->
           <div style="display:flex; gap:4px; align-items:center;">
             <span style="font-size:0.75rem; color:#64748b;">取貨：</span>
             <button type="button" class="btn-quick" onclick="setPickupOffset(0)">⚡ 現在 (即刻)</button>
@@ -273,7 +274,6 @@
         <!-- 終點 -->
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
           <span style="font-size:0.8rem; font-weight:700; color:#991b1b;">🎯 送達終點</span>
-          <!-- 送達時間預估快捷 -->
           <div style="display:flex; gap:4px; align-items:center;">
             <span style="font-size:0.75rem; color:#64748b;">車程預估：</span>
             <button type="button" class="btn-quick" onclick="setDropoffOffset(60)">+1 小時 (短程)</button>
@@ -409,50 +409,74 @@
         <div class="card-title">
           <span>🚚 司機名單 (點擊指派)</span>
         </div>
-        <div id="driverList" style="max-height: 420px; overflow-y: auto;"></div>
+        <div id="driverList" style="max-height: 420px; overflow-y: auto;">
+          <div style="color:#64748b; font-size:0.8rem; padding:4px;">🔄 正在連線同步司機名單...</div>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
-    const FACTORIES = [
-      { name: "台積竹科十二廠", addr: "新竹市東區力行六路8號", dock: "P8碼頭", contact: "現場窗口 #214" },
-      { name: "台積竹科二期", addr: "新竹市東區力行路2號", dock: "3號卸貨口", contact: "張工程師" },
-      { name: "台積晶圓八廠", addr: "新竹市科學園區創新一路25號", dock: "1號碼頭", contact: "物料課" },
-      { name: "台積中科十五廠", addr: "台中市大雅區科雅六路1號", dock: "物流中心碼頭", contact: "收貨課" },
-      { name: "台積南科十八廠", addr: "台南市善化區南科九路16號", dock: "P1卸貨碼頭", contact: "黃副理" },
-      { name: "台積南科十四廠", addr: "台南市新市區南科北路1號", dock: "2號碼頭", contact: "林主任" },
-      { name: "日月光中壢廠", addr: "桃園市中壢區中華路二段550號", dock: "B棟庫房", contact: "李課長" },
-      { name: "日月光高雄廠", addr: "高雄市楠梓加工出口區經三路5號", dock: "K11收貨區", contact: "驗收組" },
-      { name: "聯電南科十二廠", addr: "台南市新市區南科二路18號", dock: "Fab 12A碼頭", contact: "設備課" },
-      { name: "聯電竹科八廠", addr: "新竹科學園區力行二路3號", dock: "出貨碼頭", contact: "調度組" },
-      { name: "艾司摩爾林口", addr: "新北市林口區工四路10號", dock: "客戶收貨碼頭", contact: "ASML Logistics" },
-      { name: "艾司摩爾南科", addr: "台南市新市區南科三路8號", dock: "維修配件碼頭", contact: "客服組" },
-      { name: "力積電銅鑼廠", addr: "苗栗縣銅鑼鄉銅科北路1號", dock: "1號出入口", contact: "收發室" },
-      { name: "世界先進二廠", addr: "新竹市科學園區研發三路1號", dock: "倉儲碼頭", contact: "驗收組" }
-    ];
+    // Google Sheets 公開 CSV 網址
+    const DRIVER_SHEET_URL = "https://docs.google.com/spreadsheets/d/1m4ebHqR9CaCvhOkLL0-tRvAqX9CtNrnwlWLHL2-Puvo/export?format=csv&gid=0";
+    const FACTORY_SHEET_URL = "https://docs.google.com/spreadsheets/d/1pVQsAMe2TY0Di5LGw48URU_j1x1vokBpPIHWxctKOQg/export?format=csv&gid=0";
 
-    let drivers = [
-      { id: 1, name: "陳建銘", phone: "0912-111222", plate: "KJA-5821", loc: "新竹待命" },
-      { id: 2, name: "林志豪", phone: "0922-333444", plate: "RFB-7712", loc: "竹南待命" },
-      { id: 3, name: "王國華", phone: "0933-555666", plate: "BQD-9018", loc: "中科運送中" },
-      { id: 4, name: "張家榮", phone: "0944-777888", plate: "KPA-1102", loc: "林口待命" },
-      { id: 5, name: "黃俊傑", phone: "0955-999000", plate: "TDA-3391", loc: "南科待命" },
-      { id: 6, name: "許峰銘", phone: "0977-456123", plate: "RAC-6682", loc: "中壢待命" }
-    ];
-
+    let FACTORIES = [];
+    let drivers = [];
     let currentClickStep = 1;
     let orderHistory = JSON.parse(localStorage.getItem('dispatch_orders') || '[]');
 
-    // 核心初始化：載入廠區、司機、並「預設填入當下時間」
     function init() {
-      renderFactories();
-      renderDrivers();
+      setDefaultTimes();
       renderHistoryTable();
-      setDefaultTimes(); // 頁面一開，自動設定當前時間！
+      loadGoogleSheets();
     }
 
-    // 💡 時間運算邏輯：抓當前時分，並可加上分鐘偏移
+    // 💡 雲端試算表自動同步函式（強化換行符與欄位支援）
+    async function loadGoogleSheets() {
+      try {
+        // 1. 抓取客戶廠區清冊
+        const fRes = await fetch(FACTORY_SHEET_URL);
+        const fCsv = await fRes.text();
+        const fLines = fCsv.split(/\r?\n/).filter(line => line.trim() !== '');
+        
+        FACTORIES = fLines.slice(1).map(line => {
+          const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"\vert{}"$/g, '').trim());
+          return {
+            name: cols[0] || '未命名廠區',
+            addr: cols[1] || '',
+            dock: cols[2] || '',
+            contact: cols[3] || '',
+            notice: cols[4] || ''
+          };
+        }).filter(f => f.name !== '未命名廠區');
+        renderFactories();
+
+        // 2. 抓取司機清冊
+        const dRes = await fetch(DRIVER_SHEET_URL);
+        const dCsv = await dRes.text();
+        const dLines = dCsv.split(/\r?\n/).filter(line => line.trim() !== '');
+        
+        drivers = dLines.slice(1).map((line, idx) => {
+          const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"\vert{}"$/g, '').trim());
+          return {
+            id: idx + 1,
+            name: cols[0] || '司機',
+            phone: cols[1] || '',
+            plate: cols[2] || '',
+            loc: cols[3] || '待命',
+            status: cols[4] || '待命'
+          };
+        }).filter(d => d.name !== '司機');
+        renderDrivers();
+
+        console.log("✅ 成功從 Google 試算表同步資料！");
+      } catch (error) {
+        console.error("❌ 讀取 Google Sheets 失敗：", error);
+        document.getElementById('factoryButtons').innerHTML = '<div style="color:#ef4444; font-size:0.8rem; padding:4px;">⚠️ 試算表同步失敗，請確認 Google 表格權限已設為「知道連結的人均可檢視」。</div>';
+      }
+    }
+
     function getTimeString(addMinutes = 0) {
       const d = new Date();
       d.setMinutes(d.getMinutes() + addMinutes);
@@ -461,7 +485,6 @@
       return `${hh}:${mm}`;
     }
 
-    // 預設時間：起點為「現在」，終點預設為「2小時後」
     function setDefaultTimes() {
       document.getElementById('pickupTime').value = `${getTimeString(0)} (即刻取貨)`;
       document.getElementById('dropoffTime').value = `${getTimeString(120)} 前送達`;
@@ -478,6 +501,10 @@
     function renderFactories() {
       const container = document.getElementById('factoryButtons');
       container.innerHTML = '';
+      if (FACTORIES.length === 0) {
+        container.innerHTML = '<div style="color:#94a3b8; font-size:0.8rem; padding:4px;">試算表內尚無廠區資料，請至 Google Sheets 新增</div>';
+        return;
+      }
       FACTORIES.forEach(f => {
         const chip = document.createElement('button');
         chip.type = 'button';
@@ -514,7 +541,6 @@
       document.getElementById('currentStepText').style.background = "#0284c7";
     }
 
-    // 隨手記文字提取
     function parseScratchpad() {
       const raw = document.getElementById('scratchpad').value;
       if (!raw) return;
@@ -556,6 +582,11 @@
       sel.innerHTML = '<option value="">-- 請選擇指派司機 --</option>';
       list.innerHTML = '';
 
+      if (drivers.length === 0) {
+        list.innerHTML = '<div style="color:#94a3b8; font-size:0.8rem; padding:4px;">試算表內尚無司機資料，請至 Google Sheets 新增</div>';
+        return;
+      }
+
       drivers.forEach(d => {
         const opt = document.createElement('option');
         opt.value = d.id;
@@ -568,7 +599,7 @@
         item.innerHTML = `
           <div>
             <strong>${d.name}</strong> <span style="color:#64748b; font-size:0.75rem;">${d.plate}</span>
-            <div style="font-size:0.75rem; color:#475569;">${d.loc}</div>
+            <div style="font-size:0.75rem; color:#475569;">${d.loc} ｜ ${d.status}</div>
           </div>
           <span style="font-size:0.75rem; color:#0284c7; font-weight:600;">選擇</span>
         `;
@@ -622,19 +653,10 @@
 🏢 廠區：${oName} ${oDock ? `(${oDock})` : ''}
 ⏱️ 取貨時間：${pTime}
 📍 地址：${oAddr || '現場確認'}
-${oNav ? `🗺️ 導航：${oNav}\n` : ''}👤 現場窗口：${oContact || '無'}
-──────────────────────
-🎯【送達終點】
-🏢 卸貨廠區：${dName} ${dDock ? `(${dDock})` : ''}
+${oNav ? `🗺️ 導航：${oNav}\n` : ''}👤 現場窗口：${oContact \vert{}\vert{} '無'} ────────────────────── 🎯【送達終點】 🏢 卸貨廠區：${dName} ${dDock ? `(${dDock})` : ''}
 ⏱️ 送達期限：${dTime}
 📍 地址：${dAddr || '現場確認'}
-${dNav ? `🗺️ 導航：${dNav}\n` : ''}👤 驗收窗口：${dContact || '無'}
-──────────────────────
-🔒【貨況要求】
-📦 貨品品名：${cargo}
-🌡️ 溫控條件：${temp}
-🛡️ 車輛規格：${spec}
-${seal ? `🔐 封條編號：${seal}\n` : ''}──────────────────────
+${dNav ? `🗺️ 導航：${dNav}\n` : ''}👤 驗收窗口：${dContact \vert{}\vert{} '無'} ────────────────────── 🔒【貨況要求】 📦 貨品品名：${cargo} 🌡️ 溫控條件：${temp} 🛡️ 車輛規格：${spec} ${seal ? `🔐 封條編號：${seal}\n` : ''}──────────────────────
 收到請回覆「確認接單」並依時前往！`;
 
       document.getElementById('previewBox').textContent = generatedText;
@@ -741,44 +763,14 @@ ${routeRank}
       }
     }
 
+    // 💡 修正後的手機/電腦雙向 LINE 喚起函式
     function sendToLine() {
       if (!generatedText) { alert("請先建立派單！"); return; }
-      navigator.clipboard.writeText(generatedText).catch(() => {});
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      window.location.href = "https://line.me/R/msg/text/?" + encodeURIComponent(generatedText);
-      if (isMobile) {
-
-        window.location.href = "https://line.me/R/msg/text/?" + encodeURIComponent(generatedText);
-      } else {
-        const lineUrl = "line://msg/text/" + encodeURIComponent(generatedText);
-        window.open(lineUrl, '_blank');
-        setTimeout(() => {
-          alert("💬 已喚起電腦版 LINE！\n（若電腦未自動帶入文字，派工內容已自動複製，可直接在司機聊天室按 Ctrl + V 貼上）");
-        }, 300);
-      }
-    }
       
-
-    function copyText() {
-      if (!generatedText) { alert("請先建立派單！"); return; }
-      navigator.clipboard.writeText(generatedText).then(() => alert("已複製派工文字！"));
-    }
-
-    function clearAllForm() {
-      document.getElementById('dispatchForm').reset();
-      document.getElementById('scratchpad').value = "";
-      resetClickStep();
-      setDefaultTimes();
-    }
-
-    document.addEventListener('keydown', e => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-        e.preventDefault();
-        submitDispatch();
-      }
-    });
-
-    window.onload = init;
-  </script>
-</body>
-</html>
+      // 自動複製派單內容（雙保險防呆）
+      navigator.clipboard.writeText(generatedText).catch(() => {});
+      
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        // 手機版：跳轉 LINE App
+        window.location.href = "
