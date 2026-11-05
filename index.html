@@ -418,9 +418,10 @@
 
   <script>
     // Google Sheets 公開 CSV 網址
-    const DRIVER_SHEET_URL = "https://docs.google.com/spreadsheets/d/1m4ebHqR9CaCvhOkLL0-tRvAqX9CtNrnwlWLHL2-Puvo/export?format=csv&gid=0";
-    const FACTORY_SHEET_URL = "https://docs.google.com/spreadsheets/d/1pVQsAMe2TY0Di5LGw48URU_j1x1vokBpPIHWxctKOQg/export?format=csv&gid=0";
-
+  // 💡 替換為前端跨網域最穩定的 gviz CSV 格式
+    const DRIVER_SHEET_URL = "https://docs.google.com/spreadsheets/d/1m4ebHqR9CaCvhOkLL0-tRvAqX9CtNrnwlWLHL2-Puvo/gviz/tq?tqx=out:csv&gid=0";
+    const FACTORY_SHEET_URL = "https://docs.google.com/spreadsheets/d/1pVQsAMe2TY0Di5LGw48URU_j1x1vokBpPIHWxctKOQg/gviz/tq?tqx=out:csv&gid=0";
+    
     let FACTORIES = [];
     let drivers = [];
     let currentClickStep = 1;
