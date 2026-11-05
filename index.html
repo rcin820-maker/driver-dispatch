@@ -62,15 +62,6 @@
       padding-bottom: 6px;
     }
 
-    /* 通話快記大文字框 */
-    .scratchpad-box {
-      background: #eff6ff;
-      border: 1.5px solid #bfdbfe;
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 14px;
-    }
-
     .flow-indicator {
       display: flex;
       align-items: center;
@@ -199,15 +190,6 @@
 
   <div class="main-container">
     <div>
-
-      <!-- 1. 通話快記大文字框 -->
-      <div class="scratchpad-box">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-          <strong style="color:#1e40af; font-size:0.85rem;">💬 通話隨手記（通話中隨手敲，點擊自動提取關鍵字）</strong>
-          <button type="button" class="btn-quick" style="background:#0284c7; color:#fff; border:none;" onclick="parseScratchpad()">✨ 提取並填入表單</button>
-        </div>
-        <textarea id="scratchpad" style="width:100%; height:65px; padding:8px; border:1px solid #93c5fd; border-radius:5px; font-size:0.85rem; outline:none;" placeholder="通話中隨手輸入，例如：竹科十二廠送中壢日月光，李先生 0912345678，兩箱晶圓盒要溫控"></textarea>
-      </div>
 
       <!-- 2. 廠區連點選單 -->
       <div class="card">
@@ -541,41 +523,6 @@
       document.getElementById('currentStepText').style.background = "#0284c7";
     }
 
-    function parseScratchpad() {
-      const raw = document.getElementById('scratchpad').value;
-      if (!raw) return;
-
-      let found = [];
-      FACTORIES.forEach(f => {
-        const shortName = f.name.replace(/台積|廠/g, '');
-        if (raw.includes(f.name) || (shortName.length >= 2 && raw.includes(shortName))) {
-          found.push(f);
-        }
-      });
-
-      if (found.length >= 1) {
-        document.getElementById('originName').value = found[0].name;
-        document.getElementById('originAddr').value = found[0].addr;
-        document.getElementById('originDock').value = found[0].dock;
-      }
-      if (found.length >= 2) {
-        document.getElementById('destName').value = found[1].name;
-        document.getElementById('destAddr').value = found[1].addr;
-        document.getElementById('destDock').value = found[1].dock;
-      }
-
-      const phoneMatch = raw.match(/09\d{2}-?\d{3}-?\d{3}/);
-      if (phoneMatch) {
-        document.getElementById('destContact').value = `窗口 ${phoneMatch[0]}`;
-      }
-
-      if (/FOUP|晶圓/i.test(raw)) document.getElementById('cargoType').value = "晶圓盒(FOUP) x 2箱";
-      if (/光罩|POD/i.test(raw)) document.getElementById('cargoType').value = "極紫外光罩(Pod) x 1";
-      if (/溫控|恆溫|22度/i.test(raw)) document.getElementById('tempControl').value = "恆溫 (20~25°C)";
-
-      alert("✨ 已從通話文字中帶入廠區與規格！");
-    }
-
     function renderDrivers() {
       const sel = document.getElementById('driverSelect');
       const list = document.getElementById('driverList');
@@ -643,7 +590,6 @@
       localStorage.setItem('dispatch_orders', JSON.stringify(orderHistory));
       renderHistoryTable();
 
-      const oNav = oAddr ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(oAddr)}` : "";
       const dNav = dAddr ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dAddr)}` : "";
 
       generatedText = `🚨【急件專車派工單】#${orderNo}
@@ -653,7 +599,7 @@
 🏢 廠區：${oName} ${oDock ? `(${oDock})` : ''}
 ⏱️ 取貨時間：${pTime}
 📍 地址：${oAddr || '現場確認'}
-${oNav ? `🗺️ 導航：${oNav}\n` : ''}👤 現場窗口：${oContact || '無'}
+👤 現場窗口：${oContact || '無'}
 ──────────────────────
 🎯【送達終點】
 🏢 卸貨廠區：${dName} ${dDock ? `(${dDock})` : ''}
@@ -794,7 +740,6 @@ ${routeRank}
 
     function clearAllForm() {
       document.getElementById('dispatchForm').reset();
-      document.getElementById('scratchpad').value = "";
       resetClickStep();
       setDefaultTimes();
     }
