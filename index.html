@@ -417,11 +417,10 @@
   </div>
 
   <script>
-    // Google Sheets 公開 CSV 網址
-  // 💡 替換為前端跨網域最穩定的 gviz CSV 格式
+    // 💡 採用瀏覽器最不易擋跨來源的 gviz CSV 格式
     const DRIVER_SHEET_URL = "https://docs.google.com/spreadsheets/d/1m4ebHqR9CaCvhOkLL0-tRvAqX9CtNrnwlWLHL2-Puvo/gviz/tq?tqx=out:csv&gid=0";
     const FACTORY_SHEET_URL = "https://docs.google.com/spreadsheets/d/1pVQsAMe2TY0Di5LGw48URU_j1x1vokBpPIHWxctKOQg/gviz/tq?tqx=out:csv&gid=0";
-    
+
     let FACTORIES = [];
     let drivers = [];
     let currentClickStep = 1;
@@ -433,7 +432,6 @@
       loadGoogleSheets();
     }
 
-    // 💡 雲端試算表自動同步函式（強化換行符與欄位支援）
     async function loadGoogleSheets() {
       try {
         // 1. 抓取客戶廠區清冊
@@ -442,7 +440,7 @@
         const fLines = fCsv.split(/\r?\n/).filter(line => line.trim() !== '');
         
         FACTORIES = fLines.slice(1).map(line => {
-          const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"\vert{}"$/g, '').trim());
+          const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
           return {
             name: cols[0] || '未命名廠區',
             addr: cols[1] || '',
@@ -459,7 +457,7 @@
         const dLines = dCsv.split(/\r?\n/).filter(line => line.trim() !== '');
         
         drivers = dLines.slice(1).map((line, idx) => {
-          const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"\vert{}"$/g, '').trim());
+          const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
           return {
             id: idx + 1,
             name: cols[0] || '司機',
@@ -474,7 +472,7 @@
         console.log("✅ 成功從 Google 試算表同步資料！");
       } catch (error) {
         console.error("❌ 讀取 Google Sheets 失敗：", error);
-        document.getElementById('factoryButtons').innerHTML = '<div style="color:#ef4444; font-size:0.8rem; padding:4px;">⚠️ 試算表同步失敗，請確認 Google 表格權限已設為「知道連結的人均可檢視」。</div>';
+        document.getElementById('factoryButtons').innerHTML = '<div style="color:#ef4444; font-size:0.8rem; padding:4px;">⚠️ 試算表讀取失敗，請確認表格已公開或發布。</div>';
       }
     }
 
@@ -536,6 +534,7 @@
       }
     }
 
+    // 💡 補回漏掉的重設步驟函式
     function resetClickStep() {
       currentClickStep = 1;
       document.getElementById('currentStepText').textContent = "👉 請點擊【起點／取貨廠區】";
@@ -654,10 +653,19 @@
 🏢 廠區：${oName} ${oDock ? `(${oDock})` : ''}
 ⏱️ 取貨時間：${pTime}
 📍 地址：${oAddr || '現場確認'}
-${oNav ? `🗺️ 導航：${oNav}\n` : ''}👤 現場窗口：${oContact \vert{}\vert{} '無'} ────────────────────── 🎯【送達終點】 🏢 卸貨廠區：${dName} ${dDock ? `(${dDock})` : ''}
+${oNav ? `🗺️ 導航：${oNav}\n` : ''}👤 現場窗口：${oContact || '無'}
+──────────────────────
+🎯【送達終點】
+🏢 卸貨廠區：${dName} ${dDock ? `(${dDock})` : ''}
 ⏱️ 送達期限：${dTime}
 📍 地址：${dAddr || '現場確認'}
-${dNav ? `🗺️ 導航：${dNav}\n` : ''}👤 驗收窗口：${dContact \vert{}\vert{} '無'} ────────────────────── 🔒【貨況要求】 📦 貨品品名：${cargo} 🌡️ 溫控條件：${temp} 🛡️ 車輛規格：${spec} ${seal ? `🔐 封條編號：${seal}\n` : ''}──────────────────────
+${dNav ? `🗺️ 導航：${dNav}\n` : ''}👤 驗收窗口：${dContact || '無'}
+──────────────────────
+🔒【貨況要求】
+📦 貨品品名：${cargo}
+🌡️ 溫控條件：${temp}
+🛡️ 車輛規格：${spec}
+${seal ? `🔐 封條編號：${seal}\n` : ''}──────────────────────
 收到請回覆「確認接單」並依時前往！`;
 
       document.getElementById('previewBox').textContent = generatedText;
@@ -764,14 +772,41 @@ ${routeRank}
       }
     }
 
-    // 💡 修正後的手機/電腦雙向 LINE 喚起函式
     function sendToLine() {
       if (!generatedText) { alert("請先建立派單！"); return; }
-      
-      // 自動複製派單內容（雙保險防呆）
       navigator.clipboard.writeText(generatedText).catch(() => {});
-      
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       if (isMobile) {
-        // 手機版：跳轉 LINE App
-        window.location.href = "
+        window.location.href = "https://line.me/R/msg/text/?" + encodeURIComponent(generatedText);
+      } else {
+        const lineUrl = "line://msg/text/" + encodeURIComponent(generatedText);
+        window.open(lineUrl, '_blank');
+        setTimeout(() => {
+          alert("💬 已嘗試喚起電腦版 LINE！\n（若電腦未自動帶入文字，派工內容已自動複製，可直接在聊天室按 Ctrl + V 貼上）");
+        }, 300);
+      }
+    }
+
+    function copyText() {
+      if (!generatedText) { alert("請先建立派單！"); return; }
+      navigator.clipboard.writeText(generatedText).then(() => alert("已複製派工文字！"));
+    }
+
+    function clearAllForm() {
+      document.getElementById('dispatchForm').reset();
+      document.getElementById('scratchpad').value = "";
+      resetClickStep();
+      setDefaultTimes();
+    }
+
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        submitDispatch();
+      }
+    });
+
+    window.onload = init;
+  </script>
+</body>
+</html>
