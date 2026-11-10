@@ -243,7 +243,7 @@
           </div>
           <div class="form-group">
             <label style="color:#4338ca;">對帳備註 / 統編 (選填)</label>
-            <input type="text" id="clientTaxId" placeholder="自動帶入或空白">
+            <input type="text" id="clientTaxId" placeholder="自動帶入或手動填寫">
           </div>
         </div>
 
@@ -324,12 +324,11 @@
 
         <hr style="border:0; border-top:1px dashed #e2e8f0; margin:12px 0;">
 
-        <!-- 司機指派與貨況備註（已省略溫控/避震/封條） -->
+        <!-- 司機指派與貨況備註 -->
         <div style="font-size:0.8rem; font-weight:700; color:#92400e; margin-bottom:4px;">🚚 司機指派與貨況備註</div>
         <div class="form-grid-2">
           <div class="form-group">
             <label>指派司機 (可選式 / 可直接手動打字新增) *</label>
-            <!-- 支援下拉選單 + 直接打字新增 -->
             <input list="driverOptions" id="driverInput" required placeholder="請點選或直接打字 (例: 小林 0911-222333)">
             <datalist id="driverOptions"></datalist>
           </div>
@@ -411,14 +410,13 @@
   </div>
 
   <script>
-    // 💡 三大 Google Sheets 公開 CSV 網址（gviz 格式）
     const CLIENT_SHEET_URL = "https://docs.google.com/spreadsheets/d/1ORWIrWDii5QepS14gO9iNQ69JT6ovC3NGUfQ4_81o_I/gviz/tq?tqx=out:csv&gid=0";
     const FACTORY_SHEET_URL = "https://docs.google.com/spreadsheets/d/1pVQsAMe2TY0Di5LGw48URU_j1x1vokBpPIHWxctKOQg/gviz/tq?tqx=out:csv&gid=0";
     const DRIVER_SHEET_URL = "https://docs.google.com/spreadsheets/d/1m4ebHqR9CaCvhOkLL0-tRvAqX9CtNrnwlWLHL2-Puvo/gviz/tq?tqx=out:csv&gid=0";
 
     let CLIENTS = [];    // 委託客戶 A
     let FACTORIES = [];  // 起訖廠區 B, C
-    let drivers = [];    // 司機清冊
+    let drivers = [];    // 司機清冊 (純姓名、電話、車牌)
     let currentClickStep = 1; // 1:選客戶A, 2:選起點B, 3:選終點C
     let orderHistory = JSON.parse(localStorage.getItem('dispatch_orders') || '[]');
 
@@ -461,7 +459,7 @@
         }).filter(f => f.name !== '未命名廠區');
         renderFactories();
 
-        // 3. 抓取司機清冊
+        // 3. 抓取司機清冊 (已徹底移除待命地點與狀態)
         const dRes = await fetch(DRIVER_SHEET_URL);
         const dCsv = await dRes.text();
         const dLines = dCsv.split(/\r?\n/).filter(line => line.trim() !== '');
@@ -471,9 +469,7 @@
             id: idx + 1,
             name: cols[0] || '司機',
             phone: cols[1] || '',
-            plate: cols[2] || '',
-            loc: cols[3] || '待命',
-            status: cols[4] || '待命'
+            plate: cols[2] || ''
           };
         }).filter(d => d.name !== '司機');
         renderDrivers();
@@ -527,7 +523,6 @@
       document.getElementById('currentStepText').style.background = "#0284c7";
     }
 
-    // 💡 廠區點擊：電話保持空白，不預設帶入
     function handleFactoryClick(f) {
       if (currentClickStep === 1 || currentClickStep === 2) {
         document.getElementById('originName').value = f.name;
@@ -562,7 +557,6 @@
       return `${hh}:${mm}`;
     }
 
-    // 💡 預設送達時間為「即刻送達」
     function setDefaultTimes() {
       document.getElementById('pickupTime').value = `${getTimeString(0)} (即刻取貨)`;
       document.getElementById('dropoffTime').value = "即刻送達";
@@ -580,7 +574,6 @@
       document.getElementById('dropoffTime').value = `${getTimeString(mins)} 前送達`;
     }
 
-    // 💡 司機渲染：更新 datalist 可選清單與側邊名單
     function renderDrivers() {
       const dataList = document.getElementById('driverOptions');
       const list = document.getElementById('driverList');
@@ -593,21 +586,22 @@
       }
 
       drivers.forEach(d => {
-        // 填入 datalist 下拉提示
+        const displayText = d.plate ? `${d.name} (${d.plate})` : d.name;
+        const fullValue = d.phone ? `${displayText} - ${d.phone}` : displayText;
+
         const opt = document.createElement('option');
-        opt.value = `${d.name} (${d.plate}) - ${d.phone}`;
+        opt.value = fullValue;
         dataList.appendChild(opt);
 
-        // 填入右側快捷點擊欄
         const item = document.createElement('div');
         item.className = 'driver-item';
         item.onclick = () => { 
-          document.getElementById('driverInput').value = `${d.name} (${d.plate}) - ${d.phone}`;
+          document.getElementById('driverInput').value = fullValue;
         };
         item.innerHTML = `
           <div>
-            <strong>${d.name}</strong> <span style="color:#64748b; font-size:0.75rem;">${d.plate}</span>
-            <div style="font-size:0.75rem; color:#475569;">${d.loc} ｜ ${d.phone}</div>
+            <strong>${d.name}</strong> ${d.plate ? `<span style="color:#64748b; font-size:0.75rem;">(${d.plate})</span>` : ''}
+            <div style="font-size:0.75rem; color:#475569;">📞 ${d.phone || '無電話'}</div>
           </div>
           <span style="font-size:0.75rem; color:#0284c7; font-weight:600;">選擇</span>
         `;
@@ -653,25 +647,24 @@
 
       const dNav = dAddr ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dAddr)}` : "";
 
-      generatedText = `🚨【急件專車派工單】#${orderNo}
-🏢 委託客戶：${client} ${clientNote ? `(${clientNote})` : ''}
+      // 💡 修正反引號閉合
+      generatedText = `🚨【派工單】#${orderNo}
 👤 指定司機：${driverStr}
 ──────────────────────
 🟢【取貨起點 (B)】
 🏢 廠區：${oName} ${oDock ? `(${oDock})` : ''}
 ⏱️ 取貨時間：${pTime}
 📍 地址：${oAddr || '現場確認'}
-👤 現場窗口：${oContact || '無'}
+👤 現場窗口：${oContact || ' '}
 ──────────────────────
 🎯【送達終點 (C)】
 🏢 卸貨廠區：${dName} ${dDock ? `(${dDock})` : ''}
 ⏱️ 送達期限：${dTime}
 📍 地址：${dAddr || '現場確認'}
-${dNav ? `🗺️ 導航：${dNav}\n` : ''}👤 驗收窗口：${dContact || '無'}
+${dNav ? `🗺️ 導航：${dNav}\n` : ''}👤 驗收窗口：${dContact || ' '}
 ──────────────────────
 📦【貨況備註】${cargo}
-──────────────────────
-收到請回覆「確認接單」並依時前往！`;
+──────────────────────`;
 
       document.getElementById('previewBox').textContent = generatedText;
       document.getElementById('targetDriverLabel').textContent = `已指派：${driverStr}`;
@@ -694,7 +687,7 @@ ${dNav ? `🗺️ 導航：${dNav}\n` : ''}👤 驗收窗口：${dContact || '�
           <td><span style="color:#4338ca; font-weight:600;">${o.client || '一般客戶'}</span></td>
           <td>${o.oName}</td>
           <td>${o.dName}</td>
-          <td>${o.driverInfo || o.driverName || '外車/自填'}</td>
+          <td>${o.driverInfo || '外車/自填'}</td>
           <td>${o.cargo || '標準載運'}</td>
         `;
         tbody.appendChild(tr);
@@ -709,7 +702,7 @@ ${dNav ? `🗺️ 導航：${dNav}\n` : ''}👤 驗收窗口：${dContact || '�
           o.orderNo, o.createdAt, o.client || '', o.clientNote || '',
           o.oName, o.oAddr, o.pTime, o.oContact || '',
           o.dName, o.dAddr, o.dTime, o.dContact || '',
-          o.driverInfo || o.driverName || '', o.cargo || ''
+          o.driverInfo || '', o.cargo || ''
         ].map(val => `"${String(val).replace(/"/g, '""')}"`).join(",");
         csv += row + "\n";
       });
@@ -729,7 +722,7 @@ ${dNav ? `🗺️ 導航：${dNav}\n` : ''}👤 驗收窗口：${dContact || '�
       const clientCounts = {};
 
       orderHistory.forEach(o => {
-        const dName = o.driverInfo || o.driverName || '其他外車';
+        const dName = o.driverInfo || '其他外車';
         driverCounts[dName] = (driverCounts[dName] || 0) + 1;
         const route = `${o.oName} ➔ ${o.dName}`;
         routeCounts[route] = (routeCounts[route] || 0) + 1;
