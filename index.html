@@ -622,8 +622,7 @@
     }
 
     // 💡 完整回寫函式：自動解析電話、車牌並防重複
-    async function autoSaveNewDriverToSheet(driverStr) {
-      // 本地記憶備援
+async function autoSaveNewDriverToSheet(driverStr) {
       const exists = drivers.some(d => driverStr.includes(d.name));
       if (!exists) {
         const newD = { id: Date.now(), name: driverStr, phone: '', plate: '' };
@@ -633,7 +632,6 @@
         renderDrivers();
       }
 
-      // 如果尚未設定 Apps Script 網址，則不發送網路請求
       if (!DRIVER_API_URL || DRIVER_API_URL.includes("你的部署ID")) return;
       if (exists) return;
 
@@ -650,13 +648,13 @@
       name = name.replace(phone, '').replace(plate, '').replace(/[\(\)\-\s]/g, '').trim();
 
       try {
-        await fetch(DRIVER_API_URL, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: name || driverStr, phone: phone, plate: plate })
-        });
-        console.log("✅ 新司機已背景寫入 Google 試算表！");
+        // 使用 URL 參數傳遞，完全繞過瀏覽器限制
+        const targetUrl = `${DRIVER_API_URL}?name=${encodeURIComponent(name || driverStr)}&phone=${encodeURIComponent(phone)}&plate=${encodeURIComponent(plate)}`;
+        
+        // 透過 Image 或 fetch 發送，最穩妥
+        const img = new Image();
+        img.src = targetUrl;
+        console.log("✅ 新司機已即時寫入 Google 試算表！");
       } catch (err) {
         console.warn("自動寫入試算表失敗：", err);
       }
