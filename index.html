@@ -76,7 +76,7 @@
       margin-bottom: 10px;
     }
     .flow-step-active {
-      background: #0284c7;
+      background: #4338ca;
       color: #fff;
       padding: 2px 8px;
       border-radius: 4px;
@@ -104,6 +104,18 @@
       font-weight: 600;
     }
     .factory-chip:hover { border-color: #0284c7; background: #f0f9ff; color: #0284c7; }
+
+    .client-chip {
+      background: #e0e7ff;
+      border: 1px solid #c7d2fe;
+      color: #3730a3;
+      padding: 5px 9px;
+      font-size: 0.8rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .client-chip:hover { border-color: #4338ca; background: #c7d2fe; }
 
     .form-grid-3 { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 10px; margin-bottom: 8px; }
     .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
@@ -154,7 +166,7 @@
       font-size: 0.8rem;
       white-space: pre-wrap;
       word-break: break-all;
-      height: 220px;
+      height: 240px;
       overflow-y: auto;
       margin-bottom: 8px;
     }
@@ -191,33 +203,53 @@
   <div class="main-container">
     <div>
 
-      <!-- 2. 廠區連點選單 -->
+      <!-- 1. 委託客戶 + 廠區點擊選單 (A ➔ B ➔ C) -->
       <div class="card">
         <div class="card-title">
-          <span>⚡ 廠區連點選單</span>
+          <span>⚡ 極速連點流 (叫車客戶 A ➔ 起點 B ➔ 終點 C)</span>
           <button type="button" class="btn-quick" onclick="resetClickStep()">重設點選模式</button>
         </div>
         
         <div class="flow-indicator">
-          <span>模式：</span>
-          <span class="flow-step-active" id="currentStepText">👉 請點擊【起點／取貨廠區】</span>
+          <span>當前步驟：</span>
+          <span class="flow-step-active" id="currentStepText">👉 步驟 1：請點擊【委託叫車客戶 A】</span>
         </div>
 
+        <!-- 委託客戶按鈕區 (A) -->
+        <div style="font-size:0.75rem; font-weight:700; color:#4338ca; margin-bottom:4px;">🏢 委託下單客戶 (誰叫的車)：</div>
+        <div class="factory-grid" id="clientButtons" style="max-height:80px; background:#eef2ff; border-color:#c7d2fe;">
+          <div style="color:#64748b; font-size:0.8rem; padding:4px;">🔄 正在連線同步客戶名冊...</div>
+        </div>
+
+        <!-- 廠區按鈕區 (B & C) -->
+        <div style="font-size:0.75rem; font-weight:700; color:#0369a1; margin-bottom:4px; margin-top:6px;">🏭 路線廠區 (取貨點 B / 送達點 C)：</div>
         <div class="factory-grid" id="factoryButtons">
           <div style="color:#64748b; font-size:0.8rem; padding:4px;">🔄 正在從 Google 試算表連線同步廠區...</div>
         </div>
       </div>
 
-      <!-- 3. 表單細節確認 -->
+      <!-- 2. 表單細節確認 -->
       <form id="dispatchForm" class="card" onsubmit="event.preventDefault(); submitDispatch();">
         <div class="card-title">
           <span>📋 派單資料核對</span>
           <button type="button" onclick="clearAllForm()" class="btn-quick">清空重填</button>
         </div>
 
-        <!-- 起點 -->
+        <!-- 委託客戶 -->
+        <div class="form-grid-2" style="background:#f8fafc; padding:8px; border-radius:6px; margin-bottom:10px;">
+          <div class="form-group">
+            <label style="color:#4338ca;">委託客戶 (下單方 A) *</label>
+            <input type="text" id="clientName" required placeholder="點上方客戶快速填入">
+          </div>
+          <div class="form-group">
+            <label style="color:#4338ca;">對帳備註 / 統編 (選填)</label>
+            <input type="text" id="clientTaxId" placeholder="自動帶入或空白">
+          </div>
+        </div>
+
+        <!-- 起點 B -->
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-          <span style="font-size:0.8rem; font-weight:700; color:#065f46;">🟢 取貨起點</span>
+          <span style="font-size:0.8rem; font-weight:700; color:#065f46;">🟢 取貨起點 (B)</span>
           <div style="display:flex; gap:4px; align-items:center;">
             <span style="font-size:0.75rem; color:#64748b;">取貨：</span>
             <button type="button" class="btn-quick" onclick="setPickupOffset(0)">⚡ 現在 (即刻)</button>
@@ -229,7 +261,7 @@
         <div class="form-grid-3">
           <div class="form-group">
             <label>廠區名稱 *</label>
-            <input type="text" id="originName" required placeholder="點上方廠區自動填入">
+            <input type="text" id="originName" required placeholder="點上方廠區填入">
           </div>
           <div class="form-group">
             <label>碼頭 / 棟別</label>
@@ -246,35 +278,36 @@
             <input type="text" id="originAddr" placeholder="自動帶入">
           </div>
           <div class="form-group">
-            <label>現場窗口電話</label>
-            <input type="text" id="originContact" placeholder="聯絡窗口">
+            <label>現場窗口電話 (空白，手動填寫)</label>
+            <input type="text" id="originContact" placeholder="無">
           </div>
         </div>
 
         <hr style="border:0; border-top:1px dashed #e2e8f0; margin:12px 0;">
 
-        <!-- 終點 -->
+        <!-- 終點 C -->
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-          <span style="font-size:0.8rem; font-weight:700; color:#991b1b;">🎯 送達終點</span>
+          <span style="font-size:0.8rem; font-weight:700; color:#991b1b;">🎯 送達終點 (C)</span>
           <div style="display:flex; gap:4px; align-items:center;">
-            <span style="font-size:0.75rem; color:#64748b;">車程預估：</span>
-            <button type="button" class="btn-quick" onclick="setDropoffOffset(60)">+1 小時 (短程)</button>
-            <button type="button" class="btn-quick" onclick="setDropoffOffset(120)">+2 小時 (中程)</button>
-            <button type="button" class="btn-quick" onclick="setDropoffOffset(210)">+3.5 小時 (南科)</button>
+            <span style="font-size:0.75rem; color:#64748b;">車程快捷：</span>
+            <button type="button" class="btn-quick" onclick="setDropoffImmediate()">⚡ 即刻送達</button>
+            <button type="button" class="btn-quick" onclick="setDropoffOffset(60)">+1 小時</button>
+            <button type="button" class="btn-quick" onclick="setDropoffOffset(120)">+2 小時</button>
+            <button type="button" class="btn-quick" onclick="setDropoffOffset(210)">+3.5 小時</button>
           </div>
         </div>
 
         <div class="form-grid-3">
           <div class="form-group">
             <label>廠區名稱 *</label>
-            <input type="text" id="destName" required placeholder="點上方廠區自動填入">
+            <input type="text" id="destName" required placeholder="點上方廠區填入">
           </div>
           <div class="form-group">
             <label>庫房 / 碼頭</label>
             <input type="text" id="destDock" placeholder="例: 晶圓一課庫房">
           </div>
           <div class="form-group">
-            <label>送達期限 (預設2小時) *</label>
+            <label>送達期限 (預設即刻送達) *</label>
             <input type="text" id="dropoffTime" required>
           </div>
         </div>
@@ -284,56 +317,34 @@
             <input type="text" id="destAddr" placeholder="自動帶入">
           </div>
           <div class="form-group">
-            <label>收貨窗口電話</label>
-            <input type="text" id="destContact" placeholder="驗收窗口">
+            <label>收貨窗口電話 (空白，手動填寫)</label>
+            <input type="text" id="destContact" placeholder="無">
           </div>
         </div>
 
         <hr style="border:0; border-top:1px dashed #e2e8f0; margin:12px 0;">
 
-        <!-- 貨況規格 -->
-        <div style="font-size:0.8rem; font-weight:700; color:#92400e; margin-bottom:4px;">🔒 規格與司機指派</div>
-        <div class="form-grid-3">
-          <div class="form-group">
-            <label>貨品類型 *</label>
-            <input type="text" id="cargoType" required value="晶圓盒(FOUP) x 2箱">
-          </div>
-          <div class="form-group">
-            <label>溫控條件</label>
-            <select id="tempControl">
-              <option value="恆溫 (20~25°C)">恆溫 (20~25°C)</option>
-              <option value="常溫專車">常溫專車</option>
-              <option value="冷藏 (2~8°C)">冷藏 (2~8°C)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>車體規格</label>
-            <select id="truckSpec">
-              <option value="氣壓避震專車 (標準防震)">氣壓避震專車 (標準防震)</option>
-              <option value="專車直達 (禁止併貨)">專車直達 (禁止併貨)</option>
-            </select>
-          </div>
-        </div>
-
+        <!-- 司機指派與貨況備註（已省略溫控/避震/封條） -->
+        <div style="font-size:0.8rem; font-weight:700; color:#92400e; margin-bottom:4px;">🚚 司機指派與貨況備註</div>
         <div class="form-grid-2">
           <div class="form-group">
-            <label>指派司機 *</label>
-            <select id="driverSelect" required>
-              <option value="">-- 請點右側司機或下拉選擇 --</option>
-            </select>
+            <label>指派司機 (可選式 / 可直接手動打字新增) *</label>
+            <!-- 支援下拉選單 + 直接打字新增 -->
+            <input list="driverOptions" id="driverInput" required placeholder="請點選或直接打字 (例: 小林 0911-222333)">
+            <datalist id="driverOptions"></datalist>
           </div>
           <div class="form-group">
-            <label>保全封條編號 (Seal No.)</label>
-            <input type="text" id="sealNo" placeholder="例: SL-992102">
+            <label>貨品 / 備註內容 (選填)</label>
+            <input type="text" id="cargoType" placeholder="例: 晶圓盒 x 2箱、載三板就好">
           </div>
         </div>
 
-        <button type="submit" class="btn-submit" style="margin-top:8px;">
+        <button type="submit" class="btn-submit" style="margin-top:10px;">
           📋 產出派單、儲存歷史並組裝 LINE 訊息
         </button>
       </form>
 
-      <!-- 歷史派單紀錄與 Excel 匯出 -->
+      <!-- 3. 歷史派單紀錄與 Excel 匯出 -->
       <div class="card">
         <div class="card-title">
           <span>📦 派單歷史紀錄 (<span id="historyCount">0</span> 筆)</span>
@@ -358,14 +369,15 @@
               <tr>
                 <th>單號</th>
                 <th>建立時間</th>
-                <th>起點廠區</th>
-                <th>送達廠區</th>
-                <th>司機</th>
-                <th>貨況規格</th>
+                <th>委託客戶</th>
+                <th>起點 (B)</th>
+                <th>終點 (C)</th>
+                <th>指派司機</th>
+                <th>貨況備註</th>
               </tr>
             </thead>
             <tbody id="historyTableBody">
-              <tr><td colspan="6" style="text-align:center; color:#94a3b8;">尚無歷史紀錄，建立派單後將自動存入</td></tr>
+              <tr><td colspan="7" style="text-align:center; color:#94a3b8;">尚無歷史紀錄，建立派單後將自動存入</td></tr>
             </tbody>
           </table>
         </div>
@@ -389,7 +401,7 @@
 
       <div class="card">
         <div class="card-title">
-          <span>🚚 司機名單 (點擊指派)</span>
+          <span>🚚 快速司機名單 (點擊帶入)</span>
         </div>
         <div id="driverList" style="max-height: 420px; overflow-y: auto;">
           <div style="color:#64748b; font-size:0.8rem; padding:4px;">🔄 正在連線同步司機名單...</div>
@@ -399,13 +411,15 @@
   </div>
 
   <script>
-    // 💡 採用瀏覽器最不易擋跨來源的 gviz CSV 格式
-    const DRIVER_SHEET_URL = "https://docs.google.com/spreadsheets/d/1m4ebHqR9CaCvhOkLL0-tRvAqX9CtNrnwlWLHL2-Puvo/gviz/tq?tqx=out:csv&gid=0";
+    // 💡 三大 Google Sheets 公開 CSV 網址（gviz 格式）
+    const CLIENT_SHEET_URL = "https://docs.google.com/spreadsheets/d/1ORWIrWDii5QepS14gO9iNQ69JT6ovC3NGUfQ4_81o_I/gviz/tq?tqx=out:csv&gid=0";
     const FACTORY_SHEET_URL = "https://docs.google.com/spreadsheets/d/1pVQsAMe2TY0Di5LGw48URU_j1x1vokBpPIHWxctKOQg/gviz/tq?tqx=out:csv&gid=0";
+    const DRIVER_SHEET_URL = "https://docs.google.com/spreadsheets/d/1m4ebHqR9CaCvhOkLL0-tRvAqX9CtNrnwlWLHL2-Puvo/gviz/tq?tqx=out:csv&gid=0";
 
-    let FACTORIES = [];
-    let drivers = [];
-    let currentClickStep = 1;
+    let CLIENTS = [];    // 委託客戶 A
+    let FACTORIES = [];  // 起訖廠區 B, C
+    let drivers = [];    // 司機清冊
+    let currentClickStep = 1; // 1:選客戶A, 2:選起點B, 3:選終點C
     let orderHistory = JSON.parse(localStorage.getItem('dispatch_orders') || '[]');
 
     function init() {
@@ -416,11 +430,25 @@
 
     async function loadGoogleSheets() {
       try {
-        // 1. 抓取客戶廠區清冊
+        // 1. 抓取委託客戶清冊 (A)
+        const cRes = await fetch(CLIENT_SHEET_URL);
+        const cCsv = await cRes.text();
+        const cLines = cCsv.split(/\r?\n/).filter(line => line.trim() !== '');
+        CLIENTS = cLines.slice(1).map(line => {
+          const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
+          return {
+            name: cols[0] || '未命名客戶',
+            fullName: cols[1] || '',
+            taxId: cols[2] || '',
+            contact: cols[3] || ''
+          };
+        }).filter(c => c.name !== '未命名客戶');
+        renderClients();
+
+        // 2. 抓取廠區清冊 (B, C)
         const fRes = await fetch(FACTORY_SHEET_URL);
         const fCsv = await fRes.text();
         const fLines = fCsv.split(/\r?\n/).filter(line => line.trim() !== '');
-        
         FACTORIES = fLines.slice(1).map(line => {
           const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
           return {
@@ -433,11 +461,10 @@
         }).filter(f => f.name !== '未命名廠區');
         renderFactories();
 
-        // 2. 抓取司機清冊
+        // 3. 抓取司機清冊
         const dRes = await fetch(DRIVER_SHEET_URL);
         const dCsv = await dRes.text();
         const dLines = dCsv.split(/\r?\n/).filter(line => line.trim() !== '');
-        
         drivers = dLines.slice(1).map((line, idx) => {
           const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
           return {
@@ -451,32 +478,28 @@
         }).filter(d => d.name !== '司機');
         renderDrivers();
 
-        console.log("✅ 成功從 Google 試算表同步資料！");
+        console.log("✅ 成功從 3 份 Google 試算表同步資料！");
       } catch (error) {
         console.error("❌ 讀取 Google Sheets 失敗：", error);
         document.getElementById('factoryButtons').innerHTML = '<div style="color:#ef4444; font-size:0.8rem; padding:4px;">⚠️ 試算表讀取失敗，請確認表格已公開或發布。</div>';
       }
     }
 
-    function getTimeString(addMinutes = 0) {
-      const d = new Date();
-      d.setMinutes(d.getMinutes() + addMinutes);
-      const hh = String(d.getHours()).padStart(2, '0');
-      const mm = String(d.getMinutes()).padStart(2, '0');
-      return `${hh}:${mm}`;
-    }
-
-    function setDefaultTimes() {
-      document.getElementById('pickupTime').value = `${getTimeString(0)} (即刻取貨)`;
-      document.getElementById('dropoffTime').value = `${getTimeString(120)} 前送達`;
-    }
-
-    function setPickupOffset(mins) {
-      document.getElementById('pickupTime').value = mins === 0 ? `${getTimeString(0)} (即刻取貨)` : `${getTimeString(mins)} 準時`;
-    }
-
-    function setDropoffOffset(mins) {
-      document.getElementById('dropoffTime').value = `${getTimeString(mins)} 前送達`;
+    function renderClients() {
+      const container = document.getElementById('clientButtons');
+      container.innerHTML = '';
+      if (CLIENTS.length === 0) {
+        container.innerHTML = '<div style="color:#94a3b8; font-size:0.8rem; padding:4px;">試算表內尚無客戶資料，請至客戶端清冊新增</div>';
+        return;
+      }
+      CLIENTS.forEach(c => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'client-chip';
+        chip.textContent = c.name;
+        chip.onclick = () => handleClientClick(c);
+        container.appendChild(chip);
+      });
     }
 
     function renderFactories() {
@@ -496,37 +519,72 @@
       });
     }
 
+    function handleClientClick(c) {
+      document.getElementById('clientName').value = c.name;
+      document.getElementById('clientTaxId').value = c.taxId ? `${c.taxId} (${c.contact})` : c.contact;
+      currentClickStep = 2;
+      document.getElementById('currentStepText').textContent = "👉 步驟 2：請點擊【起點 B／取貨廠區】";
+      document.getElementById('currentStepText').style.background = "#0284c7";
+    }
+
+    // 💡 廠區點擊：電話保持空白，不預設帶入
     function handleFactoryClick(f) {
-      if (currentClickStep === 1) {
+      if (currentClickStep === 1 || currentClickStep === 2) {
         document.getElementById('originName').value = f.name;
         document.getElementById('originAddr').value = f.addr;
         document.getElementById('originDock').value = f.dock;
-        document.getElementById('originContact').value = f.contact;
-        currentClickStep = 2;
-        document.getElementById('currentStepText').textContent = "👉 請點擊【終點／送達廠區】";
+        document.getElementById('originContact').value = ""; // 保持空白
+        currentClickStep = 3;
+        document.getElementById('currentStepText').textContent = "👉 步驟 3：請點擊【終點 C／送達廠區】";
         document.getElementById('currentStepText').style.background = "#dc2626";
       } else {
         document.getElementById('destName').value = f.name;
         document.getElementById('destAddr').value = f.addr;
         document.getElementById('destDock').value = f.dock;
-        document.getElementById('destContact').value = f.contact;
+        document.getElementById('destContact').value = ""; // 保持空白
         currentClickStep = 1;
-        document.getElementById('currentStepText').textContent = "👉 請點擊【起點／取貨廠區】";
-        document.getElementById('currentStepText').style.background = "#0284c7";
+        document.getElementById('currentStepText').textContent = "👉 步驟 1：請點擊【委託叫車客戶 A】";
+        document.getElementById('currentStepText').style.background = "#4338ca";
       }
     }
 
-    // 💡 補回漏掉的重設步驟函式
     function resetClickStep() {
       currentClickStep = 1;
-      document.getElementById('currentStepText').textContent = "👉 請點擊【起點／取貨廠區】";
-      document.getElementById('currentStepText').style.background = "#0284c7";
+      document.getElementById('currentStepText').textContent = "👉 步驟 1：請點擊【委託叫車客戶 A】";
+      document.getElementById('currentStepText').style.background = "#4338ca";
     }
 
+    function getTimeString(addMinutes = 0) {
+      const d = new Date();
+      d.setMinutes(d.getMinutes() + addMinutes);
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      return `${hh}:${mm}`;
+    }
+
+    // 💡 預設送達時間為「即刻送達」
+    function setDefaultTimes() {
+      document.getElementById('pickupTime').value = `${getTimeString(0)} (即刻取貨)`;
+      document.getElementById('dropoffTime').value = "即刻送達";
+    }
+
+    function setPickupOffset(mins) {
+      document.getElementById('pickupTime').value = mins === 0 ? `${getTimeString(0)} (即刻取貨)` : `${getTimeString(mins)} 準時`;
+    }
+
+    function setDropoffImmediate() {
+      document.getElementById('dropoffTime').value = "即刻送達";
+    }
+
+    function setDropoffOffset(mins) {
+      document.getElementById('dropoffTime').value = `${getTimeString(mins)} 前送達`;
+    }
+
+    // 💡 司機渲染：更新 datalist 可選清單與側邊名單
     function renderDrivers() {
-      const sel = document.getElementById('driverSelect');
+      const dataList = document.getElementById('driverOptions');
       const list = document.getElementById('driverList');
-      sel.innerHTML = '<option value="">-- 請選擇指派司機 --</option>';
+      dataList.innerHTML = '';
       list.innerHTML = '';
 
       if (drivers.length === 0) {
@@ -535,18 +593,21 @@
       }
 
       drivers.forEach(d => {
+        // 填入 datalist 下拉提示
         const opt = document.createElement('option');
-        opt.value = d.id;
-        opt.textContent = `${d.name} (${d.plate}) - ${d.loc}`;
-        sel.appendChild(opt);
+        opt.value = `${d.name} (${d.plate}) - ${d.phone}`;
+        dataList.appendChild(opt);
 
+        // 填入右側快捷點擊欄
         const item = document.createElement('div');
         item.className = 'driver-item';
-        item.onclick = () => { sel.value = d.id; };
+        item.onclick = () => { 
+          document.getElementById('driverInput').value = `${d.name} (${d.plate}) - ${d.phone}`;
+        };
         item.innerHTML = `
           <div>
             <strong>${d.name}</strong> <span style="color:#64748b; font-size:0.75rem;">${d.plate}</span>
-            <div style="font-size:0.75rem; color:#475569;">${d.loc} ｜ ${d.status}</div>
+            <div style="font-size:0.75rem; color:#475569;">${d.loc} ｜ ${d.phone}</div>
           </div>
           <span style="font-size:0.75rem; color:#0284c7; font-weight:600;">選擇</span>
         `;
@@ -556,9 +617,11 @@
 
     let generatedText = "";
     function submitDispatch() {
-      const driverId = document.getElementById('driverSelect').value;
-      const driver = drivers.find(d => d.id == driverId);
-      if (!driver) { alert("請先選擇指派司機！"); return; }
+      const driverStr = document.getElementById('driverInput').value.trim();
+      if (!driverStr) { alert("請填寫或選擇指派司機！"); return; }
+
+      const client = document.getElementById('clientName').value;
+      const clientNote = document.getElementById('clientTaxId').value;
 
       const oName = document.getElementById('originName').value;
       const oDock = document.getElementById('originDock').value;
@@ -572,19 +635,17 @@
       const dTime = document.getElementById('dropoffTime').value;
       const dContact = document.getElementById('destContact').value;
 
-      const cargo = document.getElementById('cargoType').value;
-      const temp = document.getElementById('tempControl').value;
-      const spec = document.getElementById('truckSpec').value;
-      const seal = document.getElementById('sealNo').value;
+      const cargo = document.getElementById('cargoType').value.trim() || '依指示載運';
 
       const orderNo = "EXP-" + new Date().toISOString().slice(0,10).replace(/-/g,'') + "-" + Math.floor(100 + Math.random()*900);
       const createdAt = new Date().toLocaleString('zh-TW', { hour12: false });
 
       const newOrder = {
-        orderNo, createdAt, oName, oAddr, oDock, pTime, oContact,
+        orderNo, createdAt, client, clientNote,
+        oName, oAddr, oDock, pTime, oContact,
         dName, dAddr, dDock, dTime, dContact,
-        driverName: driver.name, driverPlate: driver.plate, driverPhone: driver.phone,
-        cargo, temp, spec, seal
+        driverInfo: driverStr,
+        cargo
       };
       orderHistory.unshift(newOrder);
       localStorage.setItem('dispatch_orders', JSON.stringify(orderHistory));
@@ -593,36 +654,34 @@
       const dNav = dAddr ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dAddr)}` : "";
 
       generatedText = `🚨【急件專車派工單】#${orderNo}
-👤 指定司機：${driver.name} 先生 (${driver.plate})
+🏢 委託客戶：${client} ${clientNote ? `(${clientNote})` : ''}
+👤 指定司機：${driverStr}
 ──────────────────────
-🟢【取貨起點】
+🟢【取貨起點 (B)】
 🏢 廠區：${oName} ${oDock ? `(${oDock})` : ''}
 ⏱️ 取貨時間：${pTime}
 📍 地址：${oAddr || '現場確認'}
 👤 現場窗口：${oContact || '無'}
 ──────────────────────
-🎯【送達終點】
+🎯【送達終點 (C)】
 🏢 卸貨廠區：${dName} ${dDock ? `(${dDock})` : ''}
 ⏱️ 送達期限：${dTime}
 📍 地址：${dAddr || '現場確認'}
 ${dNav ? `🗺️ 導航：${dNav}\n` : ''}👤 驗收窗口：${dContact || '無'}
 ──────────────────────
-🔒【貨況要求】
-📦 貨品品名：${cargo}
-🌡️ 溫控條件：${temp}
-🛡️ 車輛規格：${spec}
-${seal ? `🔐 封條編號：${seal}\n` : ''}──────────────────────
+📦【貨況備註】${cargo}
+──────────────────────
 收到請回覆「確認接單」並依時前往！`;
 
       document.getElementById('previewBox').textContent = generatedText;
-      document.getElementById('targetDriverLabel').textContent = `已指派：${driver.name} (${driver.phone})`;
+      document.getElementById('targetDriverLabel').textContent = `已指派：${driverStr}`;
     }
 
     function renderHistoryTable() {
       const tbody = document.getElementById('historyTableBody');
       document.getElementById('historyCount').textContent = orderHistory.length;
       if (orderHistory.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#94a3b8;">尚無歷史紀錄，建立派單後將自動存入</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#94a3b8;">尚無歷史紀錄，建立派單後將自動存入</td></tr>';
         return;
       }
 
@@ -632,10 +691,11 @@ ${seal ? `🔐 封條編號：${seal}\n` : ''}───────────�
         tr.innerHTML = `
           <td><strong>${o.orderNo}</strong></td>
           <td>${o.createdAt}</td>
+          <td><span style="color:#4338ca; font-weight:600;">${o.client || '一般客戶'}</span></td>
           <td>${o.oName}</td>
           <td>${o.dName}</td>
-          <td>${o.driverName} (${o.driverPlate})</td>
-          <td>${o.cargo} / ${o.temp}</td>
+          <td>${o.driverInfo || o.driverName || '外車/自填'}</td>
+          <td>${o.cargo || '標準載運'}</td>
         `;
         tbody.appendChild(tr);
       });
@@ -643,12 +703,13 @@ ${seal ? `🔐 封條編號：${seal}\n` : ''}───────────�
 
     function exportToExcel() {
       if (orderHistory.length === 0) { alert("目前沒有任何歷史紀錄可供匯出！"); return; }
-      let csv = "\uFEFF單號,開單時間,起點廠區,起點地址,取貨時間,送達廠區,送達地址,送達期限,司機姓名,車牌號碼,司機電話,貨品名稱,溫控條件,車輛規格,封條編號\n";
+      let csv = "\uFEFF單號,開單時間,委託客戶,客戶備註,起點廠區,起點地址,取貨時間,起點電話,送達廠區,送達地址,送達期限,終點電話,指派司機,貨況備註\n";
       orderHistory.forEach(o => {
         const row = [
-          o.orderNo, o.createdAt, o.oName, o.oAddr, o.pTime,
-          o.dName, o.dAddr, o.dTime, o.driverName, o.driverPlate,
-          o.driverPhone, o.cargo, o.temp, o.spec, o.seal || ''
+          o.orderNo, o.createdAt, o.client || '', o.clientNote || '',
+          o.oName, o.oAddr, o.pTime, o.oContact || '',
+          o.dName, o.dAddr, o.dTime, o.dContact || '',
+          o.driverInfo || o.driverName || '', o.cargo || ''
         ].map(val => `"${String(val).replace(/"/g, '""')}"`).join(",");
         csv += row + "\n";
       });
@@ -665,13 +726,14 @@ ${seal ? `🔐 封條編號：${seal}\n` : ''}───────────�
       const totalOrders = orderHistory.length;
       const driverCounts = {};
       const routeCounts = {};
-      let tempControlledCount = 0;
+      const clientCounts = {};
 
       orderHistory.forEach(o => {
-        driverCounts[o.driverName] = (driverCounts[o.driverName] || 0) + 1;
+        const dName = o.driverInfo || o.driverName || '其他外車';
+        driverCounts[dName] = (driverCounts[dName] || 0) + 1;
         const route = `${o.oName} ➔ ${o.dName}`;
         routeCounts[route] = (routeCounts[route] || 0) + 1;
-        if (o.temp && o.temp.includes("恆溫")) tempControlledCount++;
+        if (o.client) clientCounts[o.client] = (clientCounts[o.client] || 0) + 1;
       });
 
       let driverRank = Object.entries(driverCounts)
@@ -683,11 +745,18 @@ ${seal ? `🔐 封條編號：${seal}\n` : ''}───────────�
         .slice(0, 3)
         .map(([route, count]) => `  • ${route}: ${count} 趟`).join("\n");
 
-      latestAiReport = `📊【晶片專車物流 每週營運分析週報】
+      let clientRank = Object.entries(clientCounts)
+        .sort((a,b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([client, count]) => `  • ${client}: ${count} 趟`).join("\n");
+
+      latestAiReport = `📊【專車物流 每週營運分析週報】
 ──────────────────────────────
 📅 結算區間：截至 ${new Date().toLocaleDateString('zh-TW')}
 📈 累計完成派工趟次：${totalOrders} 趟
-❄️ 恆溫/避震高規佔比：${tempControlledCount} 趟 (${Math.round(tempControlledCount/totalOrders*100)}%)
+
+🏢【下單委託客戶 Top 3】
+${clientRank || '  • 暫無特定客戶'}
 
 🚚【司機出車率統計】
 ${driverRank}
@@ -696,8 +765,8 @@ ${driverRank}
 ${routeRank}
 
 💡【AI 營運與調度建議】
-1. 尖峰路線高度集中於特定半導體廠區間，建議於新竹與中壢兩端各預留 1 台備援氣壓避震車。
-2. 出車率最高與最低之司機差距顯著，建議在下週調度時優先將跨區長途單指派予待命時數較高之同仁以平衡工時。
+1. 尖峰路線高度集中於特定半導體廠區間，可針對高頻往返之客戶進行定期合約運費或月結專案洽談。
+2. 外車或特定同仁趟次過多時，可適度平衡班表以確保排程彈性。
 ──────────────────────────────`;
 
       document.getElementById('aiReportCard').style.display = 'block';
