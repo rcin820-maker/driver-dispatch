@@ -82,6 +82,70 @@
       border-radius: 4px;
     }
 
+    /* 行程模式切換列 */
+    .trip-mode-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      background: #f8fafc;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      align-items: center;
+    }
+    .trip-mode-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #334155;
+      margin-right: 4px;
+    }
+    .mode-btn {
+      padding: 6px 12px;
+      border: 1px solid #cbd5e1;
+      background: #fff;
+      color: #475569;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .mode-btn:hover {
+      border-color: #0284c7;
+      color: #0284c7;
+    }
+    .mode-btn.active {
+      background: #0284c7;
+      color: #fff;
+      border-color: #0284c7;
+      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+    }
+    .mode-btn.active[data-mode="roundtrip"] {
+      background: #0d9488;
+      border-color: #0d9488;
+    }
+    .mode-btn.active[data-mode="multistop"] {
+      background: #7c3aed;
+      border-color: #7c3aed;
+    }
+
+    .stop3-section {
+      display: none;
+      background: #faf5ff;
+      border: 1px dashed #c4b5fd;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 10px;
+    }
+    .stop3-section.show {
+      display: block;
+    }
+    .stop3-section.roundtrip-theme {
+      background: #f0fdfa;
+      border-color: #99f6e4;
+    }
+
     .factory-grid {
       display: flex;
       flex-wrap: wrap;
@@ -122,7 +186,7 @@
     @media (max-width: 640px) {
       .form-grid-3, .form-grid-2 { grid-template-columns: 1fr; }
     }
-    .form-group { display: flex; flex-direction: column; gap: 3px; }
+    .form-group { display: flex; flex-direction: column; gap: 3px; position: relative; }
     .form-group label { font-size: 0.8rem; font-weight: 600; color: #475569; }
     .form-group input, .form-group select {
       padding: 7px 10px;
@@ -130,8 +194,71 @@
       border-radius: 5px;
       font-size: 0.85rem;
       outline: none;
+      width: 100%;
     }
     .form-group input:focus, .form-group select:focus { border-color: var(--primary); }
+
+    /* 關鍵字搜尋下拉選單樣式 */
+    .autocomplete-wrapper {
+      position: relative;
+      width: 100%;
+    }
+    .autocomplete-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border: 1px solid #0284c7;
+      border-top: none;
+      border-radius: 0 0 6px 6px;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.15);
+      max-height: 220px;
+      overflow-y: auto;
+      z-index: 999;
+      display: none;
+    }
+    .autocomplete-dropdown.show {
+      display: block;
+    }
+    .autocomplete-item {
+      padding: 8px 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #f1f5f9;
+      transition: background 0.12s;
+    }
+    .autocomplete-item:last-child {
+      border-bottom: none;
+    }
+    .autocomplete-item:hover,
+    .autocomplete-item.active {
+      background: #e0f2fe;
+    }
+    .autocomplete-item-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .autocomplete-item-title mark {
+      background: #fef08a;
+      color: #0f172a;
+      padding: 0 1px;
+      border-radius: 2px;
+    }
+    .autocomplete-item-sub {
+      font-size: 0.74rem;
+      color: #64748b;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .autocomplete-empty {
+      padding: 10px;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      text-align: center;
+    }
 
     .btn-quick {
       background: #f1f5f9;
@@ -166,7 +293,7 @@
       font-size: 0.8rem;
       white-space: pre-wrap;
       word-break: break-all;
-      height: 240px;
+      height: 260px;
       overflow-y: auto;
       margin-bottom: 8px;
     }
@@ -189,6 +316,16 @@
     th, td { border: 1px solid #e2e8f0; padding: 7px 8px; text-align: left; }
     th { background: #f8fafc; font-weight: 700; color: #334155; }
     tr:hover { background: #f1f5f9; }
+    .trip-badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-weight: 700;
+      margin-left: 4px;
+    }
+    .trip-badge.roundtrip { background: #ccfbf1; color: #0f766e; }
+    .trip-badge.multistop { background: #ede9fe; color: #6d28d9; }
   </style>
 </head>
 <body>
@@ -203,26 +340,26 @@
   <div class="main-container">
     <div>
 
-      <!-- 1. 委託客戶 + 廠區點擊選單 (A ➔ B ➔ C) -->
+      <!-- 1. 委託客戶 + 廠區點擊選單 -->
       <div class="card">
         <div class="card-title">
-          <span>⚡ 下單流程 (叫車客戶 A ➔ 起點 B ➔ 終點 C)</span>
+          <span>⚡ 下單流程 (叫車客戶 ➔ 第 1 站 ➔ 第 2 站 ／ 選填第 3 站)</span>
           <button type="button" class="btn-quick" onclick="resetClickStep()">重設點選模式</button>
         </div>
         
         <div class="flow-indicator">
           <span>當前步驟：</span>
-          <span class="flow-step-active" id="currentStepText">👉 步驟 1：請點擊【委託叫車客戶 A】</span>
+          <span class="flow-step-active" id="currentStepText">👉 步驟 1：請點擊【委託叫車客戶】</span>
         </div>
 
-        <!-- 委託客戶按鈕區 (A) -->
+        <!-- 委託客戶按鈕區 -->
         <div style="font-size:0.75rem; font-weight:700; color:#4338ca; margin-bottom:4px;">🏢 委託下單客戶 (誰叫的車)：</div>
         <div class="factory-grid" id="clientButtons" style="max-height:80px; background:#eef2ff; border-color:#c7d2fe;">
           <div style="color:#64748b; font-size:0.8rem; padding:4px;">🔄 正在連線同步客戶名冊...</div>
         </div>
 
-        <!-- 廠區按鈕區 (B & C) -->
-        <div style="font-size:0.75rem; font-weight:700; color:#0369a1; margin-bottom:4px; margin-top:6px;">🏭 路線廠區 (取貨點 B / 送達點 C)：</div>
+        <!-- 廠區按鈕區 -->
+        <div style="font-size:0.75rem; font-weight:700; color:#0369a1; margin-bottom:4px; margin-top:6px;">🏭 路線廠區 (點擊依序帶入起點 / 送達點)：</div>
         <div class="factory-grid" id="factoryButtons">
           <div style="color:#64748b; font-size:0.8rem; padding:4px;">🔄 正在從 Google 試算表連線同步廠區...</div>
         </div>
@@ -235,11 +372,22 @@
           <button type="button" onclick="clearAllForm()" class="btn-quick">清空重填</button>
         </div>
 
+        <!-- 行程模式切換：單趟 / 來回趟 (A->B->A) / 多點串聯 (A->B->C) -->
+        <div class="trip-mode-bar">
+          <span class="trip-mode-label">🛣️ 行程模式：</span>
+          <button type="button" class="mode-btn active" data-mode="single" onclick="setTripMode('single')">➡️ 單趟 (A ➔ B)</button>
+          <button type="button" class="mode-btn" data-mode="roundtrip" onclick="setTripMode('roundtrip')">🔄 來回趟 (A ➔ B ➔ A)</button>
+          <button type="button" class="mode-btn" data-mode="multistop" onclick="setTripMode('multistop')">🔀 多點串聯 (A ➔ B ➔ C)</button>
+        </div>
+
         <!-- 委託客戶 -->
         <div class="form-grid-2" style="background:#f8fafc; padding:8px; border-radius:6px; margin-bottom:10px;">
           <div class="form-group">
-            <label style="color:#4338ca;">委託客戶 (下單方 A) *</label>
-            <input type="text" id="clientName" required placeholder="點上方客戶快速填入">
+            <label style="color:#4338ca;">委託客戶 (下單方) *</label>
+            <div class="autocomplete-wrapper">
+              <input type="text" id="clientName" required autocomplete="off" placeholder="輸入關鍵字搜尋或點上方客戶">
+              <div id="clientDropdown" class="autocomplete-dropdown"></div>
+            </div>
           </div>
           <div class="form-group">
             <label style="color:#4338ca;">對帳備註 / 統編 (選填)</label>
@@ -247,9 +395,9 @@
           </div>
         </div>
 
-        <!-- 起點 B -->
+        <!-- 第 1 站：取貨起點 -->
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-          <span style="font-size:0.8rem; font-weight:700; color:#065f46;">🟢 取貨起點 (B)</span>
+          <span style="font-size:0.8rem; font-weight:700; color:#065f46;">🟢 第 1 站：取貨起點 (A)</span>
           <div style="display:flex; gap:4px; align-items:center;">
             <span style="font-size:0.75rem; color:#64748b;">取貨：</span>
             <button type="button" class="btn-quick" onclick="setPickupOffset(0)">⚡ 現在 (即刻)</button>
@@ -261,7 +409,10 @@
         <div class="form-grid-3">
           <div class="form-group">
             <label>廠區名稱 *</label>
-            <input type="text" id="originName" required placeholder="點上方廠區填入">
+            <div class="autocomplete-wrapper">
+              <input type="text" id="originName" required autocomplete="off" placeholder="輸入關鍵字 (如: 台積電) 搜尋">
+              <div id="originDropdown" class="autocomplete-dropdown"></div>
+            </div>
           </div>
           <div class="form-group">
             <label>碼頭 / 棟別</label>
@@ -285,9 +436,9 @@
 
         <hr style="border:0; border-top:1px dashed #e2e8f0; margin:12px 0;">
 
-        <!-- 終點 C -->
+        <!-- 第 2 站：送達點 / 中途點 -->
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-          <span style="font-size:0.8rem; font-weight:700; color:#991b1b;">🎯 送達終點 (C)</span>
+          <span id="stop2Title" style="font-size:0.8rem; font-weight:700; color:#991b1b;">🎯 第 2 站：送達終點 (B)</span>
           <div style="display:flex; gap:4px; align-items:center;">
             <span style="font-size:0.75rem; color:#64748b;">車程快捷：</span>
             <button type="button" class="btn-quick" onclick="setDropoffImmediate()">⚡ 即刻送達</button>
@@ -300,7 +451,10 @@
         <div class="form-grid-3">
           <div class="form-group">
             <label>廠區名稱 *</label>
-            <input type="text" id="destName" required placeholder="點上方廠區填入">
+            <div class="autocomplete-wrapper">
+              <input type="text" id="destName" required autocomplete="off" placeholder="輸入關鍵字 (如: 台積電) 搜尋">
+              <div id="destDropdown" class="autocomplete-dropdown"></div>
+            </div>
           </div>
           <div class="form-group">
             <label>庫房 / 碼頭</label>
@@ -322,6 +476,47 @@
           </div>
         </div>
 
+        <!-- 第 3 站：折返點 (A) 或 續送終點 (C) -->
+        <div id="stop3Section" class="stop3-section">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
+            <span id="stop3Title" style="font-size:0.82rem; font-weight:700; color:#6d28d9;">🔁 第 3 站：折返終點 (回 A)</span>
+            <div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
+              <button type="button" id="btnSyncStop1" class="btn-quick" onclick="syncStop1ToStop3()" style="background:#ccfbf1; border-color:#5eead4; color:#0f766e;">🔄 同步第 1 站</button>
+              <button type="button" class="btn-quick" onclick="setStop3Immediate()">⚡ 即刻折返</button>
+              <button type="button" class="btn-quick" onclick="setStop3Offset(120)">+2 小時</button>
+              <button type="button" class="btn-quick" onclick="setStop3Offset(240)">+4 小時</button>
+            </div>
+          </div>
+
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label>廠區名稱 *</label>
+              <div class="autocomplete-wrapper">
+                <input type="text" id="stop3Name" autocomplete="off" placeholder="輸入關鍵字 (如: 台積電) 搜尋">
+                <div id="stop3Dropdown" class="autocomplete-dropdown"></div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>庫房 / 碼頭</label>
+              <input type="text" id="stop3Dock" placeholder="例: 3號卸貨口">
+            </div>
+            <div class="form-group">
+              <label>送達 / 折返期限 *</label>
+              <input type="text" id="stop3Time" value="依現場指示送達">
+            </div>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label>詳細地址</label>
+              <input type="text" id="stop3Addr" placeholder="自動帶入">
+            </div>
+            <div class="form-group">
+              <label>驗收 / 窗口電話</label>
+              <input type="text" id="stop3Contact" placeholder="無">
+            </div>
+          </div>
+        </div>
+
         <hr style="border:0; border-top:1px dashed #e2e8f0; margin:12px 0;">
 
         <!-- 司機指派與貨況備註 -->
@@ -334,7 +529,7 @@
           </div>
           <div class="form-group">
             <label>貨品 / 備註內容 (選填)</label>
-            <input type="text" id="cargoType" placeholder=" ">
+            <input type="text" id="cargoType" placeholder="例: 空盒帶回 / 雙趟確認">
           </div>
         </div>
 
@@ -369,8 +564,8 @@
                 <th>單號</th>
                 <th>建立時間</th>
                 <th>委託客戶</th>
-                <th>起點 (B)</th>
-                <th>終點 (C)</th>
+                <th>第 1 站 (起)</th>
+                <th>第 2 / 3 站 (送)</th>
                 <th>指派司機</th>
                 <th>貨況備註</th>
               </tr>
@@ -418,22 +613,84 @@
     // 👇 請把你在 Apps Script 部署得到的網址貼在下面雙引號內
     const DRIVER_API_URL = "https://script.google.com/macros/s/AKfycbwW_cszM48NYrPJoZG7EhW5vGzMISsIRsRXp47zDEOR-G9gjFerYzLtp24sGu0d9b2K/exec";
     
-    let CLIENTS = [];    // 委託客戶 A
-    let FACTORIES = [];  // 起訖廠區 B, C
+    let CLIENTS = [];    // 委託客戶
+    let FACTORIES = [];  // 廠區清冊
     let drivers = [];    // 司機清冊 (試算表 + 本地自定義司機)
     let customDrivers = JSON.parse(localStorage.getItem('custom_drivers') || '[]');
-    let currentClickStep = 1; // 1:選客戶A, 2:選起點B, 3:選終點C
+    let currentClickStep = 1; // 1:選客戶, 2:選第1站, 3:選第2站, 4:選第3站(多點模式)
+    let tripMode = 'single';  // 'single' | 'roundtrip' | 'multistop'
     let orderHistory = JSON.parse(localStorage.getItem('dispatch_orders') || '[]');
 
     function init() {
       setDefaultTimes();
       renderHistoryTable();
+      setupAllAutocompletes();
       loadGoogleSheets();
+    }
+
+    /* ========================================================
+       【行程模式切換：單趟 / 來回趟 / 多點串聯】
+       ======================================================== */
+    function setTripMode(mode) {
+      tripMode = mode;
+      document.querySelectorAll('.mode-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+      });
+
+      const stop2Title = document.getElementById('stop2Title');
+      const stop3Section = document.getElementById('stop3Section');
+      const stop3Title = document.getElementById('stop3Title');
+      const stop3NameInput = document.getElementById('stop3Name');
+      const stop3TimeInput = document.getElementById('stop3Time');
+      const btnSyncStop1 = document.getElementById('btnSyncStop1');
+
+      if (mode === 'single') {
+        stop2Title.textContent = '🎯 第 2 站：送達終點 (B)';
+        stop3Section.classList.remove('show', 'roundtrip-theme');
+        stop3NameInput.required = false;
+        stop3TimeInput.required = false;
+        if (currentClickStep === 4) resetClickStep();
+      } else if (mode === 'roundtrip') {
+        stop2Title.textContent = '🟠 第 2 站：去程送達 / 折返點 (B)';
+        stop3Section.classList.add('show', 'roundtrip-theme');
+        stop3Title.textContent = '🔁 第 3 站：折返終點 (回 A)';
+        stop3Title.style.color = '#0f766e';
+        btnSyncStop1.style.display = 'inline-block';
+        stop3NameInput.required = true;
+        stop3TimeInput.required = true;
+        if (!stop3TimeInput.value.trim()) stop3TimeInput.value = '完成第 2 站後折返送達';
+        syncStop1ToStop3();
+      } else if (mode === 'multistop') {
+        stop2Title.textContent = '🟠 第 2 站：中途停靠 / 卸載點 (B)';
+        stop3Section.classList.add('show');
+        stop3Section.classList.remove('roundtrip-theme');
+        stop3Title.textContent = '🟣 第 3 站：續送終點 (C)';
+        stop3Title.style.color = '#6d28d9';
+        btnSyncStop1.style.display = 'none';
+        stop3NameInput.required = true;
+        stop3TimeInput.required = true;
+        if (!stop3TimeInput.value.trim()) stop3TimeInput.value = '完成第 2 站後接續送達';
+      }
+    }
+
+    function syncStop1ToStop3() {
+      document.getElementById('stop3Name').value = document.getElementById('originName').value;
+      document.getElementById('stop3Addr').value = document.getElementById('originAddr').value;
+      document.getElementById('stop3Dock').value = document.getElementById('originDock').value;
+      document.getElementById('stop3Contact').value = document.getElementById('originContact').value;
+    }
+
+    function setStop3Immediate() {
+      document.getElementById('stop3Time').value = tripMode === 'roundtrip' ? '完成第 2 站後即刻折返' : '完成第 2 站後即刻送達';
+    }
+
+    function setStop3Offset(mins) {
+      document.getElementById('stop3Time').value = `${getTimeString(mins)} 前送達`;
     }
 
     async function loadGoogleSheets() {
       try {
-        // 1. 抓取委託客戶清冊 (A)
+        // 1. 抓取委託客戶清冊
         const cRes = await fetch(CLIENT_SHEET_URL);
         const cCsv = await cRes.text();
         const cLines = cCsv.split(/\r?\n/).filter(line => line.trim() !== '');
@@ -448,7 +705,7 @@
         }).filter(c => c.name !== '未命名客戶');
         renderClients();
 
-        // 2. 抓取廠區清冊 (B, C)
+        // 2. 抓取廠區清冊
         const fRes = await fetch(FACTORY_SHEET_URL);
         const fCsv = await fRes.text();
         const fLines = fCsv.split(/\r?\n/).filter(line => line.trim() !== '');
@@ -529,35 +786,224 @@
 
     function handleClientClick(c) {
       document.getElementById('clientName').value = c.name;
-      document.getElementById('clientTaxId').value = c.taxId ? `${c.taxId} (${c.contact})` : c.contact;
+      const taxInfo = c.taxId ? (c.contact ? `${c.taxId} (${c.contact})` : c.taxId) : c.contact;
+      document.getElementById('clientTaxId').value = taxInfo;
       currentClickStep = 2;
-      document.getElementById('currentStepText').textContent = "👉 步驟 2：請點擊【起點 B／取貨廠區】";
+      document.getElementById('currentStepText').textContent = "👉 步驟 2：請點擊【第 1 站／取貨起點】";
       document.getElementById('currentStepText').style.background = "#0284c7";
+    }
+
+    function fillOriginFactory(f) {
+      document.getElementById('originName').value = f.name;
+      document.getElementById('originAddr').value = f.addr;
+      document.getElementById('originDock').value = f.dock;
+      document.getElementById('originContact').value = "";
+      if (tripMode === 'roundtrip') {
+        syncStop1ToStop3();
+      }
+      currentClickStep = 3;
+      document.getElementById('currentStepText').textContent = "👉 步驟 3：請點擊【第 2 站／送達廠區】";
+      document.getElementById('currentStepText').style.background = "#dc2626";
+    }
+
+    function fillDestFactory(f) {
+      document.getElementById('destName').value = f.name;
+      document.getElementById('destAddr').value = f.addr;
+      document.getElementById('destDock').value = f.dock;
+      document.getElementById('destContact').value = "";
+      if (tripMode === 'multistop') {
+        currentClickStep = 4;
+        document.getElementById('currentStepText').textContent = "👉 步驟 4：請點擊【第 3 站／續送終點】";
+        document.getElementById('currentStepText').style.background = "#7c3aed";
+      } else {
+        resetClickStep();
+      }
+    }
+
+    function fillStop3Factory(f) {
+      document.getElementById('stop3Name').value = f.name;
+      document.getElementById('stop3Addr').value = f.addr;
+      document.getElementById('stop3Dock').value = f.dock;
+      document.getElementById('stop3Contact').value = "";
+      resetClickStep();
     }
 
     function handleFactoryClick(f) {
       if (currentClickStep === 1 || currentClickStep === 2) {
-        document.getElementById('originName').value = f.name;
-        document.getElementById('originAddr').value = f.addr;
-        document.getElementById('originDock').value = f.dock;
-        document.getElementById('originContact').value = "";
-        currentClickStep = 3;
-        document.getElementById('currentStepText').textContent = "👉 步驟 3：請點擊【終點 C／送達廠區】";
-        document.getElementById('currentStepText').style.background = "#dc2626";
+        fillOriginFactory(f);
+      } else if (currentClickStep === 3) {
+        fillDestFactory(f);
       } else {
-        document.getElementById('destName').value = f.name;
-        document.getElementById('destAddr').value = f.addr;
-        document.getElementById('destDock').value = f.dock;
-        document.getElementById('destContact').value = "";
-        currentClickStep = 1;
-        document.getElementById('currentStepText').textContent = "👉 步驟 1：請點擊【委託叫車客戶 A】";
-        document.getElementById('currentStepText').style.background = "#4338ca";
+        fillStop3Factory(f);
       }
+    }
+
+    /* ========================================================
+       【關鍵字搜尋下拉選單 (客戶 / 第1站 / 第2站 / 第3站)】
+       ======================================================== */
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function highlightKeyword(text, keyword) {
+      const safeText = escapeHtml(text);
+      if (!keyword) return safeText;
+      const escapedKw = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`(${escapedKw})`, 'ig');
+      return safeText.replace(regex, '<mark>$1</mark>');
+    }
+
+    function attachAutocomplete({ inputId, dropdownId, getItems, getTitle, getSub, matchItem, onSelect }) {
+      const input = document.getElementById(inputId);
+      const dropdown = document.getElementById(dropdownId);
+      let activeIndex = -1;
+      let currentMatches = [];
+
+      function renderDropdown() {
+        const keyword = input.value.trim();
+        const items = getItems();
+        currentMatches = keyword
+          ? items.filter(item => matchItem(item, keyword.toLowerCase()))
+          : items;
+
+        activeIndex = -1;
+        dropdown.innerHTML = '';
+
+        if (currentMatches.length === 0) {
+          dropdown.innerHTML = `<div class="autocomplete-empty">找不到符合「${escapeHtml(keyword)}」的項目（可直接手動輸入）</div>`;
+          dropdown.classList.add('show');
+          return;
+        }
+
+        currentMatches.forEach((item) => {
+          const row = document.createElement('div');
+          row.className = 'autocomplete-item';
+          const title = getTitle(item);
+          const sub = getSub(item);
+          row.innerHTML = `
+            <div class="autocomplete-item-title">${highlightKeyword(title, keyword)}</div>
+            ${sub ? `<div class="autocomplete-item-sub">${highlightKeyword(sub, keyword)}</div>` : ''}
+          `;
+          row.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            selectItem(item);
+          });
+          dropdown.appendChild(row);
+        });
+
+        dropdown.classList.add('show');
+      }
+
+      function selectItem(item) {
+        onSelect(item);
+        closeDropdown();
+      }
+
+      function closeDropdown() {
+        dropdown.classList.remove('show');
+        activeIndex = -1;
+      }
+
+      function updateActiveHighlight() {
+        const rows = dropdown.querySelectorAll('.autocomplete-item');
+        rows.forEach((r, i) => {
+          if (i === activeIndex) {
+            r.classList.add('active');
+            r.scrollIntoView({ block: 'nearest' });
+          } else {
+            r.classList.remove('active');
+          }
+        });
+      }
+
+      input.addEventListener('focus', renderDropdown);
+      input.addEventListener('input', renderDropdown);
+      input.addEventListener('blur', () => {
+        setTimeout(closeDropdown, 150);
+      });
+
+      input.addEventListener('keydown', (e) => {
+        if (!dropdown.classList.contains('show') || currentMatches.length === 0) return;
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          activeIndex = (activeIndex + 1) % currentMatches.length;
+          updateActiveHighlight();
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          activeIndex = (activeIndex - 1 + currentMatches.length) % currentMatches.length;
+          updateActiveHighlight();
+        } else if (e.key === 'Enter' && activeIndex >= 0) {
+          e.preventDefault();
+          e.stopPropagation();
+          selectItem(currentMatches[activeIndex]);
+        } else if (e.key === 'Escape') {
+          closeDropdown();
+        }
+      });
+    }
+
+    function setupAllAutocompletes() {
+      // 1. 委託客戶
+      attachAutocomplete({
+        inputId: 'clientName',
+        dropdownId: 'clientDropdown',
+        getItems: () => CLIENTS,
+        getTitle: c => c.name,
+        getSub: c => [c.fullName, c.taxId ? `統編 ${c.taxId}` : ''].filter(Boolean).join(' · '),
+        matchItem: (c, kw) =>
+          c.name.toLowerCase().includes(kw) ||
+          c.fullName.toLowerCase().includes(kw) ||
+          c.taxId.toLowerCase().includes(kw),
+        onSelect: c => handleClientClick(c)
+      });
+
+      // 2. 第 1 站：取貨起點
+      attachAutocomplete({
+        inputId: 'originName',
+        dropdownId: 'originDropdown',
+        getItems: () => FACTORIES,
+        getTitle: f => f.name,
+        getSub: f => f.addr,
+        matchItem: (f, kw) =>
+          f.name.toLowerCase().includes(kw) ||
+          f.addr.toLowerCase().includes(kw),
+        onSelect: f => fillOriginFactory(f)
+      });
+
+      // 3. 第 2 站：送達 / 中途點
+      attachAutocomplete({
+        inputId: 'destName',
+        dropdownId: 'destDropdown',
+        getItems: () => FACTORIES,
+        getTitle: f => f.name,
+        getSub: f => f.addr,
+        matchItem: (f, kw) =>
+          f.name.toLowerCase().includes(kw) ||
+          f.addr.toLowerCase().includes(kw),
+        onSelect: f => fillDestFactory(f)
+      });
+
+      // 4. 第 3 站：折返 / 續送終點
+      attachAutocomplete({
+        inputId: 'stop3Name',
+        dropdownId: 'stop3Dropdown',
+        getItems: () => FACTORIES,
+        getTitle: f => f.name,
+        getSub: f => f.addr,
+        matchItem: (f, kw) =>
+          f.name.toLowerCase().includes(kw) ||
+          f.addr.toLowerCase().includes(kw),
+        onSelect: f => fillStop3Factory(f)
+      });
     }
 
     function resetClickStep() {
       currentClickStep = 1;
-      document.getElementById('currentStepText').textContent = "👉 步驟 1：請點擊【委託叫車客戶 A】";
+      document.getElementById('currentStepText').textContent = "👉 步驟 1：請點擊【委託叫車客戶】";
       document.getElementById('currentStepText').style.background = "#4338ca";
     }
 
@@ -572,6 +1018,7 @@
     function setDefaultTimes() {
       document.getElementById('pickupTime').value = `${getTimeString(0)} (即刻取貨)`;
       document.getElementById('dropoffTime').value = "即刻送達";
+      document.getElementById('stop3Time').value = "完成第 2 站後送達";
     }
 
     function setPickupOffset(mins) {
@@ -622,7 +1069,7 @@
     }
 
     // 💡 完整回寫函式：自動解析電話、車牌並防重複
-async function autoSaveNewDriverToSheet(driverStr) {
+    async function autoSaveNewDriverToSheet(driverStr) {
       const exists = drivers.some(d => driverStr.includes(d.name));
       if (!exists) {
         const newD = { id: Date.now(), name: driverStr, phone: '', plate: '' };
@@ -648,10 +1095,7 @@ async function autoSaveNewDriverToSheet(driverStr) {
       name = name.replace(phone, '').replace(plate, '').replace(/[\(\)\-\s]/g, '').trim();
 
       try {
-        // 使用 URL 參數傳遞，完全繞過瀏覽器限制
         const targetUrl = `${DRIVER_API_URL}?name=${encodeURIComponent(name || driverStr)}&phone=${encodeURIComponent(phone)}&plate=${encodeURIComponent(plate)}`;
-        
-        // 透過 Image 或 fetch 發送，最穩妥
         const img = new Image();
         img.src = targetUrl;
         console.log("✅ 新司機已即時寫入 Google 試算表！");
@@ -665,7 +1109,6 @@ async function autoSaveNewDriverToSheet(driverStr) {
       const driverStr = document.getElementById('driverInput').value.trim();
       if (!driverStr) { alert("請填寫或選擇指派司機！"); return; }
 
-      // 💡 開單時自動觸發回寫與記憶
       autoSaveNewDriverToSheet(driverStr);
 
       const client = document.getElementById('clientName').value;
@@ -683,15 +1126,24 @@ async function autoSaveNewDriverToSheet(driverStr) {
       const dTime = document.getElementById('dropoffTime').value;
       const dContact = document.getElementById('destContact').value;
 
+      const hasStop3 = tripMode !== 'single';
+      const s3Name = hasStop3 ? document.getElementById('stop3Name').value.trim() : '';
+      const s3Dock = hasStop3 ? document.getElementById('stop3Dock').value.trim() : '';
+      const s3Addr = hasStop3 ? document.getElementById('stop3Addr').value.trim() : '';
+      const s3Time = hasStop3 ? document.getElementById('stop3Time').value.trim() : '';
+      const s3Contact = hasStop3 ? document.getElementById('stop3Contact').value.trim() : '';
+
       const cargo = document.getElementById('cargoType').value.trim() || '依指示載運';
+      const tripModeLabel = tripMode === 'roundtrip' ? '來回趟' : (tripMode === 'multistop' ? '多點串聯' : '單趟');
 
       const orderNo = "EXP-" + new Date().toISOString().slice(0,10).replace(/-/g,'') + "-" + Math.floor(100 + Math.random()*900);
       const createdAt = new Date().toLocaleString('zh-TW', { hour12: false });
 
       const newOrder = {
-        orderNo, createdAt, client, clientNote,
+        orderNo, createdAt, client, clientNote, tripMode, tripModeLabel,
         oName, oAddr, oDock, pTime, oContact,
         dName, dAddr, dDock, dTime, dContact,
+        s3Name, s3Addr, s3Dock, s3Time, s3Contact,
         driverInfo: driverStr,
         cargo
       };
@@ -699,9 +1151,12 @@ async function autoSaveNewDriverToSheet(driverStr) {
       localStorage.setItem('dispatch_orders', JSON.stringify(orderHistory));
       renderHistoryTable();
 
+      const oNav = oAddr ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(oAddr)}` : "";
       const dNav = dAddr ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dAddr)}` : "";
+      const s3Nav = s3Addr ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s3Addr)}` : "";
 
-      generatedText = `🚨【派工單】#${orderNo}
+      if (!hasStop3) {
+        generatedText = `🚨【派工單】#${orderNo}
 👤 指定司機：${driverStr}
 ──────────────────────
 🟢【取貨起點 (B)】
@@ -718,6 +1173,33 @@ ${dNav ? `🗺️ 導航：${dNav}\n` : ''}👤 驗收窗口：${dContact || ' '
 ──────────────────────
 📦【貨況備註】${cargo}
 ──────────────────────`;
+      } else {
+        const modeTag = tripMode === 'roundtrip' ? '🔄 來回趟' : '🔀 多點串聯';
+        const stop3Header = tripMode === 'roundtrip' ? '🔁【第 3 站｜折返終點】' : '🟣【第 3 站｜續送終點】';
+        generatedText = `🚨【派工單｜${modeTag}】#${orderNo}
+👤 指定司機：${driverStr}
+──────────────────────
+🟢【第 1 站｜取貨起點】
+🏢 廠區：${oName} ${oDock ? `(${oDock})` : ''}
+⏱️ 取貨時間：${pTime}
+📍 地址：${oAddr || '現場確認'}
+${oNav ? `🗺️ 導航：${oNav}\n` : ''}👤 現場窗口：${oContact || ' '}
+──────────────────────
+🟠【第 2 站｜${tripMode === 'roundtrip' ? '去程送達' : '中途卸載'}】
+🏢 廠區：${dName} ${dDock ? `(${dDock})` : ''}
+⏱️ 送達期限：${dTime}
+📍 地址：${dAddr || '現場確認'}
+${dNav ? `🗺️ 導航：${dNav}\n` : ''}👤 現場窗口：${dContact || ' '}
+──────────────────────
+${stop3Header}
+🏢 廠區：${s3Name} ${s3Dock ? `(${s3Dock})` : ''}
+⏱️ 期限：${s3Time || '完成第 2 站後送達'}
+📍 地址：${s3Addr || '現場確認'}
+${s3Nav ? `🗺️ 導航：${s3Nav}\n` : ''}👤 驗收窗口：${s3Contact || ' '}
+──────────────────────
+📦【貨況備註】${cargo}
+──────────────────────`;
+      }
 
       document.getElementById('previewBox').textContent = generatedText;
       document.getElementById('targetDriverLabel').textContent = `已指派：${driverStr}`;
@@ -734,14 +1216,20 @@ ${dNav ? `🗺️ 導航：${dNav}\n` : ''}👤 驗收窗口：${dContact || ' '
       tbody.innerHTML = '';
       orderHistory.forEach(o => {
         const tr = document.createElement('tr');
+        const modeBadge = o.tripMode === 'roundtrip'
+          ? '<span class="trip-badge roundtrip">來回</span>'
+          : (o.tripMode === 'multistop' ? '<span class="trip-badge multistop">多點</span>' : '');
+        const destDisplay = o.s3Name
+          ? `${escapeHtml(o.dName)}<br><span style="color:#6d28d9; font-weight:600;">↳ ${escapeHtml(o.s3Name)}</span>`
+          : escapeHtml(o.dName);
         tr.innerHTML = `
-          <td><strong>${o.orderNo}</strong></td>
-          <td>${o.createdAt}</td>
-          <td><span style="color:#4338ca; font-weight:600;">${o.client || '一般客戶'}</span></td>
-          <td>${o.oName}</td>
-          <td>${o.dName}</td>
-          <td>${o.driverInfo || '外車/自填'}</td>
-          <td>${o.cargo || '標準載運'}</td>
+          <td><strong>${escapeHtml(o.orderNo)}</strong>${modeBadge}</td>
+          <td>${escapeHtml(o.createdAt)}</td>
+          <td><span style="color:#4338ca; font-weight:600;">${escapeHtml(o.client || '一般客戶')}</span></td>
+          <td>${escapeHtml(o.oName)}</td>
+          <td>${destDisplay}</td>
+          <td>${escapeHtml(o.driverInfo || '外車/自填')}</td>
+          <td>${escapeHtml(o.cargo || '標準載運')}</td>
         `;
         tbody.appendChild(tr);
       });
@@ -749,12 +1237,13 @@ ${dNav ? `🗺️ 導航：${dNav}\n` : ''}👤 驗收窗口：${dContact || ' '
 
     function exportToExcel() {
       if (orderHistory.length === 0) { alert("目前沒有任何歷史紀錄可供匯出！"); return; }
-      let csv = "\uFEFF單號,開單時間,委託客戶,客戶備註,起點廠區,起點地址,取貨時間,起點電話,送達廠區,送達地址,送達期限,終點電話,指派司機,貨況備註\n";
+      let csv = "\uFEFF單號,開單時間,行程模式,委託客戶,客戶備註,第1站起點,起點地址,取貨時間,起點電話,第2站廠區,第2站地址,第2站期限,第2站電話,第3站廠區,第3站地址,第3站期限,第3站電話,指派司機,貨況備註\n";
       orderHistory.forEach(o => {
         const row = [
-          o.orderNo, o.createdAt, o.client || '', o.clientNote || '',
+          o.orderNo, o.createdAt, o.tripModeLabel || '單趟', o.client || '', o.clientNote || '',
           o.oName, o.oAddr, o.pTime, o.oContact || '',
           o.dName, o.dAddr, o.dTime, o.dContact || '',
+          o.s3Name || '', o.s3Addr || '', o.s3Time || '', o.s3Contact || '',
           o.driverInfo || '', o.cargo || ''
         ].map(val => `"${String(val).replace(/"/g, '""')}"`).join(",");
         csv += row + "\n";
@@ -773,13 +1262,17 @@ ${dNav ? `🗺️ 導航：${dNav}\n` : ''}👤 驗收窗口：${dContact || ' '
       const driverCounts = {};
       const routeCounts = {};
       const clientCounts = {};
+      let roundTripCount = 0;
+      let multiStopCount = 0;
 
       orderHistory.forEach(o => {
         const dName = o.driverInfo || '其他外車';
         driverCounts[dName] = (driverCounts[dName] || 0) + 1;
-        const route = `${o.oName} ➔ ${o.dName}`;
+        const route = o.s3Name ? `${o.oName} ➔ ${o.dName} ➔ ${o.s3Name}` : `${o.oName} ➔ ${o.dName}`;
         routeCounts[route] = (routeCounts[route] || 0) + 1;
         if (o.client) clientCounts[o.client] = (clientCounts[o.client] || 0) + 1;
+        if (o.tripMode === 'roundtrip') roundTripCount++;
+        if (o.tripMode === 'multistop') multiStopCount++;
       });
 
       let driverRank = Object.entries(driverCounts)
@@ -799,7 +1292,7 @@ ${dNav ? `🗺️ 導航：${dNav}\n` : ''}👤 驗收窗口：${dContact || ' '
       latestAiReport = `📊【專車物流 每週營運分析週報】
 ──────────────────────────────
 📅 結算區間：截至 ${new Date().toLocaleDateString('zh-TW')}
-📈 累計完成派工趟次：${totalOrders} 趟
+📈 累計完成派工趟次：${totalOrders} 趟（含來回趟 ${roundTripCount} 趟、多點串聯 ${multiStopCount} 趟）
 
 🏢【下單委託客戶 Top 3】
 ${clientRank || '  • 暫無特定客戶'}
@@ -812,7 +1305,7 @@ ${routeRank}
 
 💡【AI 營運與調度建議】
 1. 尖峰路線高度集中於特定半導體廠區間，可針對高頻往返之客戶進行定期合約運費或月結專案洽談。
-2. 外車或特定同仁趟次過多時，可適度平衡班表以確保排程彈性。
+2. 來回趟與多點串聯趟次建議於派單時標明折返等待或空盒帶回條件，以利對帳與司機排程銜接。
 ──────────────────────────────`;
 
       document.getElementById('aiReportCard').style.display = 'block';
@@ -855,6 +1348,7 @@ ${routeRank}
 
     function clearAllForm() {
       document.getElementById('dispatchForm').reset();
+      setTripMode('single');
       resetClickStep();
       setDefaultTimes();
     }
