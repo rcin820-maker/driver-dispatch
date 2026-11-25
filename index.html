@@ -582,6 +582,21 @@
     }
     .driver-item:hover { border-color: #0284c7; background: #f0f9ff; }
 
+    .history-date-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .history-date-input {
+      padding: 4px 8px;
+      border: 1px solid #cbd5e1;
+      border-radius: 5px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: #0f172a;
+      background: #f8fafc;
+      cursor: pointer;
+    }
     .history-filter-bar {
       display: flex;
       gap: 6px;
@@ -930,14 +945,16 @@
       <div class="card">
         <div class="card-title">
           <div>
-            <span>今日派單紀錄（<span id="historyCount">0</span> 筆）</span>
+            <span id="historyTitleLabel">今日派單紀錄</span>（<span id="historyCount">0</span> 筆）
             <span id="historySyncStatus" class="sync-status" style="margin-left:8px;">準備同步...</span>
           </div>
-          <div style="display:flex; gap:5px; flex-wrap:wrap;">
-            <button type="button" class="btn-quick" onclick="loadOrderHistoryFromSheet()">同步雲端</button>
+          <div style="display:flex; gap:5px; flex-wrap:wrap; align-items:center;">
+            <div class="history-date-wrap">
+              <input type="date" id="historyDateInput" class="history-date-input" onchange="onHistoryDateChange(this.value)" aria-label="選擇派單紀錄日期">
+              <button type="button" id="btnHistoryToday" class="btn-quick" style="display:none;" onclick="resetHistoryDateToToday()">回今天</button>
+            </div>
             <button type="button" class="btn-quick" style="background:#0f766e; color:#fff; border:none;" onclick="exportToExcel()">匯出 CSV</button>
             <button type="button" class="btn-quick" style="background:#4338ca; color:#fff; border:none;" onclick="generateAiWeeklyReport()">今日摘要</button>
-            <button type="button" class="btn-quick danger-text" onclick="clearHistory()">清本機</button>
           </div>
         </div>
 
@@ -1060,6 +1077,11 @@
       }
       suppressMobileAutofill();
 
+      const histDateEl = document.getElementById('historyDateInput');
+      if (histDateEl) {
+        selectedHistoryDate = getTodayIso();
+        histDateEl.value = selectedHistoryDate;
+      }
       restoreDraftFromStorage();
       renderHistoryTable();
       loadGoogleSheets();
@@ -2090,16 +2112,40 @@
       return prefix + String(maxSeq + 1).padStart(3, '0');
     }
 
-    function isOrderForToday(o) {
-      const todayIso = getTodayIso();
-      const todayCompact = todayIso.replace(/-/g, '');
-      const todaySlash = `${new Date().getFullYear()}/${new Date().getMonth() + 1}/${new Date().getDate()}`;
-      const todaySlashPad = todayIso.replace(/-/g, '/');
+    let selectedHistoryDate = '';
 
-      if (o.dispatchDate === todayIso) return true;
-      if (o.orderNo && o.orderNo.includes(todayCompact)) return true;
-      const c = String(o.createdAt || '');
-      return c.startsWith(todaySlashPad) || c.startsWith(todaySlash) || c.startsWith(todayIso);
+    function onHistoryDateChange(val) {
+      selectedHistoryDate = val || getTodayIso();
+      const el = document.getElementById('historyDateInput');
+      if (el && el.value !== selectedHistoryDate) el.value = selectedHistoryDate;
+      renderHistoryTable();
+    }
+
+    function resetHistoryDateToToday() {
+      onHistoryDateChange(getTodayIso());
+    }
+
+    function getOrderEffectiveDateIso(o) {
+      const dDate = String(o.dispatchDate || '').trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dDate)) return dDate;
+
+      const noMatch = String(o.orderNo || '').match(/(\d{4})(\d{2})(\d{2})/);
+      if (noMatch) return `${noMatch[1]}-${noMatch[2]}-${noMatch[3]}`;
+
+      const cMatch = String(o.createdAt || '').match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+      if (cMatch) {
+        return `${cMatch[1]}-${cMatch[2].padStart(2, '0')}-${cMatch[3].padStart(2, '0')}`;
+      }
+      return '';
+    }
+
+    function isOrderForDate(o, targetIso) {
+      const iso = targetIso || getTodayIso();
+      return getOrderEffectiveDateIso(o) === iso;
+    }
+
+    function isOrderForToday(o) {
+      return isOrderForDate(o, selectedHistoryDate || getTodayIso());
     }
 
     function isOrderPendingData(o) {
@@ -2214,7 +2260,20 @@ ${stopBlocks}
 
       const isUpdate = Boolean(editingOrderNo);
       const existingOrder = isUpdate ? allOrders.find(o => o.orderNo === editingOrderNo) : null;
-      const orderNo = isUpdate ? editingOrderNo : generateNextOrderNo(dispatchDate);
+      let orderNo = editingOrderNo;
+      if (!isUpdate) {
+        orderNo = generateNextOrderNo(dispatchDate);
+      } else {
+        const oldDateMatch = String(editingOrderNo || '').match(/EXP-(\d{8})-/);
+        const oldCompact = oldDateMatch ? oldDateMatch[1] : '';
+        const newTargetIso = dispatchDate || (existingOrder && existingOrder.dispatchDate ? getTodayIso() : '');
+        if (newTargetIso) {
+          const newCompact = newTargetIso.replace(/-/g, '');
+          if (newCompact !== oldCompact) {
+            orderNo = generateNextOrderNo(newTargetIso);
+          }
+        }
+      }
       const createdAt = existingOrder ? existingOrder.createdAt : new Date().toLocaleString('zh-TW', { hour12: false });
 
       const feeLabels = [];
@@ -2250,7 +2309,10 @@ ${stopBlocks}
       renderHistoryTable();
       renderClients();
       renderDrivers();
-      saveOrderToSheet(newOrder, isUpdate ? 'update' : 'create');
+      const payloadOrder = (isUpdate && orderNo !== editingOrderNo)
+        ? { ...newOrder, prevOrderNo: editingOrderNo }
+        : newOrder;
+      saveOrderToSheet(payloadOrder, isUpdate ? 'update' : 'create');
 
       const dispatchMsg = formatDispatchMessage(newOrder);
 
@@ -2356,8 +2418,15 @@ ${stopBlocks}
       const kw = (document.getElementById('historySearchInput')?.value || '').trim().toLowerCase();
       const now = Date.now();
 
+      const activeDate = selectedHistoryDate || getTodayIso();
+      const isTodayView = activeDate === getTodayIso();
+      const titleEl = document.getElementById('historyTitleLabel');
+      const todayBtn = document.getElementById('btnHistoryToday');
+      if (titleEl) titleEl.textContent = isTodayView ? '今日派單紀錄' : `${activeDate} 派單紀錄`;
+      if (todayBtn) todayBtn.style.display = isTodayView ? 'none' : 'inline-block';
+
       const visibleOrders = allOrders.filter(o => {
-        if (!isOrderForToday(o)) return false;
+        if (!isOrderForDate(o, activeDate)) return false;
         const isCancelled = Boolean(o.cancelled || (o.tripModeLabel && o.tripModeLabel.includes('已取消')));
         if (isCancelled && o.cancelledAt && (now - o.cancelledAt >= CANCEL_HIDE_MS)) {
           return false;
@@ -2376,7 +2445,7 @@ ${stopBlocks}
 
       document.getElementById('historyCount').textContent = filtered.length;
       if (filtered.length === 0) {
-        const msg = onlyPendingFilter ? '目前沒有資料待補單' : '今日尚無符合的派單紀錄';
+        const msg = onlyPendingFilter ? '該日沒有資料待補單' : (isTodayView ? '今日尚無符合的派單紀錄' : `${activeDate} 尚無符合的派單紀錄`);
         tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#94a3b8;">${msg}</td></tr>`;
         mobileList.innerHTML = `<div style="text-align:center; color:#94a3b8; font-size:0.82rem; padding:16px;">${msg}</div>`;
         return;
@@ -2615,7 +2684,7 @@ ${stopBlocks}
 
       latestAiReport = `【飛達旺 今日營運分析摘要】
 ──────────────────────────────
-日期：${getTodayIso()}
+日期：${selectedHistoryDate || getTodayIso()}
 有效派工趟次：${totalOrders} 趟（來回單 ${roundTripCount} 趟／已取消 ${cancelledCount} 筆）
 
 【委託客戶 Top 3】
@@ -2635,15 +2704,6 @@ ${routeRank}
     function copyAiReport() {
       if (!latestAiReport) return;
       navigator.clipboard.writeText(latestAiReport).then(() => showToast('已複製摘要'));
-    }
-
-    function clearHistory() {
-      if (confirm("確定要清空本機快取的紀錄嗎？（雲端試算表紀錄不會被刪除）")) {
-        allOrders = [];
-        localStorage.removeItem('dispatch_orders');
-        renderHistoryTable();
-        showToast('已清空本機快取');
-      }
     }
 
     const DRAFT_STORAGE_KEY = 'dispatch_draft_v1';
