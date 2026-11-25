@@ -101,61 +101,19 @@
       padding-bottom: 0;
     }
 
-    .flow-indicator {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      background: #f8fafc;
-      border: 1px solid #cbd5e1;
-      padding: 7px 10px;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      color: #334155;
-      font-weight: 600;
-      margin-bottom: 10px;
-      flex-wrap: wrap;
-    }
-    .flow-step-active {
-      background: #0f172a;
-      color: #fff;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 0.76rem;
-    }
-
-    .factory-grid {
+    .client-chip-box {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      max-height: 130px;
+      max-height: 110px;
       overflow-y: auto;
       padding: 6px;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      margin-bottom: 10px;
-      transition: opacity 0.15s;
-    }
-    .factory-grid.locked {
-      opacity: 0.45;
-      background: #f1f5f9;
-    }
-    .factory-chip {
-      background: #fff;
-      border: 1px solid #cbd5e1;
-      padding: 6px 10px;
-      font-size: 0.8rem;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: 600;
-      color: #1e293b;
-    }
-    .factory-chip:hover:not(:disabled) { border-color: #0284c7; background: #f0f9ff; color: #0284c7; }
-    .factory-chip:disabled { cursor: not-allowed; }
-
-    .client-chip {
       background: #eef2ff;
+      border: 1px solid #c7d2fe;
+      border-radius: 6px;
+    }
+    .client-chip {
+      background: #ffffff;
       border: 1px solid #c7d2fe;
       color: #3730a3;
       padding: 6px 10px;
@@ -181,6 +139,7 @@
       align-items: center;
       gap: 4px;
       flex-wrap: wrap;
+      min-height: 24px;
     }
     .form-group input, .form-group select {
       padding: 8px 10px;
@@ -306,6 +265,43 @@
     }
     .btn-cancel-order:hover { background: #b91c1c; }
 
+    .extra-fee-box {
+      display: none;
+      background: #fefce8;
+      border: 1px solid #fde047;
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-top: 10px;
+    }
+    .extra-fee-box.show { display: block; }
+    .extra-fee-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #854d0e;
+      margin-bottom: 8px;
+    }
+    .fee-toggle-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .fee-chip {
+      padding: 6px 12px;
+      border: 1px solid #cbd5e1;
+      background: #fff;
+      color: #334155;
+      border-radius: 5px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .fee-chip.active {
+      background: #b45309;
+      color: #fff;
+      border-color: #b45309;
+    }
+
     .autocomplete-wrapper { position: relative; width: 100%; }
     .autocomplete-dropdown {
       position: absolute;
@@ -413,21 +409,11 @@
     }
     .cal-footer button:hover { background: #eff6ff; }
 
-    .time-combo { display: flex; gap: 4px; width: 100%; min-width: 0; }
-    .time-combo input { flex: 1; min-width: 0; }
-    .time-combo select {
-      width: 104px;
-      flex-shrink: 0;
-      font-size: 0.8rem;
-      padding: 7px 4px;
-      color: #334155;
-    }
-
     .btn-quick {
       background: #f1f5f9;
       border: 1px solid #cbd5e1;
-      padding: 5px 9px;
-      font-size: 0.75rem;
+      padding: 4px 8px;
+      font-size: 0.74rem;
       border-radius: 4px;
       cursor: pointer;
       font-weight: 600;
@@ -542,6 +528,7 @@
     }
     .trip-badge.pending { background: #fef3c7; color: #b45309; }
     .trip-badge.cancelled { background: #fee2e2; color: #b91c1c; }
+    .trip-badge.fee { background: #fef08a; color: #854d0e; }
     .act-tag {
       display: inline-block;
       font-size: 0.68rem;
@@ -591,32 +578,15 @@
   <div class="main-container">
     <div>
 
-      <!-- 1. 快速點選區（可收合） -->
+      <!-- 1. 委託客戶快選按鈕區（保留，可收合） -->
       <div class="card">
         <div class="card-title" id="quickCardTitle">
-          <span>快速帶入</span>
-          <div style="display:flex; gap:6px; align-items:center;">
-            <span class="roundtrip-badge" id="headerRoundtripBadge">來回單</span>
-            <button type="button" class="btn-quick" onclick="resetClickStep()">重設順序</button>
-            <button type="button" class="btn-quick" id="btnToggleQuick" onclick="toggleQuickCard()">收合</button>
-          </div>
+          <span>委託客戶（點擊帶入起點）</span>
+          <button type="button" class="btn-quick" id="btnToggleQuick" onclick="toggleQuickCard()">收合</button>
         </div>
-
         <div id="quickCardBody">
-          <div class="flow-indicator">
-            <span class="flow-step-active" id="currentStepText">步驟 1：請先選取委託客戶</span>
-          </div>
-
-          <div style="font-size:0.75rem; font-weight:700; color:#4338ca; margin-bottom:4px;">委託客戶（選取後自動填入第 1 站起點）</div>
-          <div class="factory-grid" id="clientButtons" style="max-height:86px; background:#eef2ff; border-color:#c7d2fe;">
+          <div class="client-chip-box" id="clientButtons">
             <div style="color:#64748b; font-size:0.8rem; padding:4px;">正在連線同步客戶名冊...</div>
-          </div>
-
-          <div style="font-size:0.75rem; font-weight:700; color:#0369a1; margin-bottom:4px; margin-top:6px;">
-            路線廠區 <span id="factoryLockHint" style="color:#94a3b8; font-weight:500;">（請先選擇委託客戶後解鎖）</span>
-          </div>
-          <div class="factory-grid locked" id="factoryButtons">
-            <div style="color:#64748b; font-size:0.8rem; padding:4px;">正在從 Google 試算表同步廠區...</div>
           </div>
         </div>
       </div>
@@ -624,7 +594,10 @@
       <!-- 2. 派單表單 -->
       <form id="dispatchForm" class="card" onsubmit="event.preventDefault(); submitDispatch();">
         <div class="card-title">
-          <span>派單資料核對</span>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <span>派單資料核對</span>
+            <span class="roundtrip-badge" id="headerRoundtripBadge">來回單</span>
+          </div>
           <button type="button" onclick="clearAllForm()" class="btn-quick">清空重填</button>
         </div>
 
@@ -637,7 +610,7 @@
           </div>
         </div>
 
-        <!-- 委託客戶 ＋ 預排日期 -->
+        <!-- 委託客戶（關鍵字搜尋）＋ 預排日期 -->
         <div class="form-grid-3" style="background:#f8fafc; padding:10px; border-radius:6px; margin-bottom:12px; border:1px solid #e2e8f0;">
           <div class="form-group">
             <label style="color:#4338ca;">委託客戶 *</label>
@@ -666,11 +639,6 @@
               <span>第 1 站｜取貨起點</span>
               <span class="act-tag pickup">取貨</span>
             </div>
-            <div class="station-actions" id="originTimeQuickBtns">
-              <button type="button" class="btn-quick" onclick="setPickupOffset(0)">即刻</button>
-              <button type="button" class="btn-quick" onclick="setPickupOffset(15)">+15分</button>
-              <button type="button" class="btn-quick" onclick="setPickupOffset(30)">+30分</button>
-            </div>
           </div>
 
           <div class="form-grid-3">
@@ -685,14 +653,9 @@
               <label>碼頭 / 棟別</label>
               <input type="text" id="originDock">
             </div>
-            <div class="form-group">
+            <div class="form-group" id="originTimeGroup">
               <label>預計取貨時間 *</label>
-              <div class="time-combo">
-                <input type="text" id="pickupTime" required oninput="updateOriginTimeBtnsVisibility()">
-                <select onchange="applyTimeSlot('pickupTime', this)">
-                  <option value="">時段快捷</option>
-                </select>
-              </div>
+              <input type="text" id="pickupTime" required>
             </div>
           </div>
 
@@ -715,7 +678,7 @@
           </div>
         </div>
 
-        <!-- 動態後續站點 (第 2 站 ~ 第 5 站，最多 4 站) -->
+        <!-- 動態後續站點 (第 2 站 ~ 第 9 站，最多 8 站) -->
         <div id="dynamicStopsContainer"></div>
 
         <button type="button" id="btnAddStop" class="btn-add-stop" onclick="addStop()" disabled>
@@ -738,27 +701,45 @@
           </div>
         </div>
 
+        <!-- 補填/修改專屬：異常費用登記（放在更新單號按鈕正上方） -->
+        <div id="extraFeeBox" class="extra-fee-box">
+          <div class="extra-fee-title">異常費用登記（對帳用，僅補填／修改時顯示）</div>
+          <div class="fee-toggle-row">
+            <button type="button" id="btnEmptyRunFee" class="fee-chip" onclick="toggleExtraFee('emptyRun')">(取消)空趟費</button>
+            <button type="button" id="btnWaitFee" class="fee-chip" onclick="toggleExtraFee('waitFee')">(等待)超時費</button>
+          </div>
+          <div class="form-grid-2" style="margin-bottom:0;">
+            <div class="form-group">
+              <label>費用金額（選填）</label>
+              <input type="text" id="extraFeeAmount" inputmode="numeric">
+            </div>
+            <div class="form-group">
+              <label>費用說明（選填）</label>
+              <input type="text" id="extraFeeNote">
+            </div>
+          </div>
+        </div>
+
         <button type="submit" id="submitBtn" class="btn-submit" style="margin-top:10px;">
           產出派單並同步雲端
         </button>
       </form>
 
-      <!-- 3. 派單歷史紀錄 -->
+      <!-- 3. 今日派單歷史紀錄 -->
       <div class="card">
         <div class="card-title">
           <div>
-            <span>派單歷史紀錄（<span id="historyCount">0</span> 筆）</span>
+            <span>今日派單紀錄（<span id="historyCount">0</span> 筆）</span>
             <span id="historySyncStatus" class="sync-status" style="margin-left:8px;">準備同步...</span>
           </div>
           <div style="display:flex; gap:5px; flex-wrap:wrap;">
             <button type="button" class="btn-quick" onclick="loadOrderHistoryFromSheet()">同步雲端</button>
             <button type="button" class="btn-quick" style="background:#0f766e; color:#fff; border:none;" onclick="exportToExcel()">匯出 CSV</button>
-            <button type="button" class="btn-quick" style="background:#4338ca; color:#fff; border:none;" onclick="generateAiWeeklyReport()">週報</button>
+            <button type="button" class="btn-quick" style="background:#4338ca; color:#fff; border:none;" onclick="generateAiWeeklyReport()">今日摘要</button>
             <button type="button" class="btn-quick danger-text" onclick="clearHistory()">清本機</button>
           </div>
         </div>
 
-        <!-- 搜尋與「資料待補單」篩選列 -->
         <div class="history-filter-bar">
           <input type="text" id="historySearchInput" class="history-search-input" oninput="renderHistoryTable()" aria-label="搜尋歷史紀錄">
           <button type="button" id="btnPendingFilter" class="btn-quick" onclick="togglePendingFilter()">資料待補單</button>
@@ -766,7 +747,7 @@
 
         <div id="aiReportCard" style="display:none; background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:12px; margin-bottom:10px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <strong style="color:#0f172a; font-size:0.85rem;">每週營運分析摘要</strong>
+            <strong style="color:#0f172a; font-size:0.85rem;">今日營運分析摘要</strong>
             <button type="button" class="btn-quick" onclick="copyAiReport()">複製報表</button>
           </div>
           <pre id="aiReportText" style="white-space:pre-wrap; font-size:0.8rem; color:#334155; font-family:sans-serif; line-height:1.6;"></pre>
@@ -782,12 +763,12 @@
                 <th>起點</th>
                 <th>後續站點路線</th>
                 <th>指派司機</th>
-                <th>貨況備註</th>
+                <th>備註 / 費用</th>
                 <th>操作</th>
               </tr>
             </thead>
             <tbody id="historyTableBody">
-              <tr><td colspan="8" style="text-align:center; color:#94a3b8;">尚無歷史紀錄</td></tr>
+              <tr><td colspan="8" style="text-align:center; color:#94a3b8;">今日尚無派單紀錄</td></tr>
             </tbody>
           </table>
         </div>
@@ -831,7 +812,9 @@
     const DRIVER_API_URL = "https://script.google.com/macros/s/AKfycbwW_cszM48NYrPJoZG7EhW5vGzMISsIRsRXp47zDEOR-G9gjFerYzLtp24sGu0d9b2K/exec";
     const ORDER_API_URL = "https://script.google.com/macros/s/AKfycbw2akdw-_rO69PSPcjOpz27rHODlACRVIm2p5sfuKmqXQ_guOnAHftj49dopbZQdSbE/exec";
 
-    const MAX_STOPS = 4;
+    const MAX_STOPS = 8;
+    const CANCEL_HIDE_MS = 30 * 60 * 1000;
+    const HOURLY_CHECK_MS = 60 * 60 * 1000;
     let CLIENTS = [];
     let FACTORIES = [];
     let drivers = [];
@@ -839,10 +822,19 @@
     let orderHistory = JSON.parse(localStorage.getItem('dispatch_orders') || '[]');
 
     let stops = [];
-    let activeTargetStopIdx = 0;
     let editingOrderNo = null;
     let onlyPendingFilter = false;
     let quickCardCollapsed = false;
+    let extraFees = { emptyRun: false, waitFee: false };
+
+    function getTodayIso() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function getTodayCompact() {
+      return getTodayIso().replace(/-/g, '');
+    }
 
     function createEmptyStop() {
       return {
@@ -850,7 +842,6 @@
         name: '',
         addr: '',
         dock: '',
-        time: '即刻送達',
         contact: '依貨單指示',
         isUnknown: false
       };
@@ -858,7 +849,6 @@
 
     function init() {
       stops = [createEmptyStop()];
-      populateTimeSlotSelects();
       initCalendarPicker();
       setDefaultTimes();
       renderDynamicStops();
@@ -866,9 +856,12 @@
       setupOriginAutocomplete();
       setupDriverAutocomplete();
       updateClientGateState();
+      updateOriginTimeVisibility();
       renderHistoryTable();
       loadGoogleSheets();
       loadOrderHistoryFromSheet();
+      // 每小時檢查一次已取消單是否超過 30 分鐘或跨日更新
+      setInterval(renderHistoryTable, HOURLY_CHECK_MS);
     }
 
     let toastTimer = null;
@@ -893,19 +886,7 @@
 
     function updateClientGateState() {
       const unlocked = hasClientSelected();
-      const factoryBox = document.getElementById('factoryButtons');
-      const lockHint = document.getElementById('factoryLockHint');
       const addBtn = document.getElementById('btnAddStop');
-
-      factoryBox.classList.toggle('locked', !unlocked);
-      factoryBox.querySelectorAll('button.factory-chip').forEach(btn => {
-        btn.disabled = !unlocked;
-      });
-      if (lockHint) {
-        lockHint.textContent = unlocked ? '（點擊依序填入第 2～5 站）' : '（請先選擇委託客戶後解鎖）';
-        lockHint.style.color = unlocked ? '#64748b' : '#b45309';
-      }
-
       if (!unlocked) {
         addBtn.disabled = true;
         addBtn.textContent = '+ 新增站點（請先選擇委託客戶）';
@@ -916,60 +897,27 @@
         addBtn.disabled = false;
         addBtn.textContent = `+ 新增站點（目前 ${stops.length} / 最多 ${MAX_STOPS} 站）`;
       }
-
-      updateStepIndicatorText();
     }
 
-    function isExplicitTimeSlot(val) {
-      const v = String(val || '').trim();
-      return v === '不指定' || /^\d{1,2}:\d{2}\s*-\s*\d{1,2}:\d{2}$/.test(v);
+    /* ========================================================
+       【第 1 站取貨時間：預設「即刻」，非當日日期不顯示時間】
+       ======================================================== */
+    function isNonTodayDateSelected() {
+      const val = document.getElementById('dispatchDate').value.trim();
+      return Boolean(val && val !== getTodayIso());
     }
 
-    function updateOriginTimeBtnsVisibility() {
-      const val = document.getElementById('pickupTime').value;
-      const box = document.getElementById('originTimeQuickBtns');
-      if (box) box.style.display = isExplicitTimeSlot(val) ? 'none' : 'flex';
+    function updateOriginTimeVisibility() {
+      const hideTime = isNonTodayDateSelected();
+      const group = document.getElementById('originTimeGroup');
+      const input = document.getElementById('pickupTime');
+      if (group) group.style.display = hideTime ? 'none' : 'flex';
+      if (input) input.required = !hideTime;
     }
 
-    function buildTimeSlotOptionsHtml() {
-      let html = '<option value="">時段快捷</option>';
-      html += '<option value="不指定">不指定</option>';
-      html += '<option value="__CUSTOM__">自訂區間</option>';
-      for (let h = 0; h < 24; h++) {
-        const hh = String(h).padStart(2, '0');
-        const nextHh = String((h + 1) % 24).padStart(2, '0');
-        html += `<option value="${hh}:00-${nextHh}:00">${hh}:00-${nextHh}:00</option>`;
-      }
-      return html;
-    }
-
-    function populateTimeSlotSelects() {
-      const originSel = document.querySelector('#dispatchForm .origin-box .time-combo select');
-      if (originSel) originSel.innerHTML = buildTimeSlotOptionsHtml();
-    }
-
-    function applyTimeSlot(inputId, selectEl, stopIdx = null) {
-      const val = selectEl.value;
-      if (!val) return;
-      const input = document.getElementById(inputId);
-      if (val === '__CUSTOM__') {
-        const custom = prompt('請輸入自訂時間區間（例如：14:00-16:30）', input.value || '');
-        if (custom !== null && custom.trim()) {
-          input.value = custom.trim();
-          if (stopIdx !== null && stops[stopIdx]) stops[stopIdx].time = input.value;
-        }
-      } else {
-        input.value = val;
-        if (stopIdx !== null && stops[stopIdx]) stops[stopIdx].time = val;
-      }
-      selectEl.value = '';
-      if (stopIdx === null) {
-        updateOriginTimeBtnsVisibility();
-      } else {
-        updateStopSmartButtons(stopIdx);
-      }
-    }
-
+    /* ========================================================
+       【彈出式月曆 (預設空白)】
+       ======================================================== */
     let calViewYear = new Date().getFullYear();
     let calViewMonth = new Date().getMonth();
 
@@ -1002,8 +950,7 @@
       const popover = document.getElementById('calendarPopover');
       const input = document.getElementById('dispatchDate');
       const selectedVal = input.value;
-      const today = new Date();
-      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const todayStr = getTodayIso();
 
       const firstDay = new Date(calViewYear, calViewMonth, 1).getDay();
       const daysInMonth = new Date(calViewYear, calViewMonth + 1, 0).getDate();
@@ -1055,8 +1002,12 @@
     function selectCalendarDate(dateStr) {
       document.getElementById('dispatchDate').value = dateStr;
       document.getElementById('calendarPopover').classList.remove('show');
+      updateOriginTimeVisibility();
     }
 
+    /* ========================================================
+       【動態站點渲染（「現場確認」放在廠區名稱旁）】
+       ======================================================== */
     function isRoundTripDetected() {
       const originName = document.getElementById('originName').value.trim();
       if (!originName || stops.length < 2) return false;
@@ -1074,16 +1025,12 @@
       const originName = document.getElementById('originName').value.trim();
       const isReturnToA = Boolean(originName && stop.name.trim() === originName && stops.length >= 2);
       const hasName = stop.name.trim() !== '';
-      const hasExplicitSlot = isExplicitTimeSlot(stop.time);
 
       const rtBtn = document.getElementById(`btnRoundtrip_${idx}`);
       if (rtBtn) rtBtn.style.display = (idx >= 1 && !isReturnToA) ? 'inline-block' : 'none';
 
       const unkBtn = document.getElementById(`btnUnknown_${idx}`);
       if (unkBtn) unkBtn.style.display = !hasName ? 'inline-block' : 'none';
-
-      const timeBtns = document.getElementById(`stopTimeQuickBtns_${idx}`);
-      if (timeBtns) timeBtns.style.display = hasExplicitSlot ? 'none' : 'inline-flex';
 
       updateRoundTripIndicator();
     }
@@ -1099,14 +1046,12 @@
       container.innerHTML = '';
 
       const originName = document.getElementById('originName').value.trim();
-      const optionsHtml = buildTimeSlotOptionsHtml();
 
       stops.forEach((stop, idx) => {
         const stationNo = idx + 2;
         const isReturnToA = Boolean(originName && stop.name.trim() === originName && stops.length >= 2);
         const showRoundtripBtn = idx >= 1 && !isReturnToA;
         const showUnknownBtn = !stop.name.trim();
-        const showTimeQuickBtns = !isExplicitTimeSlot(stop.time);
         const actionCls = getActionClass(stop.action);
 
         const box = document.createElement('div');
@@ -1125,21 +1070,18 @@
               <button type="button" id="btnRoundtrip_${idx}" class="btn-quick primary-outline"
                 style="display:${showRoundtripBtn ? 'inline-block' : 'none'};"
                 onclick="applyRoundTripToStop(${idx})">來回單</button>
-              <button type="button" id="btnUnknown_${idx}" class="btn-quick"
-                style="display:${showUnknownBtn ? 'inline-block' : 'none'};"
-                onclick="markStopUnknown(${idx})">現場確認</button>
-              <span id="stopTimeQuickBtns_${idx}" style="display:${showTimeQuickBtns ? 'inline-flex' : 'none'}; gap:4px;">
-                <button type="button" class="btn-quick" onclick="setStopTimeQuick(${idx}, '即刻送達')">即刻</button>
-                <button type="button" class="btn-quick" onclick="setStopTimeOffset(${idx}, 60)">+1小時</button>
-                <button type="button" class="btn-quick" onclick="setStopTimeOffset(${idx}, 120)">+2小時</button>
-              </span>
               ${stops.length > 1 ? `<button type="button" class="btn-quick danger-text" onclick="removeStop(${idx})">移除</button>` : ''}
             </div>
           </div>
 
-          <div class="form-grid-3">
+          <div class="form-grid-2">
             <div class="form-group">
-              <label>廠區名稱 *</label>
+              <label>
+                <span>廠區名稱 *</span>
+                <button type="button" id="btnUnknown_${idx}" class="btn-quick"
+                  style="display:${showUnknownBtn ? 'inline-block' : 'none'};"
+                  onclick="markStopUnknown(${idx})">現場確認</button>
+              </label>
               <div class="autocomplete-wrapper">
                 <input type="text" id="stopName_${idx}" value="${escapeHtml(stop.name)}" required autocomplete="off"
                   oninput="updateStopField(${idx}, 'name', this.value); updateStopSmartButtons(${idx});">
@@ -1150,14 +1092,6 @@
               <label>庫房 / 碼頭</label>
               <input type="text" id="stopDock_${idx}" value="${escapeHtml(stop.dock)}"
                 oninput="updateStopField(${idx}, 'dock', this.value)">
-            </div>
-            <div class="form-group">
-              <label>預計期限 *</label>
-              <div class="time-combo">
-                <input type="text" id="stopTime_${idx}" value="${escapeHtml(stop.time)}" required
-                  oninput="updateStopField(${idx}, 'time', this.value); updateStopSmartButtons(${idx});">
-                <select onchange="applyTimeSlot('stopTime_${idx}', this, ${idx})">${optionsHtml}</select>
-              </div>
             </div>
           </div>
 
@@ -1196,17 +1130,13 @@
         return;
       }
       if (stops.length >= MAX_STOPS) return;
-      const newStop = createEmptyStop();
-      newStop.time = '依現場指示送達';
-      stops.push(newStop);
-      activeTargetStopIdx = stops.length - 1;
+      stops.push(createEmptyStop());
       renderDynamicStops();
     }
 
     function removeStop(idx) {
       if (stops.length <= 1) return;
       stops.splice(idx, 1);
-      if (activeTargetStopIdx >= stops.length) activeTargetStopIdx = stops.length - 1;
       renderDynamicStops();
     }
 
@@ -1236,9 +1166,6 @@
       stops[idx].contact = document.getElementById('originContact').value.trim() || '依貨單指示';
       stops[idx].action = '送達';
       stops[idx].isUnknown = false;
-      if (!stops[idx].time || stops[idx].time === '即刻送達' || stops[idx].time === '依現場指示送達') {
-        stops[idx].time = '完成前站後折返送回';
-      }
       renderDynamicStops();
     }
 
@@ -1248,19 +1175,6 @@
       stops[idx].dock = '';
       stops[idx].isUnknown = true;
       renderDynamicStops();
-    }
-
-    function setStopTimeQuick(idx, val) {
-      stops[idx].time = val;
-      const el = document.getElementById(`stopTime_${idx}`);
-      if (el) el.value = val;
-    }
-
-    function setStopTimeOffset(idx, mins) {
-      const val = `${getTimeString(mins)} 前送達`;
-      stops[idx].time = val;
-      const el = document.getElementById(`stopTime_${idx}`);
-      if (el) el.value = val;
     }
 
     function setContactPreset(inputId, value) {
@@ -1273,6 +1187,27 @@
       if (el) el.value = value;
     }
 
+    /* ========================================================
+       【異常費用切換（補填/修改用）】
+       ======================================================== */
+    function toggleExtraFee(key) {
+      extraFees[key] = !extraFees[key];
+      document.getElementById('btnEmptyRunFee').classList.toggle('active', extraFees.emptyRun);
+      document.getElementById('btnWaitFee').classList.toggle('active', extraFees.waitFee);
+    }
+
+    function resetExtraFees() {
+      extraFees = { emptyRun: false, waitFee: false };
+      document.getElementById('btnEmptyRunFee').classList.remove('active');
+      document.getElementById('btnWaitFee').classList.remove('active');
+      document.getElementById('extraFeeAmount').value = '';
+      document.getElementById('extraFeeNote').value = '';
+      document.getElementById('extraFeeBox').classList.remove('show');
+    }
+
+    /* ========================================================
+       【Google 試算表讀取】
+       ======================================================== */
     function parseCsvLine(line) {
       return line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').replace(/""/g, '"').trim());
     }
@@ -1285,8 +1220,24 @@
       return text;
     }
 
+    function renderClients() {
+      const container = document.getElementById('clientButtons');
+      container.innerHTML = '';
+      if (CLIENTS.length === 0) {
+        container.innerHTML = '<div style="color:#94a3b8; font-size:0.8rem; padding:4px;">試算表內尚無客戶資料</div>';
+        return;
+      }
+      CLIENTS.forEach(c => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'client-chip';
+        chip.textContent = c.name;
+        chip.onclick = () => handleClientClick(c);
+        container.appendChild(chip);
+      });
+    }
+
     async function loadGoogleSheets() {
-      // 三份試算表各自獨立載入，任一份失敗不會拖累另外兩份
       const loadClients = fetchSheetCsv(CLIENT_SHEET_URL)
         .then(csv => {
           const lines = csv.split(/\r?\n/).filter(line => line.trim() !== '');
@@ -1302,7 +1253,7 @@
           renderClients();
         })
         .catch(() => {
-          document.getElementById('clientButtons').innerHTML = '<div style="color:#ef4444; font-size:0.8rem; padding:4px;">客戶清冊讀取失敗，請確認已公開（或部署於 Vercel 檢視）</div>';
+          document.getElementById('clientButtons').innerHTML = '<div style="color:#ef4444; font-size:0.8rem; padding:4px;">客戶清冊讀取失敗，請確認已公開</div>';
         });
 
       const loadFactories = fetchSheetCsv(FACTORY_SHEET_URL)
@@ -1318,11 +1269,8 @@
               notice: cols[4] || ''
             };
           }).filter(f => f.name !== '未命名廠區');
-          renderFactories();
         })
-        .catch(() => {
-          document.getElementById('factoryButtons').innerHTML = '<div style="color:#ef4444; font-size:0.8rem; padding:4px;">廠區清冊讀取失敗，請確認已公開（或部署於 Vercel 檢視）</div>';
-        });
+        .catch(() => console.warn('廠區清冊讀取失敗'));
 
       const loadDrivers = fetchSheetCsv(DRIVER_SHEET_URL)
         .then(csv => {
@@ -1394,7 +1342,6 @@
                   name: dName,
                   addr: getCol('第2站地址', 10),
                   dock: '',
-                  time: getCol('第2站期限', 11),
                   contact: getCol('第2站電話', 12) || '依貨單指示'
                 });
               }
@@ -1405,19 +1352,27 @@
                   name: s3Name,
                   addr: getCol('第3站地址', 14),
                   dock: '',
-                  time: getCol('第3站期限', 15),
                   contact: getCol('第3站電話', 16) || '依貨單指示'
                 });
               }
             }
             const tripModeLabel = getCol('行程模式', 2) || '單趟';
+            const feeNote = getCol('異常費用', -1) || getCol('對帳狀態', 21);
+            const feeAmt = getCol('費用金額', -1) || getCol('運費金額', 22);
+            const isCancelled = tripModeLabel.includes('已取消');
+            let cancelledAt = null;
+            if (isCancelled) {
+              const parsedCreated = Date.parse(String(getCol('開單時間', 1)).replace(/\//g, '-'));
+              cancelledAt = Number.isNaN(parsedCreated) ? Date.now() : parsedCreated;
+            }
             return {
               orderNo: getCol('單號', 0),
               createdAt: getCol('開單時間', 1),
               dispatchDate: getCol('執行日期', -1),
               tripModeLabel,
               isRoundTrip: tripModeLabel.includes('來回'),
-              cancelled: tripModeLabel.includes('已取消'),
+              cancelled: isCancelled,
+              cancelledAt,
               client: getCol('委託客戶', 3),
               clientNote: getCol('客戶備註', 4),
               oName: getCol('第1站起點', 5) || getCol('起點廠區', 5),
@@ -1427,38 +1382,28 @@
               oContact: getCol('起點窗口', 8) || '依貨單指示',
               stops: parsedStops,
               driverInfo: getCol('指派司機', 17),
-              cargo: getCol('貨況備註', 18) || getCol('貨品名稱', 18)
+              cargo: getCol('貨況備註', 18) || getCol('貨品名稱', 18),
+              feeLabels: feeNote ? feeNote.split(' / ').filter(Boolean) : [],
+              feeAmount: feeAmt || ''
             };
           } else {
-            const driverParts = [cols[8], cols[9] ? `(${cols[9]})` : '', cols[10] ? `- ${cols[10]}` : ''].filter(Boolean);
-            return {
-              orderNo: cols[0] || '',
-              createdAt: cols[1] || '',
-              dispatchDate: '',
-              tripModeLabel: '單趟',
-              isRoundTrip: false,
-              cancelled: false,
-              client: '',
-              clientNote: '',
-              oName: cols[2] || '',
-              oAddr: cols[3] || '',
-              oDock: '',
-              pTime: cols[4] || '',
-              oContact: '依貨單指示',
-              stops: cols[5] ? [{ action: '送達', name: cols[5], addr: cols[6] || '', dock: '', time: cols[7] || '', contact: '依貨單指示' }] : [],
-              driverInfo: driverParts.join(' '),
-              cargo: cols[11] || ''
-            };
+            return null;
           }
         }).filter(Boolean);
 
         const mergedMap = new Map();
         sheetOrders.forEach(o => mergedMap.set(o.orderNo, o));
         orderHistory.forEach(o => {
-          if (!mergedMap.has(o.orderNo)) mergedMap.set(o.orderNo, o);
+          if (!mergedMap.has(o.orderNo)) {
+            mergedMap.set(o.orderNo, o);
+          } else if (o.cancelled && o.cancelledAt) {
+            mergedMap.get(o.orderNo).cancelledAt = o.cancelledAt;
+          }
         });
 
-        orderHistory = Array.from(mergedMap.values()).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+        orderHistory = Array.from(mergedMap.values())
+          .filter(isOrderForToday)
+          .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
         localStorage.setItem('dispatch_orders', JSON.stringify(orderHistory));
         renderHistoryTable();
 
@@ -1488,12 +1433,22 @@
       statusEl.textContent = actionMsg;
       statusEl.style.color = '#0284c7';
 
+      const feeSummary = [
+        ...(Array.isArray(order.feeLabels) ? order.feeLabels : []),
+        order.feeNote || ''
+      ].filter(Boolean).join(' / ');
+
       try {
         await fetch(ORDER_API_URL, {
           method: 'POST',
           mode: 'no-cors',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action: actionType, ...order })
+          body: JSON.stringify({
+            action: actionType,
+            ...order,
+            feeAmount: order.feeAmount || '',
+            feeStatus: feeSummary
+          })
         });
         const nowStr = new Date().toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit' });
         const doneMsg = actionType === 'cancel'
@@ -1508,43 +1463,9 @@
       }
     }
 
-    function renderClients() {
-      const container = document.getElementById('clientButtons');
-      container.innerHTML = '';
-      if (CLIENTS.length === 0) {
-        container.innerHTML = '<div style="color:#94a3b8; font-size:0.8rem; padding:4px;">試算表內尚無客戶資料</div>';
-        return;
-      }
-      CLIENTS.forEach(c => {
-        const chip = document.createElement('button');
-        chip.type = 'button';
-        chip.className = 'client-chip';
-        chip.textContent = c.name;
-        chip.onclick = () => handleClientClick(c);
-        container.appendChild(chip);
-      });
-    }
-
-    function renderFactories() {
-      const container = document.getElementById('factoryButtons');
-      container.innerHTML = '';
-      if (FACTORIES.length === 0) {
-        container.innerHTML = '<div style="color:#94a3b8; font-size:0.8rem; padding:4px;">試算表內尚無廠區資料</div>';
-        return;
-      }
-      const unlocked = hasClientSelected();
-      FACTORIES.forEach(f => {
-        const chip = document.createElement('button');
-        chip.type = 'button';
-        chip.className = 'factory-chip';
-        chip.textContent = f.name;
-        chip.disabled = !unlocked;
-        chip.onclick = () => handleFactoryClick(f);
-        container.appendChild(chip);
-      });
-      updateClientGateState();
-    }
-
+    /* ========================================================
+       【客戶＝預設取貨點 ＋ 關鍵字搜尋下拉選單】
+       ======================================================== */
     function handleClientClick(c) {
       document.getElementById('clientName').value = c.name;
       const taxInfo = c.taxId ? (c.contact ? `${c.taxId} (${c.contact})` : c.taxId) : c.contact;
@@ -1557,29 +1478,7 @@
       document.getElementById('originAddr').value = matchedFactory ? matchedFactory.addr : '';
       document.getElementById('originDock').value = matchedFactory ? matchedFactory.dock : '';
 
-      activeTargetStopIdx = 0;
       renderDynamicStops();
-    }
-
-    function handleFactoryClick(f) {
-      if (!hasClientSelected()) {
-        showToast('請先選取委託客戶', 'warn');
-        return;
-      }
-      if (activeTargetStopIdx >= stops.length) {
-        if (stops.length < MAX_STOPS) {
-          addStop();
-        } else {
-          activeTargetStopIdx = stops.length - 1;
-        }
-      }
-      fillStopWithFactory(activeTargetStopIdx, f);
-      if (activeTargetStopIdx < stops.length - 1) {
-        activeTargetStopIdx++;
-      } else if (stops.length < MAX_STOPS) {
-        activeTargetStopIdx = stops.length;
-      }
-      updateStepIndicatorText();
     }
 
     function fillStopWithFactory(idx, f) {
@@ -1589,23 +1488,6 @@
       stops[idx].dock = f.dock;
       stops[idx].isUnknown = false;
       renderDynamicStops();
-    }
-
-    function resetClickStep() {
-      activeTargetStopIdx = 0;
-      updateStepIndicatorText();
-    }
-
-    function updateStepIndicatorText() {
-      const el = document.getElementById('currentStepText');
-      if (!hasClientSelected()) {
-        el.textContent = '步驟 1：請先選取委託客戶';
-        el.style.background = '#0f172a';
-        return;
-      }
-      const targetNo = Math.min(activeTargetStopIdx, stops.length - 1) + 2;
-      el.textContent = `下一步：點廠區帶入第 ${targetNo} 站`;
-      el.style.background = '#0284c7';
     }
 
     function escapeHtml(str) {
@@ -1773,22 +1655,9 @@
       });
     }
 
-    function getTimeString(addMinutes = 0) {
-      const d = new Date();
-      d.setMinutes(d.getMinutes() + addMinutes);
-      const hh = String(d.getHours()).padStart(2, '0');
-      const mm = String(d.getMinutes()).padStart(2, '0');
-      return `${hh}:${mm}`;
-    }
-
     function setDefaultTimes() {
-      document.getElementById('pickupTime').value = `${getTimeString(0)} (即刻取貨)`;
-      updateOriginTimeBtnsVisibility();
-    }
-
-    function setPickupOffset(mins) {
-      document.getElementById('pickupTime').value = mins === 0 ? `${getTimeString(0)} (即刻取貨)` : `${getTimeString(mins)} 準時`;
-      updateOriginTimeBtnsVisibility();
+      document.getElementById('pickupTime').value = '即刻';
+      updateOriginTimeVisibility();
     }
 
     function renderDrivers() {
@@ -1848,7 +1717,33 @@
       }
     }
 
-    let generatedText = "";
+    /* ========================================================
+       【序號 001 起算 & 當日篩選 & 取消單 30 分鐘後隱藏】
+       ======================================================== */
+    function generateNextOrderNo() {
+      const todayCompact = getTodayCompact();
+      const prefix = `EXP-${todayCompact}-`;
+      let maxSeq = 0;
+      orderHistory.forEach(o => {
+        if (o.orderNo && o.orderNo.startsWith(prefix)) {
+          const suffix = parseInt(o.orderNo.slice(prefix.length), 10);
+          if (!Number.isNaN(suffix) && suffix > maxSeq) maxSeq = suffix;
+        }
+      });
+      return prefix + String(maxSeq + 1).padStart(3, '0');
+    }
+
+    function isOrderForToday(o) {
+      const todayIso = getTodayIso();
+      const todayCompact = getTodayCompact();
+      const todaySlash = `${new Date().getFullYear()}/${new Date().getMonth() + 1}/${new Date().getDate()}`;
+      const todaySlashPad = todayIso.replace(/-/g, '/');
+
+      if (o.dispatchDate === todayIso) return true;
+      if (o.orderNo && o.orderNo.includes(todayCompact)) return true;
+      const c = String(o.createdAt || '');
+      return c.startsWith(todaySlashPad) || c.startsWith(todaySlash) || c.startsWith(todayIso);
+    }
 
     function isOrderPendingData(o) {
       if (o.cancelled || (o.tripModeLabel && o.tripModeLabel.includes('已取消'))) return false;
@@ -1856,6 +1751,11 @@
       const stopList = Array.isArray(o.stops) ? o.stops : [];
       return stopList.some(s => s.isUnknown || (s.name && s.name.includes('現場確認')));
     }
+
+    /* ========================================================
+       【產出派單 / 補填更新 / 取消此單】
+       ======================================================== */
+    let generatedText = "";
 
     function submitDispatch() {
       const driverStr = document.getElementById('driverInput').value.trim();
@@ -1866,11 +1766,12 @@
       const client = document.getElementById('clientName').value.trim();
       const clientNote = document.getElementById('clientTaxId').value.trim();
       const dispatchDate = document.getElementById('dispatchDate').value.trim();
+      const hideTime = isNonTodayDateSelected();
 
       const oName = document.getElementById('originName').value.trim();
       const oDock = document.getElementById('originDock').value.trim();
       const oAddr = document.getElementById('originAddr').value.trim();
-      const pTime = document.getElementById('pickupTime').value.trim();
+      const pTime = hideTime ? '' : (document.getElementById('pickupTime').value.trim() || '即刻');
       const oContact = document.getElementById('originContact').value.trim() || '依貨單指示';
 
       const cleanStops = stops.map(s => ({
@@ -1878,7 +1779,6 @@
         name: s.name.trim(),
         addr: s.addr.trim(),
         dock: s.dock.trim(),
-        time: s.time.trim(),
         contact: s.contact.trim() || '依貨單指示',
         isUnknown: Boolean(s.isUnknown || s.name.includes('現場確認'))
       }));
@@ -1899,8 +1799,16 @@
 
       const isUpdate = Boolean(editingOrderNo);
       const existingOrder = isUpdate ? orderHistory.find(o => o.orderNo === editingOrderNo) : null;
-      const orderNo = isUpdate ? editingOrderNo : ("EXP-" + new Date().toISOString().slice(0,10).replace(/-/g,'') + "-" + Math.floor(100 + Math.random()*900));
+      const orderNo = isUpdate ? editingOrderNo : generateNextOrderNo();
       const createdAt = existingOrder ? existingOrder.createdAt : new Date().toLocaleString('zh-TW', { hour12: false });
+
+      const feeLabels = [];
+      if (isUpdate) {
+        if (extraFees.emptyRun) feeLabels.push('(取消)空趟費');
+        if (extraFees.waitFee) feeLabels.push('(等待)超時費');
+      }
+      const feeAmount = isUpdate ? document.getElementById('extraFeeAmount').value.trim() : '';
+      const feeNote = isUpdate ? document.getElementById('extraFeeNote').value.trim() : '';
 
       const newOrder = {
         orderNo, createdAt, dispatchDate, tripModeLabel, isRoundTrip,
@@ -1909,7 +1817,10 @@
         oName, oAddr, oDock, pTime, oContact,
         stops: cleanStops,
         driverInfo: driverStr,
-        cargo
+        cargo,
+        feeLabels,
+        feeAmount,
+        feeNote
       };
 
       if (isUpdate) {
@@ -1926,6 +1837,7 @@
 
       const tagStr = isRoundTrip ? '【來回單】' : '';
       const dateLine = dispatchDate ? `執行日期：${dispatchDate}\n` : '';
+      const pickupTimeLine = (!hideTime && pTime) ? `取貨時間：${pTime}\n` : '';
 
       let stopsText = '';
       cleanStops.forEach((s, i) => {
@@ -1935,11 +1847,14 @@
         stopsText += `──────────────────────
 ■ ${headerLabel}
 廠區：${s.name}${s.dock ? ` (${s.dock})` : ''}
-期限：${s.time || '依現場指示'}
 地址：${s.addr || '現場確認'}
 窗口：${s.contact}
 `;
       });
+
+      const feeLine = feeLabels.length
+        ? `\n異常費用：${feeLabels.join('、')}${feeAmount ? ` ($${feeAmount})` : ''}${feeNote ? ` - ${feeNote}` : ''}`
+        : '';
 
       generatedText = `【派工單${tagStr}】#${orderNo}
 ${dateLine}委託客戶：${client}
@@ -1947,11 +1862,10 @@ ${dateLine}委託客戶：${client}
 ──────────────────────
 ■ 第 1 站｜取貨起點
 廠區：${oName}${oDock ? ` (${oDock})` : ''}
-取貨時間：${pTime}
-地址：${oAddr || '現場確認'}
+${pickupTimeLine}地址：${oAddr || '現場確認'}
 窗口：${oContact}
 ${stopsText}──────────────────────
-貨況備註：${cargo}
+貨況備註：${cargo}${feeLine}
 ──────────────────────`;
 
       document.getElementById('previewBox').textContent = generatedText;
@@ -1967,25 +1881,39 @@ ${stopsText}──────────────────────
 
     function cancelCurrentOrder() {
       if (!editingOrderNo) return;
-      if (!confirm(`確定要取消（作廢）單號 ${editingOrderNo} 嗎？\n取消狀態將同步更新至雲端試算表。`)) return;
+      if (!confirm(`確定要取消（作廢）單號 ${editingOrderNo} 嗎？\n取消狀態將同步更新至雲端試算表（30 分鐘後會自動從畫面移除）。`)) return;
 
       const idx = orderHistory.findIndex(o => o.orderNo === editingOrderNo);
       if (idx < 0) return;
 
+      const feeLabels = [];
+      if (extraFees.emptyRun) feeLabels.push('(取消)空趟費');
+      if (extraFees.waitFee) feeLabels.push('(等待)超時費');
+      const feeAmount = document.getElementById('extraFeeAmount').value.trim();
+      const feeNote = document.getElementById('extraFeeNote').value.trim();
+
       const target = {
         ...orderHistory[idx],
         cancelled: true,
-        tripModeLabel: '已取消'
+        cancelledAt: Date.now(),
+        tripModeLabel: '已取消',
+        feeLabels,
+        feeAmount,
+        feeNote
       };
       orderHistory[idx] = target;
       localStorage.setItem('dispatch_orders', JSON.stringify(orderHistory));
       renderHistoryTable();
       saveOrderToSheet(target, 'cancel');
 
+      const feeLine = feeLabels.length
+        ? `\n費用標記：${feeLabels.join('、')}${feeAmount ? ` ($${feeAmount})` : ''}${feeNote ? ` - ${feeNote}` : ''}`
+        : '';
+
       generatedText = `【派工單取消通知】#${target.orderNo}
 委託客戶：${target.client || '-'}
 指定司機：${target.driverInfo || '-'}
-原定起點：${target.oName || '-'}
+原定起點：${target.oName || '-'}${feeLine}
 ──────────────────────
 此筆派工單已取消，請勿前往／無須執行。
 ──────────────────────`;
@@ -2011,18 +1939,29 @@ ${stopsText}──────────────────────
     function renderHistoryTable() {
       const tbody = document.getElementById('historyTableBody');
       const kw = (document.getElementById('historySearchInput')?.value || '').trim().toLowerCase();
+      const now = Date.now();
 
-      const filtered = orderHistory.filter(o => {
+      const visibleOrders = orderHistory.filter(o => {
+        if (!isOrderForToday(o)) return false;
+        const isCancelled = Boolean(o.cancelled || (o.tripModeLabel && o.tripModeLabel.includes('已取消')));
+        if (isCancelled && o.cancelledAt && (now - o.cancelledAt >= CANCEL_HIDE_MS)) {
+          return false;
+        }
+        return true;
+      });
+
+      const filtered = visibleOrders.filter(o => {
         if (onlyPendingFilter && !isOrderPendingData(o)) return false;
         if (!kw) return true;
         const stopNames = (Array.isArray(o.stops) ? o.stops : []).map(s => s.name).join(' ');
-        const haystack = `${o.orderNo} ${o.client} ${o.oName} ${stopNames} ${o.driverInfo} ${o.cargo} ${o.dispatchDate}`.toLowerCase();
+        const feeStr = Array.isArray(o.feeLabels) ? o.feeLabels.join(' ') : '';
+        const haystack = `${o.orderNo} ${o.client} ${o.oName} ${stopNames} ${o.driverInfo} ${o.cargo} ${o.dispatchDate} ${feeStr}`.toLowerCase();
         return haystack.includes(kw);
       });
 
       document.getElementById('historyCount').textContent = filtered.length;
       if (filtered.length === 0) {
-        const msg = onlyPendingFilter ? '目前沒有資料待補單' : '查無符合的歷史紀錄';
+        const msg = onlyPendingFilter ? '目前沒有資料待補單' : '今日尚無符合的派單紀錄';
         tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#94a3b8;">${msg}</td></tr>`;
         return;
       }
@@ -2048,6 +1987,11 @@ ${stopsText}──────────────────────
             badges += '<span class="trip-badge pending">資料待補</span>';
           }
         }
+        if (Array.isArray(o.feeLabels) && o.feeLabels.length > 0) {
+          o.feeLabels.forEach(fl => {
+            badges += `<span class="trip-badge fee">${escapeHtml(fl)}</span>`;
+          });
+        }
 
         const stopList = Array.isArray(o.stops) ? o.stops : [];
         const routeHtml = stopList.length
@@ -2061,6 +2005,10 @@ ${stopsText}──────────────────────
           ? `<strong>${escapeHtml(o.dispatchDate)}</strong><br><span style="color:#64748b;">${escapeHtml(o.createdAt)}</span>`
           : escapeHtml(o.createdAt);
 
+        const feeNoteHtml = o.feeAmount || o.feeNote
+          ? `<div style="color:#b45309; font-weight:600;">${o.feeAmount ? '$' + escapeHtml(o.feeAmount) : ''} ${escapeHtml(o.feeNote || '')}</div>`
+          : '';
+
         tr.innerHTML = `
           <td><strong>${escapeHtml(o.orderNo)}</strong>${badges}</td>
           <td>${dateDisplay}</td>
@@ -2068,7 +2016,7 @@ ${stopsText}──────────────────────
           <td>${escapeHtml(o.oName)}</td>
           <td>${routeHtml}</td>
           <td>${escapeHtml(o.driverInfo || '外車/自填')}</td>
-          <td>${escapeHtml(o.cargo || '依指示載運')}</td>
+          <td>${escapeHtml(o.cargo || '依指示載運')}${feeNoteHtml}</td>
           <td style="white-space:nowrap;">
             <div style="display:flex; gap:4px;">
               <button type="button" class="btn-quick" onclick="loadOrderForEdit('${escapeHtml(o.orderNo)}')">${isCancelled ? '檢視' : '補填/改'}</button>
@@ -2080,17 +2028,17 @@ ${stopsText}──────────────────────
       });
     }
 
-    function populateFormFromOrder(order, resetTimes = false) {
+    function populateFormFromOrder(order, isClone = false) {
       document.getElementById('clientName').value = order.client || '';
       document.getElementById('clientTaxId').value = order.clientNote || '';
-      document.getElementById('dispatchDate').value = resetTimes ? '' : (order.dispatchDate || '');
+      document.getElementById('dispatchDate').value = isClone ? '' : (order.dispatchDate || '');
 
       document.getElementById('originName').value = order.oName || '';
       document.getElementById('originAddr').value = order.oAddr || '';
       document.getElementById('originDock').value = order.oDock || '';
-      document.getElementById('pickupTime').value = resetTimes ? `${getTimeString(0)} (即刻取貨)` : (order.pTime || '');
+      document.getElementById('pickupTime').value = isClone ? '即刻' : (order.pTime || '即刻');
       document.getElementById('originContact').value = order.oContact || '依貨單指示';
-      updateOriginTimeBtnsVisibility();
+      updateOriginTimeVisibility();
 
       stops = (Array.isArray(order.stops) && order.stops.length > 0)
         ? order.stops.map(s => ({
@@ -2098,17 +2046,19 @@ ${stopsText}──────────────────────
             name: s.name || '',
             addr: s.addr || '',
             dock: s.dock || '',
-            time: resetTimes ? '即刻送達' : (s.time || '即刻送達'),
             contact: s.contact || '依貨單指示',
             isUnknown: Boolean(s.isUnknown || (s.name && s.name.includes('現場確認')))
           }))
         : [createEmptyStop()];
 
-      document.getElementById('driverInput').value = order.driverInfo || '';
+      document.getElementById('driverInput').value = isClone ? '' : (order.driverInfo || '');
       document.getElementById('cargoType').value = order.cargo || '';
 
       renderDynamicStops();
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (isClone) {
+        setTimeout(() => document.getElementById('driverInput').focus(), 300);
+      }
     }
 
     function loadOrderForEdit(orderNo) {
@@ -2121,6 +2071,16 @@ ${stopsText}──────────────────────
       document.getElementById('submitBtn').textContent = `更新單號 ${order.orderNo} 並同步雲端`;
       document.getElementById('submitBtn').style.background = '#0f766e';
 
+      extraFees = {
+        emptyRun: Array.isArray(order.feeLabels) && order.feeLabels.includes('(取消)空趟費'),
+        waitFee: Array.isArray(order.feeLabels) && order.feeLabels.includes('(等待)超時費')
+      };
+      document.getElementById('btnEmptyRunFee').classList.toggle('active', extraFees.emptyRun);
+      document.getElementById('btnWaitFee').classList.toggle('active', extraFees.waitFee);
+      document.getElementById('extraFeeAmount').value = order.feeAmount || '';
+      document.getElementById('extraFeeNote').value = order.feeNote || '';
+      document.getElementById('extraFeeBox').classList.add('show');
+
       populateFormFromOrder(order, false);
     }
 
@@ -2130,7 +2090,7 @@ ${stopsText}──────────────────────
 
       cancelEditMode(false);
       populateFormFromOrder(order, true);
-      showToast('已複製路線（開立新單）');
+      showToast('已複製路線，請重新搜尋指派司機');
     }
 
     function cancelEditMode(resetForm = true) {
@@ -2138,36 +2098,40 @@ ${stopsText}──────────────────────
       document.getElementById('editingBanner').classList.remove('show');
       document.getElementById('submitBtn').textContent = '產出派單並同步雲端';
       document.getElementById('submitBtn').style.background = '#0284c7';
+      resetExtraFees();
       if (resetForm) clearAllForm();
     }
 
     function exportToExcel() {
-      if (orderHistory.length === 0) { showToast('目前沒有歷史紀錄可匯出', 'warn'); return; }
-      let csv = "\uFEFF單號,開單時間,執行日期,行程模式,委託客戶,客戶備註,第1站起點,起點地址,取貨時間,起點窗口,第2站,第3站,第4站,第5站,指派司機,貨況備註\n";
-      orderHistory.forEach(o => {
+      const todayOrders = orderHistory.filter(isOrderForToday);
+      if (todayOrders.length === 0) { showToast('今日沒有紀錄可匯出', 'warn'); return; }
+      let csv = "\uFEFF單號,開單時間,執行日期,行程模式,委託客戶,客戶備註,第1站起點,起點地址,取貨時間,起點窗口,第2站,第3站,第4站,第5站,第6站,第7站,第8站,第9站,指派司機,貨況備註,異常費用,費用金額,費用說明\n";
+      todayOrders.forEach(o => {
         const sArr = Array.isArray(o.stops) ? o.stops : [];
-        const fmtStop = (s) => s ? `[${s.action || '送達'}] ${s.name} (${s.time || ''})` : '';
+        const fmtStop = (s) => s ? `[${s.action || '送達'}] ${s.name}` : '';
         const row = [
           o.orderNo, o.createdAt, o.dispatchDate || '', o.tripModeLabel || '單趟', o.client || '', o.clientNote || '',
-          o.oName, o.oAddr, o.pTime, o.oContact || '',
+          o.oName, o.oAddr, o.pTime || '', o.oContact || '',
           fmtStop(sArr[0]), fmtStop(sArr[1]), fmtStop(sArr[2]), fmtStop(sArr[3]),
-          o.driverInfo || '', o.cargo || ''
+          fmtStop(sArr[4]), fmtStop(sArr[5]), fmtStop(sArr[6]), fmtStop(sArr[7]),
+          o.driverInfo || '', o.cargo || '',
+          (Array.isArray(o.feeLabels) ? o.feeLabels.join('、') : ''), o.feeAmount || '', o.feeNote || ''
         ].map(val => `"${String(val).replace(/"/g, '""')}"`).join(",");
         csv += row + "\n";
       });
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = `派單紀錄清冊_${new Date().toISOString().slice(0,10)}.csv`;
+      link.download = `派單紀錄清冊_${getTodayIso()}.csv`;
       link.click();
     }
 
     let latestAiReport = "";
     function generateAiWeeklyReport() {
-      const validOrders = orderHistory.filter(o => !o.cancelled && !(o.tripModeLabel && o.tripModeLabel.includes('已取消')));
-      if (validOrders.length === 0) { showToast('尚無有效歷史紀錄', 'warn'); return; }
+      const validOrders = orderHistory.filter(o => isOrderForToday(o) && !o.cancelled && !(o.tripModeLabel && o.tripModeLabel.includes('已取消')));
+      if (validOrders.length === 0) { showToast('今日尚無有效派單紀錄', 'warn'); return; }
       const totalOrders = validOrders.length;
-      const cancelledCount = orderHistory.length - validOrders.length;
+      const cancelledCount = orderHistory.filter(o => isOrderForToday(o) && (o.cancelled || (o.tripModeLabel && o.tripModeLabel.includes('已取消')))).length;
       const driverCounts = {};
       const routeCounts = {};
       const clientCounts = {};
@@ -2190,9 +2154,9 @@ ${stopsText}──────────────────────
       const clientRank = Object.entries(clientCounts).sort((a,b) => b[1] - a[1]).slice(0, 3)
         .map(([client, count]) => `  • ${client}: ${count} 趟`).join("\n");
 
-      latestAiReport = `【飛達旺 每週營運分析週報】
+      latestAiReport = `【飛達旺 今日營運分析摘要】
 ──────────────────────────────
-結算區間：截至 ${new Date().toLocaleDateString('zh-TW')}
+日期：${getTodayIso()}
 有效派工趟次：${totalOrders} 趟（來回單 ${roundTripCount} 趟／已取消 ${cancelledCount} 筆）
 
 【委託客戶 Top 3】
@@ -2211,11 +2175,11 @@ ${routeRank}
 
     function copyAiReport() {
       if (!latestAiReport) return;
-      navigator.clipboard.writeText(latestAiReport).then(() => showToast('已複製週報'));
+      navigator.clipboard.writeText(latestAiReport).then(() => showToast('已複製摘要'));
     }
 
     function clearHistory() {
-      if (confirm("確定要清空本機快取的歷史紀錄嗎？（雲端試算表紀錄不會被刪除）")) {
+      if (confirm("確定要清空本機快取的紀錄嗎？（雲端試算表紀錄不會被刪除）")) {
         orderHistory = [];
         localStorage.removeItem('dispatch_orders');
         renderHistoryTable();
@@ -2223,15 +2187,26 @@ ${routeRank}
       }
     }
 
+    function resetAfterLineSend() {
+      clearAllForm();
+      generatedText = "";
+      document.getElementById('previewBox').textContent = '【點擊產出派單後產生訊息】';
+      document.getElementById('targetDriverLabel').textContent = '';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      showToast('已送出 LINE 並重置表單');
+    }
+
     function sendToLine() {
       if (!generatedText) { showToast('請先產出派單', 'warn'); return; }
-      navigator.clipboard.writeText(generatedText).catch(() => {});
+      const textToSend = generatedText;
+      navigator.clipboard.writeText(textToSend).catch(() => {});
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       if (isMobile) {
-        window.location.href = "https://line.me/R/msg/text/?" + encodeURIComponent(generatedText);
+        resetAfterLineSend();
+        window.location.href = "https://line.me/R/msg/text/?" + encodeURIComponent(textToSend);
       } else {
-        window.open("line://msg/text/" + encodeURIComponent(generatedText), '_blank');
-        showToast('已喚起 LINE（文字已同步複製）');
+        window.open("line://msg/text/" + encodeURIComponent(textToSend), '_blank');
+        resetAfterLineSend();
       }
     }
 
@@ -2245,7 +2220,6 @@ ${routeRank}
       document.getElementById('dispatchDate').value = '';
       document.getElementById('originContact').value = '依貨單指示';
       stops = [createEmptyStop()];
-      activeTargetStopIdx = 0;
       setDefaultTimes();
       renderDynamicStops();
       updateClientGateState();
