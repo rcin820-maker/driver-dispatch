@@ -790,7 +790,7 @@
         <div id="editingBanner" class="editing-banner">
           <span id="editingBannerText">正在補填／修改單號：</span>
           <div class="editing-banner-actions">
-            <button type="button" class="btn-cancel-order" onclick="cancelCurrentOrder()">取消此單</button>
+            <button type="button" class="btn-cancel-order" onclick="deleteCurrentOrder()">刪除此單</button>
             <button type="button" class="btn-quick" onclick="cancelEditMode()">返回開新單</button>
           </div>
         </div>
@@ -1023,8 +1023,6 @@
     const ORDER_API_URL = "https://script.google.com/macros/s/AKfycbw2akdw-_rO69PSPcjOpz27rHODlACRVIm2p5sfuKmqXQ_guOnAHftj49dopbZQdSbE/exec";
 
     const MAX_STOPS = 8;
-    const CANCEL_HIDE_MS = 30 * 60 * 1000;
-    const HOURLY_CHECK_MS = 60 * 60 * 1000;
     let CLIENTS = [];
     let FACTORIES = [];
     let drivers = [];
@@ -1086,7 +1084,6 @@
       renderHistoryTable();
       loadGoogleSheets();
       loadOrderHistoryFromSheet();
-      setInterval(renderHistoryTable, HOURLY_CHECK_MS);
     }
 
     let toastTimer = null;
@@ -1708,11 +1705,7 @@
           const feeNote = getCol('異常費用', -1) || getCol('對帳狀態', 21);
           const feeAmt = getCol('費用金額', -1) || getCol('運費金額', 22);
           const isCancelled = tripModeLabel.includes('已取消');
-          let cancelledAt = null;
-          if (isCancelled) {
-            const parsedCreated = Date.parse(String(getCol('開單時間', 1)).replace(/\//g, '-'));
-            cancelledAt = Number.isNaN(parsedCreated) ? Date.now() : parsedCreated;
-          }
+
           return {
             orderNo: getCol('單號', 0),
             createdAt: getCol('開單時間', 1),
@@ -1720,7 +1713,6 @@
             tripModeLabel,
             isRoundTrip: tripModeLabel.includes('來回'),
             cancelled: isCancelled,
-            cancelledAt,
             client: getCol('委託客戶', 4),
             clientNote: getCol('客戶備註', 5),
             oName: getCol('第1站起點', 6),
@@ -1741,8 +1733,7 @@
         allOrders.forEach(o => {
           if (!mergedMap.has(o.orderNo)) {
             mergedMap.set(o.orderNo, o);
-          } else if (o.cancelled && o.cancelledAt) {
-            mergedMap.get(o.orderNo).cancelledAt = o.cancelledAt;
+
           }
         });
 
@@ -1798,9 +1789,11 @@
           })
         });
         const nowStr = new Date().toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit' });
-        const doneMsg = actionType === 'cancel'
-          ? `已同步取消 (${nowStr})`
-          : (actionType === 'update' ? `已更新雲端 (${nowStr})` : `已寫入雲端 (${nowStr})`);
+        const doneMsg = actionType === 'delete'
+          ? `已從雲端刪除 (${nowStr})`
+          : (actionType === 'cancel'
+            ? `已同步取消 (${nowStr})`
+            : (actionType === 'update' ? `已更新雲端 (${nowStr})` : `已寫入雲端 (${nowStr})`));
         statusEl.textContent = doneMsg;
         statusEl.style.color = actionType === 'cancel' ? '#dc2626' : '#0f766e';
       } catch (err) {
@@ -2332,48 +2325,23 @@ ${stopBlocks}
       }
     }
 
-    function cancelCurrentOrder() {
+    function deleteCurrentOrder() {
       if (!editingOrderNo) return;
-      if (!confirm(`確定要取消（作廢）單號 ${editingOrderNo} 嗎？\n取消狀態將同步更新至雲端試算表（30 分鐘後會自動從畫面移除）。`)) return;
+      if (!confirm(`確定要刪除單號 ${editingOrderNo} 嗎？\n將從畫面與雲端試算表移除（適用於誤開或測試單）。`)) return;
 
       const idx = allOrders.findIndex(o => o.orderNo === editingOrderNo);
       if (idx < 0) return;
 
-      const feeLabels = [];
-      if (extraFees.emptyRun) feeLabels.push('(取消)空趟費');
-      if (extraFees.waitFee) feeLabels.push('(等待)超時費');
-      const feeAmount = document.getElementById('extraFeeAmount').value.trim();
-      const feeNote = document.getElementById('extraFeeNote').value.trim();
-
-      const target = {
-        ...allOrders[idx],
-        cancelled: true,
-        cancelledAt: Date.now(),
-        tripModeLabel: '已取消',
-        feeLabels,
-        feeAmount,
-        feeNote
-      };
-      allOrders[idx] = target;
+      const target = allOrders[idx];
+      allOrders.splice(idx, 1);
       localStorage.setItem('dispatch_orders', JSON.stringify(allOrders));
       renderHistoryTable();
-      saveOrderToSheet(target, 'cancel');
-
-      const feeLine = feeLabels.length
-        ? `\n費用標記：${feeLabels.join('、')}${feeAmount ? ` ($${feeAmount})` : ''}${feeNote ? ` - ${feeNote}` : ''}`
-        : '';
-
-      const cancelMsg = `【派工單取消通知】#${target.orderNo}
-
-客戶：${target.client || '-'}
-司機：${target.driverInfo || '-'}
-起點：${target.oName || '-'}${feeLine}
-
-此筆派工單已取消，請勿前往／無須執行。`;
+      renderClients();
+      renderDrivers();
+      saveOrderToSheet(target, 'delete');
 
       cancelEditMode(true);
-      showToast(`已取消單號 ${target.orderNo}，並複製取消通知`, 'warn');
-      triggerLineShare(cancelMsg);
+      showToast(`已刪除單號 ${target.orderNo}`, 'warn');
     }
 
     function togglePendingFilter() {
@@ -2416,7 +2384,6 @@ ${stopBlocks}
       const tbody = document.getElementById('historyTableBody');
       const mobileList = document.getElementById('mobileHistoryList');
       const kw = (document.getElementById('historySearchInput')?.value || '').trim().toLowerCase();
-      const now = Date.now();
 
       const activeDate = selectedHistoryDate || getTodayIso();
       const isTodayView = activeDate === getTodayIso();
@@ -2425,14 +2392,7 @@ ${stopBlocks}
       if (titleEl) titleEl.textContent = isTodayView ? '今日派單紀錄' : `${activeDate} 派單紀錄`;
       if (todayBtn) todayBtn.style.display = isTodayView ? 'none' : 'inline-block';
 
-      const visibleOrders = allOrders.filter(o => {
-        if (!isOrderForDate(o, activeDate)) return false;
-        const isCancelled = Boolean(o.cancelled || (o.tripModeLabel && o.tripModeLabel.includes('已取消')));
-        if (isCancelled && o.cancelledAt && (now - o.cancelledAt >= CANCEL_HIDE_MS)) {
-          return false;
-        }
-        return true;
-      });
+      const visibleOrders = allOrders.filter(o => isOrderForDate(o, activeDate));
 
       const filtered = visibleOrders.filter(o => {
         if (onlyPendingFilter && !isOrderPendingData(o)) return false;
