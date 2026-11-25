@@ -9,200 +9,285 @@
       --bg: #f1f5f9;
       --card-bg: #ffffff;
       --border: #cbd5e1;
-      --primary: #0284c7;
-      --primary-hover: #0369a1;
-      --accent-green: #10b981;
-      --accent-orange: #f59e0b;
-      --accent-purple: #8b5cf6;
+      --primary: #0f172a;
+      --accent: #0284c7;
+      --accent-hover: #0369a1;
+      --teal: #0f766e;
+      --delivery: #0284c7;
+      --pickup: #059669;
+      --both: #d97706;
+      --danger: #dc2626;
       --text: #0f172a;
       --text-muted: #64748b;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding-bottom: 40px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", Roboto, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding-bottom: 48px; }
 
     header {
       background: #0f172a;
       color: #fff;
-      padding: 10px 20px;
+      padding: 12px 18px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
-    header h1 { font-size: 1.15rem; font-weight: 700; }
+    header h1 { font-size: 1.05rem; font-weight: 700; letter-spacing: 0.5px; }
+    .header-shortcut { font-size: 0.76rem; color: #94a3b8; }
+    @media (max-width: 640px) { .header-shortcut { display: none; } }
 
     .main-container {
       max-width: 1400px;
-      margin: 14px auto;
-      padding: 0 14px;
+      margin: 12px auto;
+      padding: 0 12px;
       display: grid;
       grid-template-columns: 1fr 380px;
       gap: 16px;
+      align-items: start;
+    }
+    .side-panel {
+      position: sticky;
+      top: 62px;
     }
     @media (max-width: 1024px) {
       .main-container { grid-template-columns: 1fr; }
+      .side-panel { position: static; }
     }
 
     .card {
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 14px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      padding: 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
     }
     .card-title {
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 700;
       margin-bottom: 10px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid #e2e8f0;
-      padding-bottom: 6px;
+      padding-bottom: 8px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .card-title.collapsed-title {
+      margin-bottom: 0;
+      border-bottom: none;
+      padding-bottom: 0;
     }
 
     .flow-indicator {
       display: flex;
       align-items: center;
-      gap: 6px;
-      background: #e0f2fe;
-      border: 1px solid #bae6fd;
-      padding: 6px 12px;
+      justify-content: space-between;
+      gap: 8px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      padding: 7px 10px;
       border-radius: 6px;
-      font-size: 0.85rem;
-      color: #0369a1;
+      font-size: 0.8rem;
+      color: #334155;
       font-weight: 600;
       margin-bottom: 10px;
+      flex-wrap: wrap;
     }
     .flow-step-active {
-      background: #4338ca;
+      background: #0f172a;
       color: #fff;
       padding: 2px 8px;
       border-radius: 4px;
-    }
-
-    /* 行程模式切換列 */
-    .trip-mode-bar {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 12px;
-      flex-wrap: wrap;
-      background: #f8fafc;
-      padding: 8px;
-      border-radius: 6px;
-      border: 1px solid #e2e8f0;
-      align-items: center;
-    }
-    .trip-mode-label {
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: #334155;
-      margin-right: 4px;
-    }
-    .mode-btn {
-      padding: 6px 12px;
-      border: 1px solid #cbd5e1;
-      background: #fff;
-      color: #475569;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .mode-btn:hover {
-      border-color: #0284c7;
-      color: #0284c7;
-    }
-    .mode-btn.active {
-      background: #0284c7;
-      color: #fff;
-      border-color: #0284c7;
-      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
-    }
-    .mode-btn.active[data-mode="roundtrip"] {
-      background: #0d9488;
-      border-color: #0d9488;
-    }
-    .mode-btn.active[data-mode="multistop"] {
-      background: #7c3aed;
-      border-color: #7c3aed;
-    }
-
-    .stop3-section {
-      display: none;
-      background: #faf5ff;
-      border: 1px dashed #c4b5fd;
-      border-radius: 8px;
-      padding: 12px;
-      margin-top: 10px;
-    }
-    .stop3-section.show {
-      display: block;
-    }
-    .stop3-section.roundtrip-theme {
-      background: #f0fdfa;
-      border-color: #99f6e4;
+      font-size: 0.76rem;
     }
 
     .factory-grid {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      max-height: 140px;
+      max-height: 130px;
       overflow-y: auto;
-      padding: 4px;
+      padding: 6px;
       background: #f8fafc;
       border: 1px solid #e2e8f0;
       border-radius: 6px;
       margin-bottom: 10px;
+      transition: opacity 0.15s;
+    }
+    .factory-grid.locked {
+      opacity: 0.45;
+      background: #f1f5f9;
     }
     .factory-chip {
       background: #fff;
       border: 1px solid #cbd5e1;
-      padding: 5px 9px;
+      padding: 6px 10px;
       font-size: 0.8rem;
       border-radius: 4px;
       cursor: pointer;
       font-weight: 600;
+      color: #1e293b;
     }
-    .factory-chip:hover { border-color: #0284c7; background: #f0f9ff; color: #0284c7; }
+    .factory-chip:hover:not(:disabled) { border-color: #0284c7; background: #f0f9ff; color: #0284c7; }
+    .factory-chip:disabled { cursor: not-allowed; }
 
     .client-chip {
-      background: #e0e7ff;
+      background: #eef2ff;
       border: 1px solid #c7d2fe;
       color: #3730a3;
-      padding: 5px 9px;
+      padding: 6px 10px;
       font-size: 0.8rem;
       border-radius: 4px;
       cursor: pointer;
       font-weight: 600;
     }
-    .client-chip:hover { border-color: #4338ca; background: #c7d2fe; }
+    .client-chip:hover { border-color: #4338ca; background: #e0e7ff; }
 
     .form-grid-3 { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 10px; margin-bottom: 8px; }
     .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
     @media (max-width: 640px) {
-      .form-grid-3, .form-grid-2 { grid-template-columns: 1fr; }
+      .form-grid-3, .form-grid-2 { grid-template-columns: 1fr; gap: 8px; }
     }
-    .form-group { display: flex; flex-direction: column; gap: 3px; position: relative; }
-    .form-group label { font-size: 0.8rem; font-weight: 600; color: #475569; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; position: relative; }
+    .form-group label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #475569;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
     .form-group input, .form-group select {
-      padding: 7px 10px;
+      padding: 8px 10px;
       border: 1px solid #cbd5e1;
       border-radius: 5px;
-      font-size: 0.85rem;
+      font-size: 0.86rem;
       outline: none;
       width: 100%;
+      background: #fff;
+      color: #0f172a;
     }
-    .form-group input:focus, .form-group select:focus { border-color: var(--primary); }
+    @media (max-width: 640px) {
+      .form-group input, .form-group select { font-size: 16px; padding: 9px 10px; }
+    }
+    .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
 
-    /* 關鍵字搜尋下拉選單樣式 */
-    .autocomplete-wrapper {
-      position: relative;
-      width: 100%;
+    .station-box {
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 10px;
+      background: #ffffff;
+      transition: border-color 0.15s, background-color 0.15s;
     }
+    .station-box.origin-box {
+      border-left: 4px solid var(--pickup);
+      background: #fcfdfd;
+    }
+    .station-box.action-delivery { border-left: 4px solid var(--delivery); }
+    .station-box.action-pickup { border-left: 4px solid var(--pickup); }
+    .station-box.action-both { border-left: 4px solid var(--both); }
+    .station-box.roundtrip-highlight {
+      border-left: 4px solid var(--teal);
+      background: #f0fdfa;
+    }
+
+    .station-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .station-title {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .station-actions {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .action-seg {
+      display: inline-flex;
+      border: 1px solid #cbd5e1;
+      border-radius: 5px;
+      overflow: hidden;
+      background: #f8fafc;
+    }
+    .action-seg button {
+      border: none;
+      background: transparent;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #475569;
+      cursor: pointer;
+      border-right: 1px solid #cbd5e1;
+      transition: background 0.12s, color 0.12s;
+    }
+    .action-seg button:last-child { border-right: none; }
+    .action-seg button.act-delivery.active { background: var(--delivery); color: #fff; }
+    .action-seg button.act-pickup.active { background: var(--pickup); color: #fff; }
+    .action-seg button.act-both.active { background: var(--both); color: #fff; }
+
+    .roundtrip-badge {
+      display: none;
+      background: #ccfbf1;
+      color: #0f766e;
+      border: 1px solid #99f6e4;
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .roundtrip-badge.show { display: inline-block; }
+
+    .editing-banner {
+      display: none;
+      background: #fffbeb;
+      border: 1px solid #fcd34d;
+      color: #92400e;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .editing-banner.show { display: flex; }
+    .editing-banner-actions { display: flex; gap: 6px; align-items: center; }
+    .btn-cancel-order {
+      background: var(--danger);
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn-cancel-order:hover { background: #b91c1c; }
+
+    .autocomplete-wrapper { position: relative; width: 100%; }
     .autocomplete-dropdown {
       position: absolute;
       top: 100%;
@@ -212,71 +297,148 @@
       border: 1px solid #0284c7;
       border-top: none;
       border-radius: 0 0 6px 6px;
-      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.15);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
       max-height: 220px;
       overflow-y: auto;
       z-index: 999;
       display: none;
     }
-    .autocomplete-dropdown.show {
-      display: block;
-    }
+    .autocomplete-dropdown.show { display: block; }
     .autocomplete-item {
-      padding: 8px 10px;
+      padding: 9px 10px;
       cursor: pointer;
       border-bottom: 1px solid #f1f5f9;
-      transition: background 0.12s;
     }
-    .autocomplete-item:last-child {
-      border-bottom: none;
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item:hover, .autocomplete-item.active { background: #e0f2fe; }
+    .autocomplete-item-title { font-size: 0.85rem; font-weight: 700; color: #0f172a; }
+    .autocomplete-item-title mark { background: #fef08a; color: #0f172a; padding: 0 1px; border-radius: 2px; }
+    .autocomplete-item-sub { font-size: 0.74rem; color: #64748b; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .autocomplete-empty { padding: 10px; font-size: 0.8rem; color: #94a3b8; text-align: center; }
+
+    .date-picker-wrap { position: relative; width: 100%; }
+    .date-input-display { cursor: pointer; background: #fff; }
+    .calendar-popover {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      width: 268px;
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.16);
+      padding: 12px;
+      z-index: 1000;
+      display: none;
+      user-select: none;
     }
-    .autocomplete-item:hover,
-    .autocomplete-item.active {
-      background: #e0f2fe;
-    }
-    .autocomplete-item-title {
-      font-size: 0.85rem;
+    .calendar-popover.show { display: block; }
+    .cal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 0.88rem;
       font-weight: 700;
-      color: #0f172a;
+      color: #1e293b;
     }
-    .autocomplete-item-title mark {
-      background: #fef08a;
-      color: #0f172a;
-      padding: 0 1px;
-      border-radius: 2px;
+    .cal-nav-btn {
+      background: transparent;
+      border: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      color: #475569;
+      font-weight: 700;
     }
-    .autocomplete-item-sub {
-      font-size: 0.74rem;
-      color: #64748b;
-      margin-top: 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .autocomplete-empty {
-      padding: 10px;
-      font-size: 0.8rem;
-      color: #94a3b8;
+    .cal-nav-btn:hover { background: #f1f5f9; }
+    .cal-weekdays, .cal-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
       text-align: center;
+      gap: 2px;
+    }
+    .cal-weekdays span { font-size: 0.74rem; color: #64748b; padding: 4px 0; font-weight: 600; }
+    .cal-day {
+      height: 32px;
+      line-height: 32px;
+      font-size: 0.82rem;
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: #0f172a;
+    }
+    .cal-day:hover { background: #e2e8f0; }
+    .cal-day.muted { color: #94a3b8; }
+    .cal-day.today { border: 1px solid #1a73e8; color: #1a73e8; font-weight: 700; }
+    .cal-day.selected { background: #1a73e8; color: #fff; font-weight: 700; }
+    .cal-footer {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #f1f5f9;
+    }
+    .cal-footer button {
+      background: transparent;
+      border: none;
+      color: #1a73e8;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .cal-footer button:hover { background: #eff6ff; }
+
+    .time-combo { display: flex; gap: 4px; }
+    .time-combo select {
+      width: 108px;
+      flex-shrink: 0;
+      font-size: 0.8rem;
+      padding: 7px 4px;
+      color: #334155;
     }
 
     .btn-quick {
       background: #f1f5f9;
       border: 1px solid #cbd5e1;
-      padding: 4px 8px;
+      padding: 5px 9px;
       font-size: 0.75rem;
       border-radius: 4px;
       cursor: pointer;
       font-weight: 600;
+      color: #334155;
     }
     .btn-quick:hover { background: #e2e8f0; }
+    .btn-quick.primary-outline { border-color: #99f6e4; background: #f0fdfa; color: #0f766e; }
+    .btn-quick.primary-outline:hover { background: #ccfbf1; }
+    .btn-quick.active-filter { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
+    .btn-quick.danger-text { color: var(--danger); }
+
+    .btn-add-stop {
+      width: 100%;
+      padding: 10px;
+      border: 1px dashed #94a3b8;
+      background: #f8fafc;
+      color: #334155;
+      border-radius: 6px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 12px;
+    }
+    .btn-add-stop:hover:not(:disabled) { border-color: #0284c7; color: #0284c7; background: #f0f9ff; }
+    .btn-add-stop:disabled { opacity: 0.5; cursor: not-allowed; background: #f1f5f9; }
 
     .btn-submit {
       background: #0284c7;
       color: #fff;
       border: none;
       padding: 12px;
-      font-size: 0.95rem;
+      font-size: 0.94rem;
       font-weight: 700;
       border-radius: 6px;
       cursor: pointer;
@@ -287,204 +449,203 @@
     .preview-box {
       background: #0f172a;
       color: #f8fafc;
-      padding: 10px;
+      padding: 12px;
       border-radius: 6px;
-      font-family: monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 0.8rem;
       white-space: pre-wrap;
       word-break: break-all;
       height: 260px;
       overflow-y: auto;
       margin-bottom: 8px;
+      line-height: 1.5;
     }
 
     .driver-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 7px 10px;
+      padding: 8px 10px;
       border: 1px solid #e2e8f0;
       border-radius: 5px;
       margin-bottom: 5px;
-      font-size: 0.8rem;
+      font-size: 0.82rem;
       cursor: pointer;
       background: #fff;
     }
     .driver-item:hover { border-color: #0284c7; background: #f0f9ff; }
 
-    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 8px; }
-    th, td { border: 1px solid #e2e8f0; padding: 7px 8px; text-align: left; }
-    th { background: #f8fafc; font-weight: 700; color: #334155; }
-    tr:hover { background: #f1f5f9; }
+    .history-filter-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .history-search-input {
+      flex: 1;
+      min-width: 150px;
+      padding: 6px 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 5px;
+      font-size: 0.82rem;
+      outline: none;
+    }
+    .history-search-input:focus { border-color: var(--accent); }
+
+    .table-scroll {
+      max-height: 300px;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.78rem; min-width: 680px; }
+    th, td { border: 1px solid #e2e8f0; padding: 7px 8px; text-align: left; vertical-align: top; }
+    th { background: #f8fafc; font-weight: 700; color: #334155; white-space: nowrap; position: sticky; top: 0; }
+    tr:hover { background: #f8fafc; }
+    tr.row-cancelled { opacity: 0.55; background: #f8fafc; }
+    tr.row-cancelled td { text-decoration: line-through; color: #64748b; }
+    tr.row-cancelled td:last-child { text-decoration: none; }
+
     .trip-badge {
       display: inline-block;
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       padding: 1px 5px;
       border-radius: 4px;
       font-weight: 700;
       margin-left: 4px;
+      background: #ccfbf1;
+      color: #0f766e;
     }
-    .trip-badge.roundtrip { background: #ccfbf1; color: #0f766e; }
-    .trip-badge.multistop { background: #ede9fe; color: #6d28d9; }
+    .trip-badge.pending { background: #fef3c7; color: #b45309; }
+    .trip-badge.cancelled { background: #fee2e2; color: #b91c1c; }
+    .act-tag {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0 4px;
+      border-radius: 3px;
+      margin-right: 3px;
+    }
+    .act-tag.delivery { background: #e0f2fe; color: #0369a1; }
+    .act-tag.pickup { background: #d1fae5; color: #047857; }
+    .act-tag.both { background: #fef3c7; color: #b45309; }
+    .sync-status { font-size: 0.74rem; color: #64748b; font-weight: 500; }
+
+    .toast {
+      position: fixed;
+      top: 62px;
+      right: 16px;
+      background: #0f172a;
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25);
+      z-index: 2000;
+      opacity: 0;
+      transform: translateY(-8px);
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.warn { background: #b45309; }
+    .toast.success { background: #0f766e; }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>🚚 飛達旺派單 & 營運系統</h1>
-    <div style="font-size: 0.8rem; color: #94a3b8;">
-      按 <kbd style="background:#334155; padding:2px 5px; border-radius:3px; color:#fff;">Ctrl + Enter</kbd> 開單
+    <h1>飛達旺派單與調度系統</h1>
+    <div class="header-shortcut">
+      快捷鍵：<kbd style="background:#334155; padding:2px 6px; border-radius:3px; color:#fff;">Ctrl + Enter</kbd> 產出派單
     </div>
   </header>
+
+  <div id="toast" class="toast"></div>
 
   <div class="main-container">
     <div>
 
-      <!-- 1. 委託客戶 + 廠區點擊選單 -->
+      <!-- 1. 快速點選區（可收合） -->
       <div class="card">
-        <div class="card-title">
-          <span>⚡ 下單流程 (叫車客戶 ➔ 第 1 站 ➔ 第 2 站 ／ 選填第 3 站)</span>
-          <button type="button" class="btn-quick" onclick="resetClickStep()">重設點選模式</button>
-        </div>
-        
-        <div class="flow-indicator">
-          <span>當前步驟：</span>
-          <span class="flow-step-active" id="currentStepText">👉 步驟 1：請點擊【委託叫車客戶】</span>
-        </div>
-
-        <!-- 委託客戶按鈕區 -->
-        <div style="font-size:0.75rem; font-weight:700; color:#4338ca; margin-bottom:4px;">🏢 委託下單客戶 (誰叫的車)：</div>
-        <div class="factory-grid" id="clientButtons" style="max-height:80px; background:#eef2ff; border-color:#c7d2fe;">
-          <div style="color:#64748b; font-size:0.8rem; padding:4px;">🔄 正在連線同步客戶名冊...</div>
+        <div class="card-title" id="quickCardTitle">
+          <span>快速帶入</span>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <span class="roundtrip-badge" id="headerRoundtripBadge">來回單</span>
+            <button type="button" class="btn-quick" onclick="resetClickStep()">重設順序</button>
+            <button type="button" class="btn-quick" id="btnToggleQuick" onclick="toggleQuickCard()">收合</button>
+          </div>
         </div>
 
-        <!-- 廠區按鈕區 -->
-        <div style="font-size:0.75rem; font-weight:700; color:#0369a1; margin-bottom:4px; margin-top:6px;">🏭 路線廠區 (點擊依序帶入起點 / 送達點)：</div>
-        <div class="factory-grid" id="factoryButtons">
-          <div style="color:#64748b; font-size:0.8rem; padding:4px;">🔄 正在從 Google 試算表連線同步廠區...</div>
+        <div id="quickCardBody">
+          <div class="flow-indicator">
+            <span class="flow-step-active" id="currentStepText">步驟 1：請先選取委託客戶</span>
+          </div>
+
+          <div style="font-size:0.75rem; font-weight:700; color:#4338ca; margin-bottom:4px;">委託客戶（選取後自動填入第 1 站起點）</div>
+          <div class="factory-grid" id="clientButtons" style="max-height:86px; background:#eef2ff; border-color:#c7d2fe;">
+            <div style="color:#64748b; font-size:0.8rem; padding:4px;">正在連線同步客戶名冊...</div>
+          </div>
+
+          <div style="font-size:0.75rem; font-weight:700; color:#0369a1; margin-bottom:4px; margin-top:6px;">
+            路線廠區 <span id="factoryLockHint" style="color:#94a3b8; font-weight:500;">（請先選擇委託客戶後解鎖）</span>
+          </div>
+          <div class="factory-grid locked" id="factoryButtons">
+            <div style="color:#64748b; font-size:0.8rem; padding:4px;">正在從 Google 試算表同步廠區...</div>
+          </div>
         </div>
       </div>
 
-      <!-- 2. 表單細節確認 -->
+      <!-- 2. 派單表單 -->
       <form id="dispatchForm" class="card" onsubmit="event.preventDefault(); submitDispatch();">
         <div class="card-title">
-          <span>📋 派單資料核對</span>
+          <span>派單資料核對</span>
           <button type="button" onclick="clearAllForm()" class="btn-quick">清空重填</button>
         </div>
 
-        <!-- 行程模式切換：單趟 / 來回趟 (A->B->A) / 多點串聯 (A->B->C) -->
-        <div class="trip-mode-bar">
-          <span class="trip-mode-label">🛣️ 行程模式：</span>
-          <button type="button" class="mode-btn active" data-mode="single" onclick="setTripMode('single')">➡️ 單趟 (A ➔ B)</button>
-          <button type="button" class="mode-btn" data-mode="roundtrip" onclick="setTripMode('roundtrip')">🔄 來回趟 (A ➔ B ➔ A)</button>
-          <button type="button" class="mode-btn" data-mode="multistop" onclick="setTripMode('multistop')">🔀 多點串聯 (A ➔ B ➔ C)</button>
+        <!-- 補填 / 修改頂部操作列（含「取消此單」並同步雲端） -->
+        <div id="editingBanner" class="editing-banner">
+          <span id="editingBannerText">正在補填／修改單號：</span>
+          <div class="editing-banner-actions">
+            <button type="button" class="btn-cancel-order" onclick="cancelCurrentOrder()">取消此單</button>
+            <button type="button" class="btn-quick" onclick="cancelEditMode()">返回開新單</button>
+          </div>
         </div>
 
-        <!-- 委託客戶 -->
-        <div class="form-grid-2" style="background:#f8fafc; padding:8px; border-radius:6px; margin-bottom:10px;">
+        <!-- 委託客戶 ＋ 預排日期 -->
+        <div class="form-grid-3" style="background:#f8fafc; padding:10px; border-radius:6px; margin-bottom:12px; border:1px solid #e2e8f0;">
           <div class="form-group">
-            <label style="color:#4338ca;">委託客戶 (下單方) *</label>
+            <label style="color:#4338ca;">委託客戶 *</label>
             <div class="autocomplete-wrapper">
-              <input type="text" id="clientName" required autocomplete="off" placeholder="輸入關鍵字搜尋或點上方客戶">
+              <input type="text" id="clientName" required autocomplete="off">
               <div id="clientDropdown" class="autocomplete-dropdown"></div>
             </div>
           </div>
           <div class="form-group">
-            <label style="color:#4338ca;">對帳備註 / 統編 (選填)</label>
-            <input type="text" id="clientTaxId" placeholder="自動帶入或手動填寫">
+            <label style="color:#4338ca;">對帳備註 / 統編</label>
+            <input type="text" id="clientTaxId">
+          </div>
+          <div class="form-group">
+            <label style="color:#0f172a;">預排執行日期</label>
+            <div class="date-picker-wrap">
+              <input type="text" id="dispatchDate" class="date-input-display" readonly>
+              <div id="calendarPopover" class="calendar-popover"></div>
+            </div>
           </div>
         </div>
 
         <!-- 第 1 站：取貨起點 -->
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-          <span style="font-size:0.8rem; font-weight:700; color:#065f46;">🟢 第 1 站：取貨起點 (A)</span>
-          <div style="display:flex; gap:4px; align-items:center;">
-            <span style="font-size:0.75rem; color:#64748b;">取貨：</span>
-            <button type="button" class="btn-quick" onclick="setPickupOffset(0)">⚡ 現在 (即刻)</button>
-            <button type="button" class="btn-quick" onclick="setPickupOffset(15)">+15 分鐘</button>
-            <button type="button" class="btn-quick" onclick="setPickupOffset(30)">+30 分鐘</button>
-          </div>
-        </div>
-        
-        <div class="form-grid-3">
-          <div class="form-group">
-            <label>廠區名稱 *</label>
-            <div class="autocomplete-wrapper">
-              <input type="text" id="originName" required autocomplete="off" placeholder="輸入關鍵字 (如: 台積電) 搜尋">
-              <div id="originDropdown" class="autocomplete-dropdown"></div>
+        <div class="station-box origin-box">
+          <div class="station-header">
+            <div class="station-title">
+              <span>第 1 站｜取貨起點</span>
+              <span class="act-tag pickup">取貨</span>
             </div>
-          </div>
-          <div class="form-group">
-            <label>碼頭 / 棟別</label>
-            <input type="text" id="originDock" placeholder="例: 3號卸貨口">
-          </div>
-          <div class="form-group">
-            <label>預計取貨時間 (已預設當下) *</label>
-            <input type="text" id="pickupTime" required>
-          </div>
-        </div>
-        <div class="form-grid-2">
-          <div class="form-group">
-            <label>詳細地址</label>
-            <input type="text" id="originAddr" placeholder="自動帶入">
-          </div>
-          <div class="form-group">
-            <label>現場窗口電話</label>
-            <input type="text" id="originContact" placeholder="無">
-          </div>
-        </div>
-
-        <hr style="border:0; border-top:1px dashed #e2e8f0; margin:12px 0;">
-
-        <!-- 第 2 站：送達點 / 中途點 -->
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-          <span id="stop2Title" style="font-size:0.8rem; font-weight:700; color:#991b1b;">🎯 第 2 站：送達終點 (B)</span>
-          <div style="display:flex; gap:4px; align-items:center;">
-            <span style="font-size:0.75rem; color:#64748b;">車程快捷：</span>
-            <button type="button" class="btn-quick" onclick="setDropoffImmediate()">⚡ 即刻送達</button>
-            <button type="button" class="btn-quick" onclick="setDropoffOffset(60)">+1 小時</button>
-            <button type="button" class="btn-quick" onclick="setDropoffOffset(120)">+2 小時</button>
-            <button type="button" class="btn-quick" onclick="setDropoffOffset(210)">+3.5 小時</button>
-          </div>
-        </div>
-
-        <div class="form-grid-3">
-          <div class="form-group">
-            <label>廠區名稱 *</label>
-            <div class="autocomplete-wrapper">
-              <input type="text" id="destName" required autocomplete="off" placeholder="輸入關鍵字 (如: 台積電) 搜尋">
-              <div id="destDropdown" class="autocomplete-dropdown"></div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>庫房 / 碼頭</label>
-            <input type="text" id="destDock" placeholder="例: 晶圓一課庫房">
-          </div>
-          <div class="form-group">
-            <label>送達期限 (預設即刻送達) *</label>
-            <input type="text" id="dropoffTime" required>
-          </div>
-        </div>
-        <div class="form-grid-2">
-          <div class="form-group">
-            <label>詳細地址</label>
-            <input type="text" id="destAddr" placeholder="自動帶入">
-          </div>
-          <div class="form-group">
-            <label>收貨窗口電話</label>
-            <input type="text" id="destContact" placeholder="無">
-          </div>
-        </div>
-
-        <!-- 第 3 站：折返點 (A) 或 續送終點 (C) -->
-        <div id="stop3Section" class="stop3-section">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
-            <span id="stop3Title" style="font-size:0.82rem; font-weight:700; color:#6d28d9;">🔁 第 3 站：折返終點 (回 A)</span>
-            <div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
-              <button type="button" id="btnSyncStop1" class="btn-quick" onclick="syncStop1ToStop3()" style="background:#ccfbf1; border-color:#5eead4; color:#0f766e;">🔄 同步第 1 站</button>
-              <button type="button" class="btn-quick" onclick="setStop3Immediate()">⚡ 即刻折返</button>
-              <button type="button" class="btn-quick" onclick="setStop3Offset(120)">+2 小時</button>
-              <button type="button" class="btn-quick" onclick="setStop3Offset(240)">+4 小時</button>
+            <div class="station-actions" id="originTimeQuickBtns">
+              <button type="button" class="btn-quick" onclick="setPickupOffset(0)">即刻</button>
+              <button type="button" class="btn-quick" onclick="setPickupOffset(15)">+15分</button>
+              <button type="button" class="btn-quick" onclick="setPickupOffset(30)">+30分</button>
             </div>
           </div>
 
@@ -492,86 +653,117 @@
             <div class="form-group">
               <label>廠區名稱 *</label>
               <div class="autocomplete-wrapper">
-                <input type="text" id="stop3Name" autocomplete="off" placeholder="輸入關鍵字 (如: 台積電) 搜尋">
-                <div id="stop3Dropdown" class="autocomplete-dropdown"></div>
+                <input type="text" id="originName" required autocomplete="off">
+                <div id="originDropdown" class="autocomplete-dropdown"></div>
               </div>
             </div>
             <div class="form-group">
-              <label>庫房 / 碼頭</label>
-              <input type="text" id="stop3Dock" placeholder="例: 3號卸貨口">
+              <label>碼頭 / 棟別</label>
+              <input type="text" id="originDock">
             </div>
             <div class="form-group">
-              <label>送達 / 折返期限 *</label>
-              <input type="text" id="stop3Time" value="依現場指示送達">
+              <label>預計取貨時間 *</label>
+              <div class="time-combo">
+                <input type="text" id="pickupTime" required oninput="updateOriginTimeBtnsVisibility()">
+                <select onchange="applyTimeSlot('pickupTime', this)">
+                  <option value="">時段快捷</option>
+                </select>
+              </div>
             </div>
           </div>
+
           <div class="form-grid-2">
             <div class="form-group">
               <label>詳細地址</label>
-              <input type="text" id="stop3Addr" placeholder="自動帶入">
+              <input type="text" id="originAddr">
             </div>
             <div class="form-group">
-              <label>驗收 / 窗口電話</label>
-              <input type="text" id="stop3Contact" placeholder="無">
+              <label>
+                <span>現場窗口</span>
+                <span style="display:flex; gap:3px;">
+                  <button type="button" class="btn-quick" onclick="setContactPreset('originContact', '庫房')">庫房</button>
+                  <button type="button" class="btn-quick" onclick="setContactPreset('originContact', '工程師')">工程師</button>
+                  <button type="button" class="btn-quick" onclick="setContactPreset('originContact', '依貨單指示')">依貨單指示</button>
+                </span>
+              </label>
+              <input type="text" id="originContact" value="依貨單指示">
             </div>
           </div>
         </div>
 
-        <hr style="border:0; border-top:1px dashed #e2e8f0; margin:12px 0;">
+        <!-- 動態後續站點 (第 2 站 ~ 第 5 站，最多 4 站) -->
+        <div id="dynamicStopsContainer"></div>
+
+        <button type="button" id="btnAddStop" class="btn-add-stop" onclick="addStop()" disabled>
+          + 新增站點（請先選擇委託客戶）
+        </button>
 
         <!-- 司機指派與貨況備註 -->
-        <div style="font-size:0.8rem; font-weight:700; color:#92400e; margin-bottom:4px;">🚚 司機指派與貨況備註</div>
+        <div style="font-size:0.8rem; font-weight:700; color:#334155; margin-bottom:6px;">司機指派與貨況備註</div>
         <div class="form-grid-2">
           <div class="form-group">
-            <label>指派司機 (可選式 / 可直接手動打字新增) *</label>
-            <input list="driverOptions" id="driverInput" required placeholder="請點選或直接打字 (例: 小劉 0988-111222)">
-            <datalist id="driverOptions"></datalist>
+            <label>指派司機 *</label>
+            <div class="autocomplete-wrapper">
+              <input type="text" id="driverInput" required autocomplete="off">
+              <div id="driverDropdown" class="autocomplete-dropdown"></div>
+            </div>
           </div>
           <div class="form-group">
-            <label>貨品 / 備註內容 (選填)</label>
-            <input type="text" id="cargoType" placeholder="例: 空盒帶回 / 雙趟確認">
+            <label>貨品 / 備註內容</label>
+            <input type="text" id="cargoType">
           </div>
         </div>
 
-        <button type="submit" class="btn-submit" style="margin-top:10px;">
-          📋 產出派單、儲存歷史並組裝 LINE 訊息
+        <button type="submit" id="submitBtn" class="btn-submit" style="margin-top:10px;">
+          產出派單並同步雲端
         </button>
       </form>
 
-      <!-- 3. 歷史派單紀錄與 Excel 匯出 -->
+      <!-- 3. 派單歷史紀錄 -->
       <div class="card">
         <div class="card-title">
-          <span>📦 派單歷史紀錄 (<span id="historyCount">0</span> 筆)</span>
-          <div style="display:flex; gap:6px;">
-            <button type="button" class="btn-quick" style="background:#10b981; color:#fff; border:none;" onclick="exportToExcel()">📥 匯出 Excel (CSV)</button>
-            <button type="button" class="btn-quick" style="background:#8b5cf6; color:#fff; border:none;" onclick="generateAiWeeklyReport()">🤖 AI 生成每週報表</button>
-            <button type="button" class="btn-quick" style="color:#ef4444;" onclick="clearHistory()">清空歷史</button>
+          <div>
+            <span>派單歷史紀錄（<span id="historyCount">0</span> 筆）</span>
+            <span id="historySyncStatus" class="sync-status" style="margin-left:8px;">準備同步...</span>
+          </div>
+          <div style="display:flex; gap:5px; flex-wrap:wrap;">
+            <button type="button" class="btn-quick" onclick="loadOrderHistoryFromSheet()">同步雲端</button>
+            <button type="button" class="btn-quick" style="background:#0f766e; color:#fff; border:none;" onclick="exportToExcel()">匯出 CSV</button>
+            <button type="button" class="btn-quick" style="background:#4338ca; color:#fff; border:none;" onclick="generateAiWeeklyReport()">週報</button>
+            <button type="button" class="btn-quick danger-text" onclick="clearHistory()">清本機</button>
           </div>
         </div>
 
-        <div id="aiReportCard" style="display:none; background:#faf5ff; border:1px solid #d8b4fe; border-radius:6px; padding:12px; margin-bottom:12px;">
+        <!-- 搜尋與「資料待補單」篩選列 -->
+        <div class="history-filter-bar">
+          <input type="text" id="historySearchInput" class="history-search-input" oninput="renderHistoryTable()" aria-label="搜尋歷史紀錄">
+          <button type="button" id="btnPendingFilter" class="btn-quick" onclick="togglePendingFilter()">資料待補單</button>
+        </div>
+
+        <div id="aiReportCard" style="display:none; background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:12px; margin-bottom:10px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <strong style="color:#6b21a8; font-size:0.85rem;">📊 每週營運 AI 摘要報表</strong>
+            <strong style="color:#0f172a; font-size:0.85rem;">每週營運分析摘要</strong>
             <button type="button" class="btn-quick" onclick="copyAiReport()">複製報表</button>
           </div>
-          <pre id="aiReportText" style="white-space:pre-wrap; font-size:0.8rem; color:#4c1d95; font-family:sans-serif; line-height:1.6;"></pre>
+          <pre id="aiReportText" style="white-space:pre-wrap; font-size:0.8rem; color:#334155; font-family:sans-serif; line-height:1.6;"></pre>
         </div>
 
-        <div style="max-height: 250px; overflow-y: auto;">
+        <div class="table-scroll">
           <table>
             <thead>
               <tr>
-                <th>單號</th>
-                <th>建立時間</th>
+                <th>單號 / 類型</th>
+                <th>日期 / 建立</th>
                 <th>委託客戶</th>
-                <th>第 1 站 (起)</th>
-                <th>第 2 / 3 站 (送)</th>
+                <th>起點</th>
+                <th>後續站點路線</th>
                 <th>指派司機</th>
                 <th>貨況備註</th>
+                <th>操作</th>
               </tr>
             </thead>
             <tbody id="historyTableBody">
-              <tr><td colspan="7" style="text-align:center; color:#94a3b8;">尚無歷史紀錄，建立派單後將自動存入</td></tr>
+              <tr><td colspan="8" style="text-align:center; color:#94a3b8;">尚無歷史紀錄</td></tr>
             </tbody>
           </table>
         </div>
@@ -579,788 +771,412 @@
 
     </div>
 
-    <!-- 右側面板 -->
-    <div>
-      <div class="card">
+    <!-- 右側面板（電腦版固定跟隨捲動） -->
+    <div class="side-panel">
+      <div class="card" id="linePreviewCard">
         <div class="card-title">
-          <span>📱 LINE 派工訊息</span>
+          <span>LINE 派工訊息</span>
           <span id="targetDriverLabel" style="font-size:0.75rem; color:#0284c7;"></span>
         </div>
-        <div id="previewBox" class="preview-box">【點擊派單後產生訊息】</div>
+        <div id="previewBox" class="preview-box">【點擊產出派單後產生訊息】</div>
         <div style="display:flex; gap:6px;">
-          <button type="button" class="btn-submit" style="background:#06c755;" onclick="sendToLine()">💬 喚起 LINE 私傳</button>
-          <button type="button" class="btn-quick" style="flex:1;" onclick="copyText()">📋 複製</button>
+          <button type="button" class="btn-submit" style="background:#06c755;" onclick="sendToLine()">喚起 LINE 私傳</button>
+          <button type="button" class="btn-quick" style="flex:1;" onclick="copyText()">複製</button>
         </div>
       </div>
 
       <div class="card">
         <div class="card-title">
-          <span>🚚 快速司機名單 (點擊帶入)</span>
+          <span>司機名單（點擊帶入）</span>
         </div>
-        <div id="driverList" style="max-height: 420px; overflow-y: auto;">
-          <div style="color:#64748b; font-size:0.8rem; padding:4px;">🔄 正在連線同步司機名單...</div>
+        <div id="driverList" style="max-height: 360px; overflow-y: auto;">
+          <div style="color:#64748b; font-size:0.8rem; padding:4px;">正在連線同步司機名單...</div>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    // 💡 1. 填入你的 Google 試算表與 Apps Script 部署網址
+    // Google 試算表讀取網址 (CSV)
     const CLIENT_SHEET_URL = "https://docs.google.com/spreadsheets/d/1ORWIrWDii5QepS14gO9iNQ69JT6ovC3NGUfQ4_81o_I/gviz/tq?tqx=out:csv&gid=0";
     const FACTORY_SHEET_URL = "https://docs.google.com/spreadsheets/d/1pVQsAMe2TY0Di5LGw48URU_j1x1vokBpPIHWxctKOQg/gviz/tq?tqx=out:csv&gid=0";
     const DRIVER_SHEET_URL = "https://docs.google.com/spreadsheets/d/1m4ebHqR9CaCvhOkLL0-tRvAqX9CtNrnwlWLHL2-Puvo/gviz/tq?tqx=out:csv&gid=0";
-    
-    // 👇 請把你在 Apps Script 部署得到的網址貼在下面雙引號內
+    const ORDER_SHEET_URL = "https://docs.google.com/spreadsheets/d/1JwIFy2dU4ZNv7paJ-EgLYy8J0FuX0coJ7DGs8NDx5hg/gviz/tq?tqx=out:csv&gid=1558654610";
+
+    // Apps Script 部署網址
     const DRIVER_API_URL = "https://script.google.com/macros/s/AKfycbwW_cszM48NYrPJoZG7EhW5vGzMISsIRsRXp47zDEOR-G9gjFerYzLtp24sGu0d9b2K/exec";
-    
-    let CLIENTS = [];    // 委託客戶
-    let FACTORIES = [];  // 廠區清冊
-    let drivers = [];    // 司機清冊 (試算表 + 本地自定義司機)
+    const ORDER_API_URL = "請貼上派單紀錄清冊的_Apps_Script_網址";
+
+    const MAX_STOPS = 4;
+    let CLIENTS = [];
+    let FACTORIES = [];
+    let drivers = [];
     let customDrivers = JSON.parse(localStorage.getItem('custom_drivers') || '[]');
-    let currentClickStep = 1; // 1:選客戶, 2:選第1站, 3:選第2站, 4:選第3站(多點模式)
-    let tripMode = 'single';  // 'single' | 'roundtrip' | 'multistop'
     let orderHistory = JSON.parse(localStorage.getItem('dispatch_orders') || '[]');
 
-    function init() {
-      setDefaultTimes();
-      renderHistoryTable();
-      setupAllAutocompletes();
-      loadGoogleSheets();
-    }
+    let stops = [];
+    let activeTargetStopIdx = 0;
+    let editingOrderNo = null;
+    let onlyPendingFilter = false;
+    let quickCardCollapsed = false;
 
-    /* ========================================================
-       【行程模式切換：單趟 / 來回趟 / 多點串聯】
-       ======================================================== */
-    function setTripMode(mode) {
-      tripMode = mode;
-      document.querySelectorAll('.mode-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.mode === mode);
-      });
-
-      const stop2Title = document.getElementById('stop2Title');
-      const stop3Section = document.getElementById('stop3Section');
-      const stop3Title = document.getElementById('stop3Title');
-      const stop3NameInput = document.getElementById('stop3Name');
-      const stop3TimeInput = document.getElementById('stop3Time');
-      const btnSyncStop1 = document.getElementById('btnSyncStop1');
-
-      if (mode === 'single') {
-        stop2Title.textContent = '🎯 第 2 站：送達終點 (B)';
-        stop3Section.classList.remove('show', 'roundtrip-theme');
-        stop3NameInput.required = false;
-        stop3TimeInput.required = false;
-        if (currentClickStep === 4) resetClickStep();
-      } else if (mode === 'roundtrip') {
-        stop2Title.textContent = '🟠 第 2 站：去程送達 / 折返點 (B)';
-        stop3Section.classList.add('show', 'roundtrip-theme');
-        stop3Title.textContent = '🔁 第 3 站：折返終點 (回 A)';
-        stop3Title.style.color = '#0f766e';
-        btnSyncStop1.style.display = 'inline-block';
-        stop3NameInput.required = true;
-        stop3TimeInput.required = true;
-        if (!stop3TimeInput.value.trim()) stop3TimeInput.value = '完成第 2 站後折返送達';
-        syncStop1ToStop3();
-      } else if (mode === 'multistop') {
-        stop2Title.textContent = '🟠 第 2 站：中途停靠 / 卸載點 (B)';
-        stop3Section.classList.add('show');
-        stop3Section.classList.remove('roundtrip-theme');
-        stop3Title.textContent = '🟣 第 3 站：續送終點 (C)';
-        stop3Title.style.color = '#6d28d9';
-        btnSyncStop1.style.display = 'none';
-        stop3NameInput.required = true;
-        stop3TimeInput.required = true;
-        if (!stop3TimeInput.value.trim()) stop3TimeInput.value = '完成第 2 站後接續送達';
-      }
-    }
-
-    function syncStop1ToStop3() {
-      document.getElementById('stop3Name').value = document.getElementById('originName').value;
-      document.getElementById('stop3Addr').value = document.getElementById('originAddr').value;
-      document.getElementById('stop3Dock').value = document.getElementById('originDock').value;
-      document.getElementById('stop3Contact').value = document.getElementById('originContact').value;
-    }
-
-    function setStop3Immediate() {
-      document.getElementById('stop3Time').value = tripMode === 'roundtrip' ? '完成第 2 站後即刻折返' : '完成第 2 站後即刻送達';
-    }
-
-    function setStop3Offset(mins) {
-      document.getElementById('stop3Time').value = `${getTimeString(mins)} 前送達`;
-    }
-
-    async function loadGoogleSheets() {
-      try {
-        // 1. 抓取委託客戶清冊
-        const cRes = await fetch(CLIENT_SHEET_URL);
-        const cCsv = await cRes.text();
-        const cLines = cCsv.split(/\r?\n/).filter(line => line.trim() !== '');
-        CLIENTS = cLines.slice(1).map(line => {
-          const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
-          return {
-            name: cols[0] || '未命名客戶',
-            fullName: cols[1] || '',
-            taxId: cols[2] || '',
-            contact: cols[3] || ''
-          };
-        }).filter(c => c.name !== '未命名客戶');
-        renderClients();
-
-        // 2. 抓取廠區清冊
-        const fRes = await fetch(FACTORY_SHEET_URL);
-        const fCsv = await fRes.text();
-        const fLines = fCsv.split(/\r?\n/).filter(line => line.trim() !== '');
-        FACTORIES = fLines.slice(1).map(line => {
-          const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
-          return {
-            name: cols[0] || '未命名廠區',
-            addr: cols[1] || '',
-            dock: cols[2] || '',
-            contact: cols[3] || '',
-            notice: cols[4] || ''
-          };
-        }).filter(f => f.name !== '未命名廠區');
-        renderFactories();
-
-        // 3. 抓取司機清冊 (並與本地手打司機合併)
-        const dRes = await fetch(DRIVER_SHEET_URL);
-        const dCsv = await dRes.text();
-        const dLines = dCsv.split(/\r?\n/).filter(line => line.trim() !== '');
-        const sheetDrivers = dLines.slice(1).map((line, idx) => {
-          const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
-          return {
-            id: idx + 1,
-            name: cols[0] || '司機',
-            phone: cols[1] || '',
-            plate: cols[2] || ''
-          };
-        }).filter(d => d.name !== '司機');
-
-        drivers = [...sheetDrivers];
-        customDrivers.forEach(cd => {
-          if (!drivers.some(d => d.name === cd.name)) {
-            drivers.push(cd);
-          }
-        });
-
-        renderDrivers();
-        console.log("✅ 成功從 3 份 Google 試算表同步資料！");
-      } catch (error) {
-        console.error("❌ 讀取 Google Sheets 失敗：", error);
-        document.getElementById('factoryButtons').innerHTML = '<div style="color:#ef4444; font-size:0.8rem; padding:4px;">⚠️ 試算表讀取失敗，請確認表格已公開或發布。</div>';
-      }
-    }
-
-    function renderClients() {
-      const container = document.getElementById('clientButtons');
-      container.innerHTML = '';
-      if (CLIENTS.length === 0) {
-        container.innerHTML = '<div style="color:#94a3b8; font-size:0.8rem; padding:4px;">試算表內尚無客戶資料，請至客戶端清冊新增</div>';
-        return;
-      }
-      CLIENTS.forEach(c => {
-        const chip = document.createElement('button');
-        chip.type = 'button';
-        chip.className = 'client-chip';
-        chip.textContent = c.name;
-        chip.onclick = () => handleClientClick(c);
-        container.appendChild(chip);
-      });
-    }
-
-    function renderFactories() {
-      const container = document.getElementById('factoryButtons');
-      container.innerHTML = '';
-      if (FACTORIES.length === 0) {
-        container.innerHTML = '<div style="color:#94a3b8; font-size:0.8rem; padding:4px;">試算表內尚無廠區資料，請至 Google Sheets 新增</div>';
-        return;
-      }
-      FACTORIES.forEach(f => {
-        const chip = document.createElement('button');
-        chip.type = 'button';
-        chip.className = 'factory-chip';
-        chip.textContent = f.name;
-        chip.onclick = () => handleFactoryClick(f);
-        container.appendChild(chip);
-      });
-    }
-
-    function handleClientClick(c) {
-      document.getElementById('clientName').value = c.name;
-      const taxInfo = c.taxId ? (c.contact ? `${c.taxId} (${c.contact})` : c.taxId) : c.contact;
-      document.getElementById('clientTaxId').value = taxInfo;
-      currentClickStep = 2;
-      document.getElementById('currentStepText').textContent = "👉 步驟 2：請點擊【第 1 站／取貨起點】";
-      document.getElementById('currentStepText').style.background = "#0284c7";
-    }
-
-    function fillOriginFactory(f) {
-      document.getElementById('originName').value = f.name;
-      document.getElementById('originAddr').value = f.addr;
-      document.getElementById('originDock').value = f.dock;
-      document.getElementById('originContact').value = "";
-      if (tripMode === 'roundtrip') {
-        syncStop1ToStop3();
-      }
-      currentClickStep = 3;
-      document.getElementById('currentStepText').textContent = "👉 步驟 3：請點擊【第 2 站／送達廠區】";
-      document.getElementById('currentStepText').style.background = "#dc2626";
-    }
-
-    function fillDestFactory(f) {
-      document.getElementById('destName').value = f.name;
-      document.getElementById('destAddr').value = f.addr;
-      document.getElementById('destDock').value = f.dock;
-      document.getElementById('destContact').value = "";
-      if (tripMode === 'multistop') {
-        currentClickStep = 4;
-        document.getElementById('currentStepText').textContent = "👉 步驟 4：請點擊【第 3 站／續送終點】";
-        document.getElementById('currentStepText').style.background = "#7c3aed";
-      } else {
-        resetClickStep();
-      }
-    }
-
-    function fillStop3Factory(f) {
-      document.getElementById('stop3Name').value = f.name;
-      document.getElementById('stop3Addr').value = f.addr;
-      document.getElementById('stop3Dock').value = f.dock;
-      document.getElementById('stop3Contact').value = "";
-      resetClickStep();
-    }
-
-    function handleFactoryClick(f) {
-      if (currentClickStep === 1 || currentClickStep === 2) {
-        fillOriginFactory(f);
-      } else if (currentClickStep === 3) {
-        fillDestFactory(f);
-      } else {
-        fillStop3Factory(f);
-      }
-    }
-
-    /* ========================================================
-       【關鍵字搜尋下拉選單 (客戶 / 第1站 / 第2站 / 第3站)】
-       ======================================================== */
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-    }
-
-    function highlightKeyword(text, keyword) {
-      const safeText = escapeHtml(text);
-      if (!keyword) return safeText;
-      const escapedKw = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp(`(${escapedKw})`, 'ig');
-      return safeText.replace(regex, '<mark>$1</mark>');
-    }
-
-    function attachAutocomplete({ inputId, dropdownId, getItems, getTitle, getSub, matchItem, onSelect }) {
-      const input = document.getElementById(inputId);
-      const dropdown = document.getElementById(dropdownId);
-      let activeIndex = -1;
-      let currentMatches = [];
-
-      function renderDropdown() {
-        const keyword = input.value.trim();
-        const items = getItems();
-        currentMatches = keyword
-          ? items.filter(item => matchItem(item, keyword.toLowerCase()))
-          : items;
-
-        activeIndex = -1;
-        dropdown.innerHTML = '';
-
-        if (currentMatches.length === 0) {
-          dropdown.innerHTML = `<div class="autocomplete-empty">找不到符合「${escapeHtml(keyword)}」的項目（可直接手動輸入）</div>`;
-          dropdown.classList.add('show');
-          return;
-        }
-
-        currentMatches.forEach((item) => {
-          const row = document.createElement('div');
-          row.className = 'autocomplete-item';
-          const title = getTitle(item);
-          const sub = getSub(item);
-          row.innerHTML = `
-            <div class="autocomplete-item-title">${highlightKeyword(title, keyword)}</div>
-            ${sub ? `<div class="autocomplete-item-sub">${highlightKeyword(sub, keyword)}</div>` : ''}
-          `;
-          row.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            selectItem(item);
-          });
-          dropdown.appendChild(row);
-        });
-
-        dropdown.classList.add('show');
-      }
-
-      function selectItem(item) {
-        onSelect(item);
-        closeDropdown();
-      }
-
-      function closeDropdown() {
-        dropdown.classList.remove('show');
-        activeIndex = -1;
-      }
-
-      function updateActiveHighlight() {
-        const rows = dropdown.querySelectorAll('.autocomplete-item');
-        rows.forEach((r, i) => {
-          if (i === activeIndex) {
-            r.classList.add('active');
-            r.scrollIntoView({ block: 'nearest' });
-          } else {
-            r.classList.remove('active');
-          }
-        });
-      }
-
-      input.addEventListener('focus', renderDropdown);
-      input.addEventListener('input', renderDropdown);
-      input.addEventListener('blur', () => {
-        setTimeout(closeDropdown, 150);
-      });
-
-      input.addEventListener('keydown', (e) => {
-        if (!dropdown.classList.contains('show') || currentMatches.length === 0) return;
-        if (e.key === 'ArrowDown') {
-          e.preventDefault();
-          activeIndex = (activeIndex + 1) % currentMatches.length;
-          updateActiveHighlight();
-        } else if (e.key === 'ArrowUp') {
-          e.preventDefault();
-          activeIndex = (activeIndex - 1 + currentMatches.length) % currentMatches.length;
-          updateActiveHighlight();
-        } else if (e.key === 'Enter' && activeIndex >= 0) {
-          e.preventDefault();
-          e.stopPropagation();
-          selectItem(currentMatches[activeIndex]);
-        } else if (e.key === 'Escape') {
-          closeDropdown();
-        }
-      });
-    }
-
-    function setupAllAutocompletes() {
-      // 1. 委託客戶
-      attachAutocomplete({
-        inputId: 'clientName',
-        dropdownId: 'clientDropdown',
-        getItems: () => CLIENTS,
-        getTitle: c => c.name,
-        getSub: c => [c.fullName, c.taxId ? `統編 ${c.taxId}` : ''].filter(Boolean).join(' · '),
-        matchItem: (c, kw) =>
-          c.name.toLowerCase().includes(kw) ||
-          c.fullName.toLowerCase().includes(kw) ||
-          c.taxId.toLowerCase().includes(kw),
-        onSelect: c => handleClientClick(c)
-      });
-
-      // 2. 第 1 站：取貨起點
-      attachAutocomplete({
-        inputId: 'originName',
-        dropdownId: 'originDropdown',
-        getItems: () => FACTORIES,
-        getTitle: f => f.name,
-        getSub: f => f.addr,
-        matchItem: (f, kw) =>
-          f.name.toLowerCase().includes(kw) ||
-          f.addr.toLowerCase().includes(kw),
-        onSelect: f => fillOriginFactory(f)
-      });
-
-      // 3. 第 2 站：送達 / 中途點
-      attachAutocomplete({
-        inputId: 'destName',
-        dropdownId: 'destDropdown',
-        getItems: () => FACTORIES,
-        getTitle: f => f.name,
-        getSub: f => f.addr,
-        matchItem: (f, kw) =>
-          f.name.toLowerCase().includes(kw) ||
-          f.addr.toLowerCase().includes(kw),
-        onSelect: f => fillDestFactory(f)
-      });
-
-      // 4. 第 3 站：折返 / 續送終點
-      attachAutocomplete({
-        inputId: 'stop3Name',
-        dropdownId: 'stop3Dropdown',
-        getItems: () => FACTORIES,
-        getTitle: f => f.name,
-        getSub: f => f.addr,
-        matchItem: (f, kw) =>
-          f.name.toLowerCase().includes(kw) ||
-          f.addr.toLowerCase().includes(kw),
-        onSelect: f => fillStop3Factory(f)
-      });
-    }
-
-    function resetClickStep() {
-      currentClickStep = 1;
-      document.getElementById('currentStepText').textContent = "👉 步驟 1：請點擊【委託叫車客戶】";
-      document.getElementById('currentStepText').style.background = "#4338ca";
-    }
-
-    function getTimeString(addMinutes = 0) {
-      const d = new Date();
-      d.setMinutes(d.getMinutes() + addMinutes);
-      const hh = String(d.getHours()).padStart(2, '0');
-      const mm = String(d.getMinutes()).padStart(2, '0');
-      return `${hh}:${mm}`;
-    }
-
-    function setDefaultTimes() {
-      document.getElementById('pickupTime').value = `${getTimeString(0)} (即刻取貨)`;
-      document.getElementById('dropoffTime').value = "即刻送達";
-      document.getElementById('stop3Time').value = "完成第 2 站後送達";
-    }
-
-    function setPickupOffset(mins) {
-      document.getElementById('pickupTime').value = mins === 0 ? `${getTimeString(0)} (即刻取貨)` : `${getTimeString(mins)} 準時`;
-    }
-
-    function setDropoffImmediate() {
-      document.getElementById('dropoffTime').value = "即刻送達";
-    }
-
-    function setDropoffOffset(mins) {
-      document.getElementById('dropoffTime').value = `${getTimeString(mins)} 前送達`;
-    }
-
-    function renderDrivers() {
-      const dataList = document.getElementById('driverOptions');
-      const list = document.getElementById('driverList');
-      dataList.innerHTML = '';
-      list.innerHTML = '';
-
-      if (drivers.length === 0) {
-        list.innerHTML = '<div style="color:#94a3b8; font-size:0.8rem; padding:4px;">試算表內尚無司機資料，請至 Google Sheets 新增</div>';
-        return;
-      }
-
-      drivers.forEach(d => {
-        const displayText = d.plate ? `${d.name} (${d.plate})` : d.name;
-        const fullValue = d.phone ? `${displayText} - ${d.phone}` : displayText;
-
-        const opt = document.createElement('option');
-        opt.value = fullValue;
-        dataList.appendChild(opt);
-
-        const item = document.createElement('div');
-        item.className = 'driver-item';
-        item.onclick = () => { 
-          document.getElementById('driverInput').value = fullValue;
-        };
-        item.innerHTML = `
-          <div>
-            <strong>${d.name}</strong> ${d.plate ? `<span style="color:#64748b; font-size:0.75rem;">(${d.plate})</span>` : ''}
-            <div style="font-size:0.75rem; color:#475569;">📞 ${d.phone || '無電話'}</div>
-          </div>
-          <span style="font-size:0.75rem; color:#0284c7; font-weight:600;">選擇</span>
-        `;
-        list.appendChild(item);
-      });
-    }
-
-    // 💡 完整回寫函式：自動解析電話、車牌並防重複
-    async function autoSaveNewDriverToSheet(driverStr) {
-      const exists = drivers.some(d => driverStr.includes(d.name));
-      if (!exists) {
-        const newD = { id: Date.now(), name: driverStr, phone: '', plate: '' };
-        customDrivers.push(newD);
-        localStorage.setItem('custom_drivers', JSON.stringify(customDrivers));
-        drivers.push(newD);
-        renderDrivers();
-      }
-
-      if (!DRIVER_API_URL || DRIVER_API_URL.includes("你的部署ID")) return;
-      if (exists) return;
-
-      let name = driverStr;
-      let phone = "";
-      let plate = "";
-
-      const phoneMatch = driverStr.match(/09\d{2}-?\d{3}-?\d{3}/);
-      if (phoneMatch) phone = phoneMatch[0];
-
-      const plateMatch = driverStr.match(/[A-Z0-9]{2,4}-[A-Z0-9]{2,4}/i);
-      if (plateMatch) plate = plateMatch[0];
-
-      name = name.replace(phone, '').replace(plate, '').replace(/[\(\)\-\s]/g, '').trim();
-
-      try {
-        const targetUrl = `${DRIVER_API_URL}?name=${encodeURIComponent(name || driverStr)}&phone=${encodeURIComponent(phone)}&plate=${encodeURIComponent(plate)}`;
-        const img = new Image();
-        img.src = targetUrl;
-        console.log("✅ 新司機已即時寫入 Google 試算表！");
-      } catch (err) {
-        console.warn("自動寫入試算表失敗：", err);
-      }
-    }
-
-    let generatedText = "";
-    function submitDispatch() {
-      const driverStr = document.getElementById('driverInput').value.trim();
-      if (!driverStr) { alert("請填寫或選擇指派司機！"); return; }
-
-      autoSaveNewDriverToSheet(driverStr);
-
-      const client = document.getElementById('clientName').value;
-      const clientNote = document.getElementById('clientTaxId').value;
-
-      const oName = document.getElementById('originName').value;
-      const oDock = document.getElementById('originDock').value;
-      const oAddr = document.getElementById('originAddr').value;
-      const pTime = document.getElementById('pickupTime').value;
-      const oContact = document.getElementById('originContact').value;
-
-      const dName = document.getElementById('destName').value;
-      const dDock = document.getElementById('destDock').value;
-      const dAddr = document.getElementById('destAddr').value;
-      const dTime = document.getElementById('dropoffTime').value;
-      const dContact = document.getElementById('destContact').value;
-
-      const hasStop3 = tripMode !== 'single';
-      const s3Name = hasStop3 ? document.getElementById('stop3Name').value.trim() : '';
-      const s3Dock = hasStop3 ? document.getElementById('stop3Dock').value.trim() : '';
-      const s3Addr = hasStop3 ? document.getElementById('stop3Addr').value.trim() : '';
-      const s3Time = hasStop3 ? document.getElementById('stop3Time').value.trim() : '';
-      const s3Contact = hasStop3 ? document.getElementById('stop3Contact').value.trim() : '';
-
-      const cargo = document.getElementById('cargoType').value.trim() || '依指示載運';
-      const tripModeLabel = tripMode === 'roundtrip' ? '來回趟' : (tripMode === 'multistop' ? '多點串聯' : '單趟');
-
-      const orderNo = "EXP-" + new Date().toISOString().slice(0,10).replace(/-/g,'') + "-" + Math.floor(100 + Math.random()*900);
-      const createdAt = new Date().toLocaleString('zh-TW', { hour12: false });
-
-      const newOrder = {
-        orderNo, createdAt, client, clientNote, tripMode, tripModeLabel,
-        oName, oAddr, oDock, pTime, oContact,
-        dName, dAddr, dDock, dTime, dContact,
-        s3Name, s3Addr, s3Dock, s3Time, s3Contact,
-        driverInfo: driverStr,
-        cargo
+    function createEmptyStop() {
+      return {
+        action: '送達',
+        name: '',
+        addr: '',
+        dock: '',
+        time: '即刻送達',
+        contact: '依貨單指示',
+        isUnknown: false
       };
-      orderHistory.unshift(newOrder);
-      localStorage.setItem('dispatch_orders', JSON.stringify(orderHistory));
-      renderHistoryTable();
-
-      const oNav = oAddr ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(oAddr)}` : "";
-      const dNav = dAddr ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dAddr)}` : "";
-      const s3Nav = s3Addr ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s3Addr)}` : "";
-
-      if (!hasStop3) {
-        generatedText = `🚨【派工單】#${orderNo}
-👤 指定司機：${driverStr}
-──────────────────────
-🟢【取貨起點 (B)】
-🏢 廠區：${oName} ${oDock ? `(${oDock})` : ''}
-⏱️ 取貨時間：${pTime}
-📍 地址：${oAddr || '現場確認'}
-👤 現場窗口：${oContact || ' '}
-──────────────────────
-🎯【送達終點 (C)】
-🏢 卸貨廠區：${dName} ${dDock ? `(${dDock})` : ''}
-⏱️ 送達期限：${dTime}
-📍 地址：${dAddr || '現場確認'}
-${dNav ? `🗺️ 導航：${dNav}\n` : ''}👤 驗收窗口：${dContact || ' '}
-──────────────────────
-📦【貨況備註】${cargo}
-──────────────────────`;
-      } else {
-        const modeTag = tripMode === 'roundtrip' ? '🔄 來回趟' : '🔀 多點串聯';
-        const stop3Header = tripMode === 'roundtrip' ? '🔁【第 3 站｜折返終點】' : '🟣【第 3 站｜續送終點】';
-        generatedText = `🚨【派工單｜${modeTag}】#${orderNo}
-👤 指定司機：${driverStr}
-──────────────────────
-🟢【第 1 站｜取貨起點】
-🏢 廠區：${oName} ${oDock ? `(${oDock})` : ''}
-⏱️ 取貨時間：${pTime}
-📍 地址：${oAddr || '現場確認'}
-${oNav ? `🗺️ 導航：${oNav}\n` : ''}👤 現場窗口：${oContact || ' '}
-──────────────────────
-🟠【第 2 站｜${tripMode === 'roundtrip' ? '去程送達' : '中途卸載'}】
-🏢 廠區：${dName} ${dDock ? `(${dDock})` : ''}
-⏱️ 送達期限：${dTime}
-📍 地址：${dAddr || '現場確認'}
-${dNav ? `🗺️ 導航：${dNav}\n` : ''}👤 現場窗口：${dContact || ' '}
-──────────────────────
-${stop3Header}
-🏢 廠區：${s3Name} ${s3Dock ? `(${s3Dock})` : ''}
-⏱️ 期限：${s3Time || '完成第 2 站後送達'}
-📍 地址：${s3Addr || '現場確認'}
-${s3Nav ? `🗺️ 導航：${s3Nav}\n` : ''}👤 驗收窗口：${s3Contact || ' '}
-──────────────────────
-📦【貨況備註】${cargo}
-──────────────────────`;
-      }
-
-      document.getElementById('previewBox').textContent = generatedText;
-      document.getElementById('targetDriverLabel').textContent = `已指派：${driverStr}`;
     }
 
-    function renderHistoryTable() {
-      const tbody = document.getElementById('historyTableBody');
-      document.getElementById('historyCount').textContent = orderHistory.length;
-      if (orderHistory.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#94a3b8;">尚無歷史紀錄，建立派單後將自動存入</td></tr>';
+    function init() {
+      stops = [createEmptyStop()];
+      populateTimeSlotSelects();
+      initCalendarPicker();
+      setDefaultTimes();
+      renderDynamicStops();
+      setupClientAutocomplete();
+      setupOriginAutocomplete();
+      setupDriverAutocomplete();
+      updateClientGateState();
+      renderHistoryTable();
+      loadGoogleSheets();
+      loadOrderHistoryFromSheet();
+    }
+
+    let toastTimer = null;
+    function showToast(msg, type = 'success') {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.className = `toast show ${type}`;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { el.classList.remove('show'); }, 2400);
+    }
+
+    function toggleQuickCard() {
+      quickCardCollapsed = !quickCardCollapsed;
+      document.getElementById('quickCardBody').style.display = quickCardCollapsed ? 'none' : 'block';
+      document.getElementById('btnToggleQuick').textContent = quickCardCollapsed ? '展開' : '收合';
+      document.getElementById('quickCardTitle').classList.toggle('collapsed-title', quickCardCollapsed);
+    }
+
+    function hasClientSelected() {
+      return document.getElementById('clientName').value.trim() !== '';
+    }
+
+    function updateClientGateState() {
+      const unlocked = hasClientSelected();
+      const factoryBox = document.getElementById('factoryButtons');
+      const lockHint = document.getElementById('factoryLockHint');
+      const addBtn = document.getElementById('btnAddStop');
+
+      factoryBox.classList.toggle('locked', !unlocked);
+      factoryBox.querySelectorAll('button.factory-chip').forEach(btn => {
+        btn.disabled = !unlocked;
+      });
+      if (lockHint) {
+        lockHint.textContent = unlocked ? '（點擊依序填入第 2～5 站）' : '（請先選擇委託客戶後解鎖）';
+        lockHint.style.color = unlocked ? '#64748b' : '#b45309';
+      }
+
+      if (!unlocked) {
+        addBtn.disabled = true;
+        addBtn.textContent = '+ 新增站點（請先選擇委託客戶）';
+      } else if (stops.length >= MAX_STOPS) {
+        addBtn.disabled = true;
+        addBtn.textContent = `已達站點上限（${stops.length} / ${MAX_STOPS} 站）`;
+      } else {
+        addBtn.disabled = false;
+        addBtn.textContent = `+ 新增站點（目前 ${stops.length} / 最多 ${MAX_STOPS} 站）`;
+      }
+
+      updateStepIndicatorText();
+    }
+
+    function isExplicitTimeSlot(val) {
+      const v = String(val || '').trim();
+      return v === '不指定' || /^\d{1,2}:\d{2}\s*-\s*\d{1,2}:\d{2}$/.test(v);
+    }
+
+    function updateOriginTimeBtnsVisibility() {
+      const val = document.getElementById('pickupTime').value;
+      const box = document.getElementById('originTimeQuickBtns');
+      if (box) box.style.display = isExplicitTimeSlot(val) ? 'none' : 'flex';
+    }
+
+    function buildTimeSlotOptionsHtml() {
+      let html = '<option value="">時段快捷</option>';
+      html += '<option value="不指定">不指定</option>';
+      html += '<option value="__CUSTOM__">自訂區間</option>';
+      for (let h = 0; h < 24; h++) {
+        const hh = String(h).padStart(2, '0');
+        const nextHh = String((h + 1) % 24).padStart(2, '0');
+        html += `<option value="${hh}:00-${nextHh}:00">${hh}:00-${nextHh}:00</option>`;
+      }
+      return html;
+    }
+
+    function populateTimeSlotSelects() {
+      const originSel = document.querySelector('#dispatchForm .origin-box .time-combo select');
+      if (originSel) originSel.innerHTML = buildTimeSlotOptionsHtml();
+    }
+
+    function applyTimeSlot(inputId, selectEl, stopIdx = null) {
+      const val = selectEl.value;
+      if (!val) return;
+      const input = document.getElementById(inputId);
+      if (val === '__CUSTOM__') {
+        const custom = prompt('請輸入自訂時間區間（例如：14:00-16:30）', input.value || '');
+        if (custom !== null && custom.trim()) {
+          input.value = custom.trim();
+          if (stopIdx !== null && stops[stopIdx]) stops[stopIdx].time = input.value;
+        }
+      } else {
+        input.value = val;
+        if (stopIdx !== null && stops[stopIdx]) stops[stopIdx].time = val;
+      }
+      selectEl.value = '';
+      if (stopIdx === null) {
+        updateOriginTimeBtnsVisibility();
+      } else {
+        updateStopSmartButtons(stopIdx);
+      }
+    }
+
+    let calViewYear = new Date().getFullYear();
+    let calViewMonth = new Date().getMonth();
+
+    function initCalendarPicker() {
+      const input = document.getElementById('dispatchDate');
+      const popover = document.getElementById('calendarPopover');
+
+      input.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (input.value) {
+          const parts = input.value.split('-');
+          if (parts.length === 3) {
+            calViewYear = parseInt(parts[0], 10);
+            calViewMonth = parseInt(parts[1], 10) - 1;
+          }
+        } else {
+          const now = new Date();
+          calViewYear = now.getFullYear();
+          calViewMonth = now.getMonth();
+        }
+        renderCalendar();
+        popover.classList.toggle('show');
+      });
+
+      popover.addEventListener('click', (e) => e.stopPropagation());
+      document.addEventListener('click', () => popover.classList.remove('show'));
+    }
+
+    function renderCalendar() {
+      const popover = document.getElementById('calendarPopover');
+      const input = document.getElementById('dispatchDate');
+      const selectedVal = input.value;
+      const today = new Date();
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+      const firstDay = new Date(calViewYear, calViewMonth, 1).getDay();
+      const daysInMonth = new Date(calViewYear, calViewMonth + 1, 0).getDate();
+      const prevMonthDays = new Date(calViewYear, calViewMonth, 0).getDate();
+
+      let cellsHtml = '';
+      for (let i = firstDay - 1; i >= 0; i--) {
+        cellsHtml += `<button type="button" class="cal-day muted" disabled>${prevMonthDays - i}</button>`;
+      }
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${calViewYear}-${String(calViewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const classes = ['cal-day'];
+        if (dateStr === todayStr) classes.push('today');
+        if (dateStr === selectedVal) classes.push('selected');
+        cellsHtml += `<button type="button" class="${classes.join(' ')}" onclick="selectCalendarDate('${dateStr}')">${d}</button>`;
+      }
+      const totalCells = firstDay + daysInMonth;
+      const trailing = (7 - (totalCells % 7)) % 7;
+      for (let i = 1; i <= trailing; i++) {
+        cellsHtml += `<button type="button" class="cal-day muted" disabled>${i}</button>`;
+      }
+
+      popover.innerHTML = `
+        <div class="cal-header">
+          <span>${calViewYear}年${calViewMonth + 1}月</span>
+          <div>
+            <button type="button" class="cal-nav-btn" onclick="shiftCalendarMonth(-1)">‹</button>
+            <button type="button" class="cal-nav-btn" onclick="shiftCalendarMonth(1)">›</button>
+          </div>
+        </div>
+        <div class="cal-weekdays">
+          <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+        </div>
+        <div class="cal-days">${cellsHtml}</div>
+        <div class="cal-footer">
+          <button type="button" onclick="selectCalendarDate('${todayStr}')">今天</button>
+          <button type="button" style="color:#64748b;" onclick="selectCalendarDate('')">清除</button>
+        </div>
+      `;
+    }
+
+    function shiftCalendarMonth(delta) {
+      calViewMonth += delta;
+      if (calViewMonth < 0) { calViewMonth = 11; calViewYear--; }
+      if (calViewMonth > 11) { calViewMonth = 0; calViewYear++; }
+      renderCalendar();
+    }
+
+    function selectCalendarDate(dateStr) {
+      document.getElementById('dispatchDate').value = dateStr;
+      document.getElementById('calendarPopover').classList.remove('show');
+    }
+
+    function isRoundTripDetected() {
+      const originName = document.getElementById('originName').value.trim();
+      if (!originName || stops.length < 2) return false;
+      const lastStop = stops[stops.length - 1];
+      return Boolean(lastStop && lastStop.name.trim() && lastStop.name.trim() === originName);
+    }
+
+    function updateRoundTripIndicator() {
+      document.getElementById('headerRoundtripBadge').classList.toggle('show', isRoundTripDetected());
+    }
+
+    function updateStopSmartButtons(idx) {
+      const stop = stops[idx];
+      if (!stop) return;
+      const originName = document.getElementById('originName').value.trim();
+      const isReturnToA = Boolean(originName && stop.name.trim() === originName && stops.length >= 2);
+      const hasName = stop.name.trim() !== '';
+      const hasExplicitSlot = isExplicitTimeSlot(stop.time);
+
+      const rtBtn = document.getElementById(`btnRoundtrip_${idx}`);
+      if (rtBtn) rtBtn.style.display = (idx >= 1 && !isReturnToA) ? 'inline-block' : 'none';
+
+      const unkBtn = document.getElementById(`btnUnknown_${idx}`);
+      if (unkBtn) unkBtn.style.display = !hasName ? 'inline-block' : 'none';
+
+      const timeBtns = document.getElementById(`stopTimeQuickBtns_${idx}`);
+      if (timeBtns) timeBtns.style.display = hasExplicitSlot ? 'none' : 'inline-flex';
+
+      updateRoundTripIndicator();
+    }
+
+    function getActionClass(action) {
+      if (action === '取貨') return 'action-pickup';
+      if (action === '送+取') return 'action-both';
+      return 'action-delivery';
+    }
+
+    function renderDynamicStops() {
+      const container = document.getElementById('dynamicStopsContainer');
+      container.innerHTML = '';
+
+      const originName = document.getElementById('originName').value.trim();
+      const optionsHtml = buildTimeSlotOptionsHtml();
+
+      stops.forEach((stop, idx) => {
+        const stationNo = idx + 2;
+        const isReturnToA = Boolean(originName && stop.name.trim() === originName && stops.length >= 2);
+        const showRoundtripBtn = idx >= 1 && !isReturnToA;
+        const showUnknownBtn = !stop.name.trim();
+        const showTimeQuickBtns = !isExplicitTimeSlot(stop.time);
+        const actionCls = getActionClass(stop.action);
+
+        const box = document.createElement('div');
+        box.className = `station-box ${actionCls} ${isReturnToA ? 'roundtrip-highlight' : ''}`;
+        box.innerHTML = `
+          <div class="station-header">
+            <div class="station-title">
+              <span>第 ${stationNo} 站｜${isReturnToA ? '折返回起點（來回單）' : '停靠站點'}</span>
+              <div class="action-seg">
+                <button type="button" class="act-delivery ${stop.action === '送達' ? 'active' : ''}" onclick="setStopAction(${idx}, '送達')">送達</button>
+                <button type="button" class="act-pickup ${stop.action === '取貨' ? 'active' : ''}" onclick="setStopAction(${idx}, '取貨')">取貨</button>
+                <button type="button" class="act-both ${stop.action === '送+取' ? 'active' : ''}" onclick="setStopAction(${idx}, '送+取')">送+取</button>
+              </div>
+            </div>
+            <div class="station-actions">
+              <button type="button" id="btnRoundtrip_${idx}" class="btn-quick primary-outline"
+                style="display:${showRoundtripBtn ? 'inline-block' : 'none'};"
+                onclick="applyRoundTripToStop(${idx})">來回單</button>
+              <button type="button" id="btnUnknown_${idx}" class="btn-quick"
+                style="display:${showUnknownBtn ? 'inline-block' : 'none'};"
+                onclick="markStopUnknown(${idx})">現場確認</button>
+              <span id="stopTimeQuickBtns_${idx}" style="display:${showTimeQuickBtns ? 'inline-flex' : 'none'}; gap:4px;">
+                <button type="button" class="btn-quick" onclick="setStopTimeQuick(${idx}, '即刻送達')">即刻</button>
+                <button type="button" class="btn-quick" onclick="setStopTimeOffset(${idx}, 60)">+1小時</button>
+                <button type="button" class="btn-quick" onclick="setStopTimeOffset(${idx}, 120)">+2小時</button>
+              </span>
+              ${stops.length > 1 ? `<button type="button" class="btn-quick danger-text" onclick="removeStop(${idx})">移除</button>` : ''}
+            </div>
+          </div>
+
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label>廠區名稱 *</label>
+              <div class="autocomplete-wrapper">
+                <input type="text" id="stopName_${idx}" value="${escapeHtml(stop.name)}" required autocomplete="off"
+                  oninput="updateStopField(${idx}, 'name', this.value); updateStopSmartButtons(${idx});">
+                <div id="stopDropdown_${idx}" class="autocomplete-dropdown"></div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>庫房 / 碼頭</label>
+              <input type="text" id="stopDock_${idx}" value="${escapeHtml(stop.dock)}"
+                oninput="updateStopField(${idx}, 'dock', this.value)">
+            </div>
+            <div class="form-group">
+              <label>預計期限 *</label>
+              <div class="time-combo">
+                <input type="text" id="stopTime_${idx}" value="${escapeHtml(stop.time)}" required
+                  oninput="updateStopField(${idx}, 'time', this.value); updateStopSmartButtons(${idx});">
+                <select onchange="applyTimeSlot('stopTime_${idx}', this, ${idx})">${optionsHtml}</select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label>詳細地址</label>
+              <input type="text" id="stopAddr_${idx}" value="${escapeHtml(stop.addr)}"
+                oninput="updateStopField(${idx}, 'addr', this.value)">
+            </div>
+            <div class="form-group">
+              <label>
+                <span>收貨 / 現場窗口</span>
+                <span style="display:flex; gap:3px;">
+                  <button type="button" class="btn-quick" onclick="setStopContactPreset(${idx}, '庫房')">庫房</button>
+                  <button type="button" class="btn-quick" onclick="setStopContactPreset(${idx}, '工程師')">工程師</button>
+                  <button type="button" class="btn-quick" onclick="setStopContactPreset(${idx}, '依貨單指示')">依貨單指示</button>
+                </span>
+              </label>
+              <input type="text" id="stopContact_${idx}" value="${escapeHtml(stop.contact)}"
+                oninput="updateStopField(${idx}, 'contact', this.value)">
+            </div>
+          </div>
+        `;
+        container.appendChild(box);
+        setupStopAutocomplete(idx);
+      });
+
+      updateClientGateState();
+      updateRoundTripIndicator();
+    }
+
+    function addStop() {
+      if (!hasClientSelected()) {
+        showToast('請先選取委託客戶，再新增停靠站', 'warn');
+        document.getElementById('clientName').focus();
         return;
       }
-
-      tbody.innerHTML = '';
-      orderHistory.forEach(o => {
-        const tr = document.createElement('tr');
-        const modeBadge = o.tripMode === 'roundtrip'
-          ? '<span class="trip-badge roundtrip">來回</span>'
-          : (o.tripMode === 'multistop' ? '<span class="trip-badge multistop">多點</span>' : '');
-        const destDisplay = o.s3Name
-          ? `${escapeHtml(o.dName)}<br><span style="color:#6d28d9; font-weight:600;">↳ ${escapeHtml(o.s3Name)}</span>`
-          : escapeHtml(o.dName);
-        tr.innerHTML = `
-          <td><strong>${escapeHtml(o.orderNo)}</strong>${modeBadge}</td>
-          <td>${escapeHtml(o.createdAt)}</td>
-          <td><span style="color:#4338ca; font-weight:600;">${escapeHtml(o.client || '一般客戶')}</span></td>
-          <td>${escapeHtml(o.oName)}</td>
-          <td>${destDisplay}</td>
-          <td>${escapeHtml(o.driverInfo || '外車/自填')}</td>
-          <td>${escapeHtml(o.cargo || '標準載運')}</td>
-        `;
-        tbody.appendChild(tr);
-      });
+      if (stops.length >= MAX_STOPS) return;
+      const newStop = createEmptyStop();
+      newStop.time = '依現場指示送達';
+      stops.push(newStop);
+      activeTargetStopIdx = stops.length - 1;
+      renderDynamicStops();
     }
 
-    function exportToExcel() {
-      if (orderHistory.length === 0) { alert("目前沒有任何歷史紀錄可供匯出！"); return; }
-      let csv = "\uFEFF單號,開單時間,行程模式,委託客戶,客戶備註,第1站起點,起點地址,取貨時間,起點電話,第2站廠區,第2站地址,第2站期限,第2站電話,第3站廠區,第3站地址,第3站期限,第3站電話,指派司機,貨況備註\n";
-      orderHistory.forEach(o => {
-        const row = [
-          o.orderNo, o.createdAt, o.tripModeLabel || '單趟', o.client || '', o.clientNote || '',
-          o.oName, o.oAddr, o.pTime, o.oContact || '',
-          o.dName, o.dAddr, o.dTime, o.dContact || '',
-          o.s3Name || '', o.s3Addr || '', o.s3Time || '', o.s3Contact || '',
-          o.driverInfo || '', o.cargo || ''
-        ].map(val => `"${String(val).replace(/"/g, '""')}"`).join(",");
-        csv += row + "\n";
-      });
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `派單紀錄清冊_${new Date().toISOString().slice(0,10)}.csv`;
-      link.click();
-    }
-
-    let latestAiReport = "";
-    function generateAiWeeklyReport() {
-      if (orderHistory.length === 0) { alert("歷史紀錄為空，無法生成報表！"); return; }
-      const totalOrders = orderHistory.length;
-      const driverCounts = {};
-      const routeCounts = {};
-      const clientCounts = {};
-      let roundTripCount = 0;
-      let multiStopCount = 0;
-
-      orderHistory.forEach(o => {
-        const dName = o.driverInfo || '其他外車';
-        driverCounts[dName] = (driverCounts[dName] || 0) + 1;
-        const route = o.s3Name ? `${o.oName} ➔ ${o.dName} ➔ ${o.s3Name}` : `${o.oName} ➔ ${o.dName}`;
-        routeCounts[route] = (routeCounts[route] || 0) + 1;
-        if (o.client) clientCounts[o.client] = (clientCounts[o.client] || 0) + 1;
-        if (o.tripMode === 'roundtrip') roundTripCount++;
-        if (o.tripMode === 'multistop') multiStopCount++;
-      });
-
-      let driverRank = Object.entries(driverCounts)
-        .sort((a,b) => b[1] - a[1])
-        .map(([name, count]) => `  • ${name}: ${count} 趟 (${Math.round(count/totalOrders*100)}%)`).join("\n");
-
-      let routeRank = Object.entries(routeCounts)
-        .sort((a,b) => b[1] - a[1])
-        .slice(0, 3)
-        .map(([route, count]) => `  • ${route}: ${count} 趟`).join("\n");
-
-      let clientRank = Object.entries(clientCounts)
-        .sort((a,b) => b[1] - a[1])
-        .slice(0, 3)
-        .map(([client, count]) => `  • ${client}: ${count} 趟`).join("\n");
-
-      latestAiReport = `📊【專車物流 每週營運分析週報】
-──────────────────────────────
-📅 結算區間：截至 ${new Date().toLocaleDateString('zh-TW')}
-📈 累計完成派工趟次：${totalOrders} 趟（含來回趟 ${roundTripCount} 趟、多點串聯 ${multiStopCount} 趟）
-
-🏢【下單委託客戶 Top 3】
-${clientRank || '  • 暫無特定客戶'}
-
-🚚【司機出車率統計】
-${driverRank}
-
-📍【三大高頻熱門路線】
-${routeRank}
-
-💡【AI 營運與調度建議】
-1. 尖峰路線高度集中於特定半導體廠區間，可針對高頻往返之客戶進行定期合約運費或月結專案洽談。
-2. 來回趟與多點串聯趟次建議於派單時標明折返等待或空盒帶回條件，以利對帳與司機排程銜接。
-──────────────────────────────`;
-
-      document.getElementById('aiReportCard').style.display = 'block';
-      document.getElementById('aiReportText').textContent = latestAiReport;
-    }
-
-    function copyAiReport() {
-      if (!latestAiReport) return;
-      navigator.clipboard.writeText(latestAiReport).then(() => alert("已複製每週報表！"));
-    }
-
-    function clearHistory() {
-      if (confirm("確定要清空所有歷史派單紀錄嗎？")) {
-        orderHistory = [];
-        localStorage.removeItem('dispatch_orders');
-        renderHistoryTable();
-        document.getElementById('aiReportCard').style.display = 'none';
-      }
-    }
-
-    function sendToLine() {
-      if (!generatedText) { alert("請先建立派單！"); return; }
-      navigator.clipboard.writeText(generatedText).catch(() => {});
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      if (isMobile) {
-        window.location.href = "https://line.me/R/msg/text/?" + encodeURIComponent(generatedText);
-      } else {
-        const lineUrl = "line://msg/text/" + encodeURIComponent(generatedText);
-        window.open(lineUrl, '_blank');
-        setTimeout(() => {
-          alert("💬 已嘗試喚起電腦版 LINE！\n（若電腦未自動帶入文字，派工內容已自動複製，可直接在聊天室按 Ctrl + V 貼上）");
-        }, 300);
-      }
-    }
-
-    function copyText() {
-      if (!generatedText) { alert("請先建立派單！"); return; }
-      navigator.clipboard.writeText(generatedText).then(() => alert("已複製派工文字！"));
-    }
-
-    function clearAllForm() {
-      document.getElementById('dispatchForm').reset();
-      setTripMode('single');
-      resetClickStep();
-      setDefaultTimes();
-    }
-
-    document.addEventListener('keydown', e => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-        e.preventDefault();
-        submitDispatch();
-      }
-    });
-
-    window.onload = init;
-  </script>
-</body>
-</html>
+    function removeStop(idx) {
