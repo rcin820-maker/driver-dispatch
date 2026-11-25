@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>飛達旺派單系統 (Dispatch Pro)</title>
   <style>
     :root {
@@ -22,38 +22,54 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", Roboto, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding-bottom: 48px; }
+    html, body {
+      background-color: var(--bg);
+      color: var(--text);
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+    body { padding-bottom: 48px; }
 
     header {
       background: #0f172a;
       color: #fff;
-      padding: 12px 18px;
+      padding: 12px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       position: sticky;
       top: 0;
       z-index: 100;
+      width: 100%;
     }
     header h1 { font-size: 1.05rem; font-weight: 700; letter-spacing: 0.5px; }
     .header-shortcut { font-size: 0.76rem; color: #94a3b8; }
     @media (max-width: 640px) { .header-shortcut { display: none; } }
 
     .main-container {
+      width: 100%;
       max-width: 1400px;
       margin: 12px auto;
       padding: 0 12px;
       display: grid;
-      grid-template-columns: 1fr 380px;
+      grid-template-columns: minmax(0, 1fr) 380px;
       gap: 16px;
       align-items: start;
     }
+    .main-container > div { min-width: 0; width: 100%; }
     .side-panel {
       position: sticky;
       top: 62px;
+      min-width: 0;
+      width: 100%;
     }
     @media (max-width: 1024px) {
-      .main-container { grid-template-columns: 1fr; }
+      .main-container {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 0 10px;
+        margin: 10px auto;
+        gap: 12px;
+      }
       .side-panel { position: static; }
     }
 
@@ -64,6 +80,8 @@
       padding: 14px;
       margin-bottom: 12px;
       box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      width: 100%;
+      min-width: 0;
     }
     .card-title {
       font-size: 0.9rem;
@@ -151,9 +169,9 @@
     .form-grid-3 { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 10px; margin-bottom: 8px; }
     .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
     @media (max-width: 640px) {
-      .form-grid-3, .form-grid-2 { grid-template-columns: 1fr; gap: 8px; }
+      .form-grid-3, .form-grid-2 { grid-template-columns: minmax(0, 1fr); gap: 8px; }
     }
-    .form-group { display: flex; flex-direction: column; gap: 4px; position: relative; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; position: relative; min-width: 0; }
     .form-group label {
       font-size: 0.78rem;
       font-weight: 600;
@@ -171,6 +189,7 @@
       font-size: 0.86rem;
       outline: none;
       width: 100%;
+      min-width: 0;
       background: #fff;
       color: #0f172a;
     }
@@ -323,6 +342,7 @@
       top: calc(100% + 4px);
       left: 0;
       width: 268px;
+      max-width: calc(100vw - 40px);
       background: #fff;
       border: 1px solid #cbd5e1;
       border-radius: 8px;
@@ -393,9 +413,10 @@
     }
     .cal-footer button:hover { background: #eff6ff; }
 
-    .time-combo { display: flex; gap: 4px; }
+    .time-combo { display: flex; gap: 4px; width: 100%; min-width: 0; }
+    .time-combo input { flex: 1; min-width: 0; }
     .time-combo select {
-      width: 108px;
+      width: 104px;
       flex-shrink: 0;
       font-size: 0.8rem;
       padding: 7px 4px;
@@ -454,7 +475,7 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 0.8rem;
       white-space: pre-wrap;
-      word-break: break-all;
+      word-break: break-word;
       height: 260px;
       overflow-y: auto;
       margin-bottom: 8px;
@@ -484,16 +505,19 @@
     }
     .history-search-input {
       flex: 1;
-      min-width: 150px;
+      min-width: 140px;
       padding: 6px 10px;
       border: 1px solid #cbd5e1;
       border-radius: 5px;
       font-size: 0.82rem;
       outline: none;
     }
+    @media (max-width: 640px) { .history-search-input { font-size: 16px; } }
     .history-search-input:focus { border-color: var(--accent); }
 
     .table-scroll {
+      width: 100%;
+      max-width: 100%;
       max-height: 300px;
       overflow: auto;
       -webkit-overflow-scrolling: touch;
@@ -1180,3 +1204,1061 @@
     }
 
     function removeStop(idx) {
+      if (stops.length <= 1) return;
+      stops.splice(idx, 1);
+      if (activeTargetStopIdx >= stops.length) activeTargetStopIdx = stops.length - 1;
+      renderDynamicStops();
+    }
+
+    function updateStopField(idx, field, value) {
+      if (!stops[idx]) return;
+      stops[idx][field] = value;
+      if (field === 'name' && value !== '現場確認（到場依指示）') {
+        stops[idx].isUnknown = false;
+      }
+    }
+
+    function setStopAction(idx, action) {
+      if (!stops[idx]) return;
+      stops[idx].action = action;
+      renderDynamicStops();
+    }
+
+    function applyRoundTripToStop(idx) {
+      const oName = document.getElementById('originName').value.trim();
+      if (!oName) {
+        showToast('請先選取委託客戶或填寫第 1 站起點', 'warn');
+        return;
+      }
+      stops[idx].name = oName;
+      stops[idx].addr = document.getElementById('originAddr').value.trim();
+      stops[idx].dock = document.getElementById('originDock').value.trim();
+      stops[idx].contact = document.getElementById('originContact').value.trim() || '依貨單指示';
+      stops[idx].action = '送達';
+      stops[idx].isUnknown = false;
+      if (!stops[idx].time || stops[idx].time === '即刻送達' || stops[idx].time === '依現場指示送達') {
+        stops[idx].time = '完成前站後折返送回';
+      }
+      renderDynamicStops();
+    }
+
+    function markStopUnknown(idx) {
+      stops[idx].name = '現場確認（到場依指示）';
+      stops[idx].addr = '到場後依客戶窗口指示';
+      stops[idx].dock = '';
+      stops[idx].isUnknown = true;
+      renderDynamicStops();
+    }
+
+    function setStopTimeQuick(idx, val) {
+      stops[idx].time = val;
+      const el = document.getElementById(`stopTime_${idx}`);
+      if (el) el.value = val;
+    }
+
+    function setStopTimeOffset(idx, mins) {
+      const val = `${getTimeString(mins)} 前送達`;
+      stops[idx].time = val;
+      const el = document.getElementById(`stopTime_${idx}`);
+      if (el) el.value = val;
+    }
+
+    function setContactPreset(inputId, value) {
+      document.getElementById(inputId).value = value;
+    }
+
+    function setStopContactPreset(idx, value) {
+      stops[idx].contact = value;
+      const el = document.getElementById(`stopContact_${idx}`);
+      if (el) el.value = value;
+    }
+
+    function parseCsvLine(line) {
+      return line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').replace(/""/g, '"').trim());
+    }
+
+    async function fetchSheetCsv(url) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const text = await res.text();
+      if (text.trim().startsWith('<')) throw new Error('試算表未設為公開存取');
+      return text;
+    }
+
+    async function loadGoogleSheets() {
+      // 三份試算表各自獨立載入，任一份失敗不會拖累另外兩份
+      const loadClients = fetchSheetCsv(CLIENT_SHEET_URL)
+        .then(csv => {
+          const lines = csv.split(/\r?\n/).filter(line => line.trim() !== '');
+          CLIENTS = lines.slice(1).map(line => {
+            const cols = parseCsvLine(line);
+            return {
+              name: cols[0] || '未命名客戶',
+              fullName: cols[1] || '',
+              taxId: cols[2] || '',
+              contact: cols[3] || ''
+            };
+          }).filter(c => c.name !== '未命名客戶');
+          renderClients();
+        })
+        .catch(() => {
+          document.getElementById('clientButtons').innerHTML = '<div style="color:#ef4444; font-size:0.8rem; padding:4px;">客戶清冊讀取失敗，請確認已公開（或部署於 Vercel 檢視）</div>';
+        });
+
+      const loadFactories = fetchSheetCsv(FACTORY_SHEET_URL)
+        .then(csv => {
+          const lines = csv.split(/\r?\n/).filter(line => line.trim() !== '');
+          FACTORIES = lines.slice(1).map(line => {
+            const cols = parseCsvLine(line);
+            return {
+              name: cols[0] || '未命名廠區',
+              addr: cols[1] || '',
+              dock: cols[2] || '',
+              contact: cols[3] || '',
+              notice: cols[4] || ''
+            };
+          }).filter(f => f.name !== '未命名廠區');
+          renderFactories();
+        })
+        .catch(() => {
+          document.getElementById('factoryButtons').innerHTML = '<div style="color:#ef4444; font-size:0.8rem; padding:4px;">廠區清冊讀取失敗，請確認已公開（或部署於 Vercel 檢視）</div>';
+        });
+
+      const loadDrivers = fetchSheetCsv(DRIVER_SHEET_URL)
+        .then(csv => {
+          const lines = csv.split(/\r?\n/).filter(line => line.trim() !== '');
+          const sheetDrivers = lines.slice(1).map((line, idx) => {
+            const cols = parseCsvLine(line);
+            return {
+              id: idx + 1,
+              name: cols[0] || '司機',
+              phone: cols[1] || '',
+              plate: cols[2] || ''
+            };
+          }).filter(d => d.name !== '司機');
+
+          drivers = [...sheetDrivers];
+          customDrivers.forEach(cd => {
+            if (!drivers.some(d => d.name === cd.name)) drivers.push(cd);
+          });
+          renderDrivers();
+        })
+        .catch(() => {
+          drivers = [...customDrivers];
+          if (drivers.length > 0) {
+            renderDrivers();
+          } else {
+            document.getElementById('driverList').innerHTML = '<div style="color:#ef4444; font-size:0.8rem; padding:4px;">司機清冊讀取失敗，請確認已公開</div>';
+          }
+        });
+
+      await Promise.allSettled([loadClients, loadFactories, loadDrivers]);
+    }
+
+    async function loadOrderHistoryFromSheet() {
+      const statusEl = document.getElementById('historySyncStatus');
+      statusEl.textContent = '雲端同步中...';
+      statusEl.style.color = '#0284c7';
+
+      try {
+        const csv = await fetchSheetCsv(`${ORDER_SHEET_URL}&_t=${Date.now()}`);
+        const lines = csv.split(/\r?\n/).filter(line => line.trim() !== '');
+        if (lines.length <= 1) {
+          statusEl.textContent = '已同步（尚無紀錄）';
+          statusEl.style.color = '#0f766e';
+          return;
+        }
+
+        const headers = parseCsvLine(lines[0]);
+        const isExtendedFormat = headers.includes('委託客戶') || headers.includes('站點明細JSON') || headers.includes('行程模式');
+
+        const sheetOrders = lines.slice(1).map(line => {
+          const cols = parseCsvLine(line);
+          if (!cols[0]) return null;
+
+          if (isExtendedFormat) {
+            const getCol = (name, fallbackIdx) => {
+              const found = headers.indexOf(name);
+              return found >= 0 ? (cols[found] || '') : (cols[fallbackIdx] || '');
+            };
+            let parsedStops = [];
+            const rawJson = getCol('站點明細JSON', -1);
+            if (rawJson) {
+              try { parsedStops = JSON.parse(rawJson); } catch (_) {}
+            }
+            if (!parsedStops.length) {
+              const dName = getCol('第2站廠區', 9) || getCol('送達廠區', 9);
+              if (dName) {
+                parsedStops.push({
+                  action: '送達',
+                  name: dName,
+                  addr: getCol('第2站地址', 10),
+                  dock: '',
+                  time: getCol('第2站期限', 11),
+                  contact: getCol('第2站電話', 12) || '依貨單指示'
+                });
+              }
+              const s3Name = getCol('第3站廠區', 13);
+              if (s3Name) {
+                parsedStops.push({
+                  action: '送達',
+                  name: s3Name,
+                  addr: getCol('第3站地址', 14),
+                  dock: '',
+                  time: getCol('第3站期限', 15),
+                  contact: getCol('第3站電話', 16) || '依貨單指示'
+                });
+              }
+            }
+            const tripModeLabel = getCol('行程模式', 2) || '單趟';
+            return {
+              orderNo: getCol('單號', 0),
+              createdAt: getCol('開單時間', 1),
+              dispatchDate: getCol('執行日期', -1),
+              tripModeLabel,
+              isRoundTrip: tripModeLabel.includes('來回'),
+              cancelled: tripModeLabel.includes('已取消'),
+              client: getCol('委託客戶', 3),
+              clientNote: getCol('客戶備註', 4),
+              oName: getCol('第1站起點', 5) || getCol('起點廠區', 5),
+              oAddr: getCol('起點地址', 6),
+              oDock: getCol('起點碼頭', -1),
+              pTime: getCol('取貨時間', 7),
+              oContact: getCol('起點窗口', 8) || '依貨單指示',
+              stops: parsedStops,
+              driverInfo: getCol('指派司機', 17),
+              cargo: getCol('貨況備註', 18) || getCol('貨品名稱', 18)
+            };
+          } else {
+            const driverParts = [cols[8], cols[9] ? `(${cols[9]})` : '', cols[10] ? `- ${cols[10]}` : ''].filter(Boolean);
+            return {
+              orderNo: cols[0] || '',
+              createdAt: cols[1] || '',
+              dispatchDate: '',
+              tripModeLabel: '單趟',
+              isRoundTrip: false,
+              cancelled: false,
+              client: '',
+              clientNote: '',
+              oName: cols[2] || '',
+              oAddr: cols[3] || '',
+              oDock: '',
+              pTime: cols[4] || '',
+              oContact: '依貨單指示',
+              stops: cols[5] ? [{ action: '送達', name: cols[5], addr: cols[6] || '', dock: '', time: cols[7] || '', contact: '依貨單指示' }] : [],
+              driverInfo: driverParts.join(' '),
+              cargo: cols[11] || ''
+            };
+          }
+        }).filter(Boolean);
+
+        const mergedMap = new Map();
+        sheetOrders.forEach(o => mergedMap.set(o.orderNo, o));
+        orderHistory.forEach(o => {
+          if (!mergedMap.has(o.orderNo)) mergedMap.set(o.orderNo, o);
+        });
+
+        orderHistory = Array.from(mergedMap.values()).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+        localStorage.setItem('dispatch_orders', JSON.stringify(orderHistory));
+        renderHistoryTable();
+
+        const nowStr = new Date().toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit' });
+        statusEl.textContent = `已同步 (${nowStr})`;
+        statusEl.style.color = '#0f766e';
+      } catch (err) {
+        console.warn('讀取派單歷史試算表失敗：', err);
+        statusEl.textContent = err.message === '試算表未設為公開存取'
+          ? '請開啟試算表「知道連結即可檢視」權限'
+          : '顯示本機紀錄';
+        statusEl.style.color = '#d97706';
+      }
+    }
+
+    async function saveOrderToSheet(order, actionType = 'create') {
+      const statusEl = document.getElementById('historySyncStatus');
+      if (!ORDER_API_URL || ORDER_API_URL.includes('請貼上')) {
+        statusEl.textContent = '尚未設定 API，僅存本機';
+        statusEl.style.color = '#d97706';
+        return;
+      }
+
+      const actionMsg = actionType === 'cancel'
+        ? '同步取消中...'
+        : (actionType === 'update' ? '更新雲端中...' : '上傳雲端中...');
+      statusEl.textContent = actionMsg;
+      statusEl.style.color = '#0284c7';
+
+      try {
+        await fetch(ORDER_API_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: actionType, ...order })
+        });
+        const nowStr = new Date().toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit' });
+        const doneMsg = actionType === 'cancel'
+          ? `已同步取消 (${nowStr})`
+          : (actionType === 'update' ? `已更新雲端 (${nowStr})` : `已寫入雲端 (${nowStr})`);
+        statusEl.textContent = doneMsg;
+        statusEl.style.color = actionType === 'cancel' ? '#dc2626' : '#0f766e';
+      } catch (err) {
+        console.error('同步至 Google 試算表失敗：', err);
+        statusEl.textContent = '雲端同步失敗';
+        statusEl.style.color = '#dc2626';
+      }
+    }
+
+    function renderClients() {
+      const container = document.getElementById('clientButtons');
+      container.innerHTML = '';
+      if (CLIENTS.length === 0) {
+        container.innerHTML = '<div style="color:#94a3b8; font-size:0.8rem; padding:4px;">試算表內尚無客戶資料</div>';
+        return;
+      }
+      CLIENTS.forEach(c => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'client-chip';
+        chip.textContent = c.name;
+        chip.onclick = () => handleClientClick(c);
+        container.appendChild(chip);
+      });
+    }
+
+    function renderFactories() {
+      const container = document.getElementById('factoryButtons');
+      container.innerHTML = '';
+      if (FACTORIES.length === 0) {
+        container.innerHTML = '<div style="color:#94a3b8; font-size:0.8rem; padding:4px;">試算表內尚無廠區資料</div>';
+        return;
+      }
+      const unlocked = hasClientSelected();
+      FACTORIES.forEach(f => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'factory-chip';
+        chip.textContent = f.name;
+        chip.disabled = !unlocked;
+        chip.onclick = () => handleFactoryClick(f);
+        container.appendChild(chip);
+      });
+      updateClientGateState();
+    }
+
+    function handleClientClick(c) {
+      document.getElementById('clientName').value = c.name;
+      const taxInfo = c.taxId ? (c.contact ? `${c.taxId} (${c.contact})` : c.taxId) : c.contact;
+      document.getElementById('clientTaxId').value = taxInfo;
+
+      const matchedFactory = FACTORIES.find(f => f.name === c.name) ||
+        FACTORIES.find(f => f.name.includes(c.name) || c.name.includes(f.name));
+
+      document.getElementById('originName').value = matchedFactory ? matchedFactory.name : c.name;
+      document.getElementById('originAddr').value = matchedFactory ? matchedFactory.addr : '';
+      document.getElementById('originDock').value = matchedFactory ? matchedFactory.dock : '';
+
+      activeTargetStopIdx = 0;
+      renderDynamicStops();
+    }
+
+    function handleFactoryClick(f) {
+      if (!hasClientSelected()) {
+        showToast('請先選取委託客戶', 'warn');
+        return;
+      }
+      if (activeTargetStopIdx >= stops.length) {
+        if (stops.length < MAX_STOPS) {
+          addStop();
+        } else {
+          activeTargetStopIdx = stops.length - 1;
+        }
+      }
+      fillStopWithFactory(activeTargetStopIdx, f);
+      if (activeTargetStopIdx < stops.length - 1) {
+        activeTargetStopIdx++;
+      } else if (stops.length < MAX_STOPS) {
+        activeTargetStopIdx = stops.length;
+      }
+      updateStepIndicatorText();
+    }
+
+    function fillStopWithFactory(idx, f) {
+      if (!stops[idx]) return;
+      stops[idx].name = f.name;
+      stops[idx].addr = f.addr;
+      stops[idx].dock = f.dock;
+      stops[idx].isUnknown = false;
+      renderDynamicStops();
+    }
+
+    function resetClickStep() {
+      activeTargetStopIdx = 0;
+      updateStepIndicatorText();
+    }
+
+    function updateStepIndicatorText() {
+      const el = document.getElementById('currentStepText');
+      if (!hasClientSelected()) {
+        el.textContent = '步驟 1：請先選取委託客戶';
+        el.style.background = '#0f172a';
+        return;
+      }
+      const targetNo = Math.min(activeTargetStopIdx, stops.length - 1) + 2;
+      el.textContent = `下一步：點廠區帶入第 ${targetNo} 站`;
+      el.style.background = '#0284c7';
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function highlightKeyword(text, keyword) {
+      const safeText = escapeHtml(text);
+      if (!keyword) return safeText;
+      const escapedKw = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`(${escapedKw})`, 'ig');
+      return safeText.replace(regex, '<mark>$1</mark>');
+    }
+
+    function attachAutocomplete({ inputId, dropdownId, getItems, getTitle, getSub, matchItem, onSelect }) {
+      const input = document.getElementById(inputId);
+      const dropdown = document.getElementById(dropdownId);
+      if (!input || !dropdown) return;
+      let activeIndex = -1;
+      let currentMatches = [];
+
+      function renderDropdown() {
+        const keyword = input.value.trim();
+        const items = getItems();
+        currentMatches = keyword ? items.filter(item => matchItem(item, keyword.toLowerCase())) : items;
+        activeIndex = -1;
+        dropdown.innerHTML = '';
+
+        if (currentMatches.length === 0) {
+          dropdown.innerHTML = `<div class="autocomplete-empty">無符合項目（可直接手動輸入）</div>`;
+          dropdown.classList.add('show');
+          return;
+        }
+
+        currentMatches.forEach((item) => {
+          const row = document.createElement('div');
+          row.className = 'autocomplete-item';
+          const title = getTitle(item);
+          const sub = getSub(item);
+          row.innerHTML = `
+            <div class="autocomplete-item-title">${highlightKeyword(title, keyword)}</div>
+            ${sub ? `<div class="autocomplete-item-sub">${highlightKeyword(sub, keyword)}</div>` : ''}
+          `;
+          row.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            onSelect(item);
+            closeDropdown();
+          });
+          dropdown.appendChild(row);
+        });
+        dropdown.classList.add('show');
+      }
+
+      function closeDropdown() {
+        dropdown.classList.remove('show');
+        activeIndex = -1;
+      }
+
+      function updateActiveHighlight() {
+        const rows = dropdown.querySelectorAll('.autocomplete-item');
+        rows.forEach((r, i) => {
+          if (i === activeIndex) {
+            r.classList.add('active');
+            r.scrollIntoView({ block: 'nearest' });
+          } else {
+            r.classList.remove('active');
+          }
+        });
+      }
+
+      input.addEventListener('focus', renderDropdown);
+      input.addEventListener('input', renderDropdown);
+      input.addEventListener('blur', () => setTimeout(closeDropdown, 150));
+      input.addEventListener('keydown', (e) => {
+        if (!dropdown.classList.contains('show') || currentMatches.length === 0) return;
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          activeIndex = (activeIndex + 1) % currentMatches.length;
+          updateActiveHighlight();
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          activeIndex = (activeIndex - 1 + currentMatches.length) % currentMatches.length;
+          updateActiveHighlight();
+        } else if (e.key === 'Enter' && activeIndex >= 0) {
+          e.preventDefault();
+          e.stopPropagation();
+          onSelect(currentMatches[activeIndex]);
+          closeDropdown();
+        } else if (e.key === 'Escape') {
+          closeDropdown();
+        }
+      });
+    }
+
+    function setupClientAutocomplete() {
+      const clientInput = document.getElementById('clientName');
+      clientInput.addEventListener('input', updateClientGateState);
+      attachAutocomplete({
+        inputId: 'clientName',
+        dropdownId: 'clientDropdown',
+        getItems: () => CLIENTS,
+        getTitle: c => c.name,
+        getSub: c => [c.fullName, c.taxId ? `統編 ${c.taxId}` : ''].filter(Boolean).join(' · '),
+        matchItem: (c, kw) =>
+          c.name.toLowerCase().includes(kw) ||
+          c.fullName.toLowerCase().includes(kw) ||
+          c.taxId.toLowerCase().includes(kw),
+        onSelect: c => handleClientClick(c)
+      });
+    }
+
+    function setupOriginAutocomplete() {
+      attachAutocomplete({
+        inputId: 'originName',
+        dropdownId: 'originDropdown',
+        getItems: () => FACTORIES,
+        getTitle: f => f.name,
+        getSub: f => f.addr,
+        matchItem: (f, kw) => f.name.toLowerCase().includes(kw) || f.addr.toLowerCase().includes(kw),
+        onSelect: f => {
+          document.getElementById('originName').value = f.name;
+          document.getElementById('originAddr').value = f.addr;
+          document.getElementById('originDock').value = f.dock;
+          renderDynamicStops();
+        }
+      });
+      document.getElementById('originName').addEventListener('input', updateRoundTripIndicator);
+    }
+
+    function setupStopAutocomplete(idx) {
+      attachAutocomplete({
+        inputId: `stopName_${idx}`,
+        dropdownId: `stopDropdown_${idx}`,
+        getItems: () => FACTORIES,
+        getTitle: f => f.name,
+        getSub: f => f.addr,
+        matchItem: (f, kw) => f.name.toLowerCase().includes(kw) || f.addr.toLowerCase().includes(kw),
+        onSelect: f => fillStopWithFactory(idx, f)
+      });
+    }
+
+    function formatDriverValue(d) {
+      const displayText = d.plate ? `${d.name} (${d.plate})` : d.name;
+      return d.phone ? `${displayText} - ${d.phone}` : displayText;
+    }
+
+    function setupDriverAutocomplete() {
+      attachAutocomplete({
+        inputId: 'driverInput',
+        dropdownId: 'driverDropdown',
+        getItems: () => drivers,
+        getTitle: d => d.plate ? `${d.name} (${d.plate})` : d.name,
+        getSub: d => d.phone || '',
+        matchItem: (d, kw) =>
+          d.name.toLowerCase().includes(kw) ||
+          (d.phone || '').toLowerCase().includes(kw) ||
+          (d.plate || '').toLowerCase().includes(kw),
+        onSelect: d => {
+          document.getElementById('driverInput').value = formatDriverValue(d);
+        }
+      });
+    }
+
+    function getTimeString(addMinutes = 0) {
+      const d = new Date();
+      d.setMinutes(d.getMinutes() + addMinutes);
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      return `${hh}:${mm}`;
+    }
+
+    function setDefaultTimes() {
+      document.getElementById('pickupTime').value = `${getTimeString(0)} (即刻取貨)`;
+      updateOriginTimeBtnsVisibility();
+    }
+
+    function setPickupOffset(mins) {
+      document.getElementById('pickupTime').value = mins === 0 ? `${getTimeString(0)} (即刻取貨)` : `${getTimeString(mins)} 準時`;
+      updateOriginTimeBtnsVisibility();
+    }
+
+    function renderDrivers() {
+      const list = document.getElementById('driverList');
+      list.innerHTML = '';
+
+      if (drivers.length === 0) {
+        list.innerHTML = '<div style="color:#94a3b8; font-size:0.8rem; padding:4px;">試算表內尚無司機資料</div>';
+        return;
+      }
+
+      drivers.forEach(d => {
+        const fullValue = formatDriverValue(d);
+        const item = document.createElement('div');
+        item.className = 'driver-item';
+        item.onclick = () => {
+          document.getElementById('driverInput').value = fullValue;
+          showToast(`已帶入司機：${d.name}`);
+        };
+        item.innerHTML = `
+          <div>
+            <strong>${escapeHtml(d.name)}</strong> ${d.plate ? `<span style="color:#64748b; font-size:0.75rem;">(${escapeHtml(d.plate)})</span>` : ''}
+            <div style="font-size:0.75rem; color:#475569;">${escapeHtml(d.phone || '無電話')}</div>
+          </div>
+          <span style="font-size:0.75rem; color:#0284c7; font-weight:600;">選擇</span>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    async function autoSaveNewDriverToSheet(driverStr) {
+      const exists = drivers.some(d => driverStr.includes(d.name));
+      if (!exists) {
+        const newD = { id: Date.now(), name: driverStr, phone: '', plate: '' };
+        customDrivers.push(newD);
+        localStorage.setItem('custom_drivers', JSON.stringify(customDrivers));
+        drivers.push(newD);
+        renderDrivers();
+      }
+      if (!DRIVER_API_URL || DRIVER_API_URL.includes("你的部署ID") || exists) return;
+
+      let name = driverStr;
+      let phone = "";
+      let plate = "";
+      const phoneMatch = driverStr.match(/09\d{2}-?\d{3}-?\d{3}/);
+      if (phoneMatch) phone = phoneMatch[0];
+      const plateMatch = driverStr.match(/[A-Z0-9]{2,4}-[A-Z0-9]{2,4}/i);
+      if (plateMatch) plate = plateMatch[0];
+      name = name.replace(phone, '').replace(plate, '').replace(/[\(\)\-\s]/g, '').trim();
+
+      try {
+        const targetUrl = `${DRIVER_API_URL}?name=${encodeURIComponent(name || driverStr)}&phone=${encodeURIComponent(phone)}&plate=${encodeURIComponent(plate)}`;
+        const img = new Image();
+        img.src = targetUrl;
+      } catch (err) {
+        console.warn("自動寫入司機失敗：", err);
+      }
+    }
+
+    let generatedText = "";
+
+    function isOrderPendingData(o) {
+      if (o.cancelled || (o.tripModeLabel && o.tripModeLabel.includes('已取消'))) return false;
+      if (o.tripModeLabel && (o.tripModeLabel.includes('待補') || o.tripModeLabel.includes('資料待補'))) return true;
+      const stopList = Array.isArray(o.stops) ? o.stops : [];
+      return stopList.some(s => s.isUnknown || (s.name && s.name.includes('現場確認')));
+    }
+
+    function submitDispatch() {
+      const driverStr = document.getElementById('driverInput').value.trim();
+      if (!driverStr) { showToast('請填寫或選擇指派司機', 'warn'); document.getElementById('driverInput').focus(); return; }
+
+      autoSaveNewDriverToSheet(driverStr);
+
+      const client = document.getElementById('clientName').value.trim();
+      const clientNote = document.getElementById('clientTaxId').value.trim();
+      const dispatchDate = document.getElementById('dispatchDate').value.trim();
+
+      const oName = document.getElementById('originName').value.trim();
+      const oDock = document.getElementById('originDock').value.trim();
+      const oAddr = document.getElementById('originAddr').value.trim();
+      const pTime = document.getElementById('pickupTime').value.trim();
+      const oContact = document.getElementById('originContact').value.trim() || '依貨單指示';
+
+      const cleanStops = stops.map(s => ({
+        action: s.action || '送達',
+        name: s.name.trim(),
+        addr: s.addr.trim(),
+        dock: s.dock.trim(),
+        time: s.time.trim(),
+        contact: s.contact.trim() || '依貨單指示',
+        isUnknown: Boolean(s.isUnknown || s.name.includes('現場確認'))
+      }));
+
+      if (cleanStops.some(s => !s.name)) {
+        showToast('請填寫各站廠區（未知可點「現場確認」）', 'warn');
+        return;
+      }
+
+      const cargo = document.getElementById('cargoType').value.trim() || '依指示載運';
+      const isRoundTrip = isRoundTripDetected();
+      const hasUnknown = cleanStops.some(s => s.isUnknown);
+
+      let tripModeLabel = isRoundTrip
+        ? '來回單'
+        : (cleanStops.length > 1 ? `多點(${cleanStops.length}點)` : '單趟');
+      if (hasUnknown) tripModeLabel += '·資料待補';
+
+      const isUpdate = Boolean(editingOrderNo);
+      const existingOrder = isUpdate ? orderHistory.find(o => o.orderNo === editingOrderNo) : null;
+      const orderNo = isUpdate ? editingOrderNo : ("EXP-" + new Date().toISOString().slice(0,10).replace(/-/g,'') + "-" + Math.floor(100 + Math.random()*900));
+      const createdAt = existingOrder ? existingOrder.createdAt : new Date().toLocaleString('zh-TW', { hour12: false });
+
+      const newOrder = {
+        orderNo, createdAt, dispatchDate, tripModeLabel, isRoundTrip,
+        cancelled: false,
+        client, clientNote,
+        oName, oAddr, oDock, pTime, oContact,
+        stops: cleanStops,
+        driverInfo: driverStr,
+        cargo
+      };
+
+      if (isUpdate) {
+        const idx = orderHistory.findIndex(o => o.orderNo === editingOrderNo);
+        if (idx >= 0) orderHistory[idx] = newOrder;
+        else orderHistory.unshift(newOrder);
+      } else {
+        orderHistory.unshift(newOrder);
+      }
+
+      localStorage.setItem('dispatch_orders', JSON.stringify(orderHistory));
+      renderHistoryTable();
+      saveOrderToSheet(newOrder, isUpdate ? 'update' : 'create');
+
+      const tagStr = isRoundTrip ? '【來回單】' : '';
+      const dateLine = dispatchDate ? `執行日期：${dispatchDate}\n` : '';
+
+      let stopsText = '';
+      cleanStops.forEach((s, i) => {
+        const no = i + 2;
+        const isLastReturn = isRoundTrip && i === cleanStops.length - 1;
+        const headerLabel = isLastReturn ? `第 ${no} 站｜折返回起點 (${s.action})` : `第 ${no} 站｜${s.action}`;
+        stopsText += `──────────────────────
+■ ${headerLabel}
+廠區：${s.name}${s.dock ? ` (${s.dock})` : ''}
+期限：${s.time || '依現場指示'}
+地址：${s.addr || '現場確認'}
+窗口：${s.contact}
+`;
+      });
+
+      generatedText = `【派工單${tagStr}】#${orderNo}
+${dateLine}委託客戶：${client}
+指定司機：${driverStr}
+──────────────────────
+■ 第 1 站｜取貨起點
+廠區：${oName}${oDock ? ` (${oDock})` : ''}
+取貨時間：${pTime}
+地址：${oAddr || '現場確認'}
+窗口：${oContact}
+${stopsText}──────────────────────
+貨況備註：${cargo}
+──────────────────────`;
+
+      document.getElementById('previewBox').textContent = generatedText;
+      document.getElementById('targetDriverLabel').textContent = `已指派：${driverStr}`;
+      showToast(isUpdate ? `已更新單號 ${orderNo}` : `已產出單號 ${orderNo}`);
+
+      if (isUpdate) cancelEditMode(false);
+
+      if (window.innerWidth <= 1024) {
+        document.getElementById('linePreviewCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function cancelCurrentOrder() {
+      if (!editingOrderNo) return;
+      if (!confirm(`確定要取消（作廢）單號 ${editingOrderNo} 嗎？\n取消狀態將同步更新至雲端試算表。`)) return;
+
+      const idx = orderHistory.findIndex(o => o.orderNo === editingOrderNo);
+      if (idx < 0) return;
+
+      const target = {
+        ...orderHistory[idx],
+        cancelled: true,
+        tripModeLabel: '已取消'
+      };
+      orderHistory[idx] = target;
+      localStorage.setItem('dispatch_orders', JSON.stringify(orderHistory));
+      renderHistoryTable();
+      saveOrderToSheet(target, 'cancel');
+
+      generatedText = `【派工單取消通知】#${target.orderNo}
+委託客戶：${target.client || '-'}
+指定司機：${target.driverInfo || '-'}
+原定起點：${target.oName || '-'}
+──────────────────────
+此筆派工單已取消，請勿前往／無須執行。
+──────────────────────`;
+      document.getElementById('previewBox').textContent = generatedText;
+      document.getElementById('targetDriverLabel').textContent = `已取消：${target.orderNo}`;
+      showToast(`已取消單號 ${target.orderNo}`, 'warn');
+
+      cancelEditMode(true);
+    }
+
+    function togglePendingFilter() {
+      onlyPendingFilter = !onlyPendingFilter;
+      document.getElementById('btnPendingFilter').classList.toggle('active-filter', onlyPendingFilter);
+      renderHistoryTable();
+    }
+
+    function getActionTagClass(action) {
+      if (action === '取貨') return 'pickup';
+      if (action === '送+取') return 'both';
+      return 'delivery';
+    }
+
+    function renderHistoryTable() {
+      const tbody = document.getElementById('historyTableBody');
+      const kw = (document.getElementById('historySearchInput')?.value || '').trim().toLowerCase();
+
+      const filtered = orderHistory.filter(o => {
+        if (onlyPendingFilter && !isOrderPendingData(o)) return false;
+        if (!kw) return true;
+        const stopNames = (Array.isArray(o.stops) ? o.stops : []).map(s => s.name).join(' ');
+        const haystack = `${o.orderNo} ${o.client} ${o.oName} ${stopNames} ${o.driverInfo} ${o.cargo} ${o.dispatchDate}`.toLowerCase();
+        return haystack.includes(kw);
+      });
+
+      document.getElementById('historyCount').textContent = filtered.length;
+      if (filtered.length === 0) {
+        const msg = onlyPendingFilter ? '目前沒有資料待補單' : '查無符合的歷史紀錄';
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#94a3b8;">${msg}</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = '';
+      filtered.forEach(o => {
+        const tr = document.createElement('tr');
+        const isCancelled = Boolean(o.cancelled || (o.tripModeLabel && o.tripModeLabel.includes('已取消')));
+        const isPending = isOrderPendingData(o);
+        if (isCancelled) tr.className = 'row-cancelled';
+
+        let badges = '';
+        if (isCancelled) {
+          badges += '<span class="trip-badge cancelled">已取消</span>';
+        } else {
+          if (o.isRoundTrip || (o.tripModeLabel && o.tripModeLabel.includes('來回'))) {
+            badges += '<span class="trip-badge">來回單</span>';
+          } else if (o.tripModeLabel && !o.tripModeLabel.startsWith('單趟')) {
+            const cleanLabel = o.tripModeLabel.replace(/·?(資料待補|待補)/g, '');
+            if (cleanLabel) badges += `<span class="trip-badge" style="background:#e0f2fe; color:#0369a1;">${escapeHtml(cleanLabel)}</span>`;
+          }
+          if (isPending) {
+            badges += '<span class="trip-badge pending">資料待補</span>';
+          }
+        }
+
+        const stopList = Array.isArray(o.stops) ? o.stops : [];
+        const routeHtml = stopList.length
+          ? stopList.map((s, idx) => {
+              const act = s.action || '送達';
+              return `<div>${idx + 2}. <span class="act-tag ${getActionTagClass(act)}">${escapeHtml(act)}</span>${escapeHtml(s.name)}</div>`;
+            }).join('')
+          : escapeHtml(o.dName || '-');
+
+        const dateDisplay = o.dispatchDate
+          ? `<strong>${escapeHtml(o.dispatchDate)}</strong><br><span style="color:#64748b;">${escapeHtml(o.createdAt)}</span>`
+          : escapeHtml(o.createdAt);
+
+        tr.innerHTML = `
+          <td><strong>${escapeHtml(o.orderNo)}</strong>${badges}</td>
+          <td>${dateDisplay}</td>
+          <td><span style="color:#4338ca; font-weight:600;">${escapeHtml(o.client || '一般客戶')}</span></td>
+          <td>${escapeHtml(o.oName)}</td>
+          <td>${routeHtml}</td>
+          <td>${escapeHtml(o.driverInfo || '外車/自填')}</td>
+          <td>${escapeHtml(o.cargo || '依指示載運')}</td>
+          <td style="white-space:nowrap;">
+            <div style="display:flex; gap:4px;">
+              <button type="button" class="btn-quick" onclick="loadOrderForEdit('${escapeHtml(o.orderNo)}')">${isCancelled ? '檢視' : '補填/改'}</button>
+              <button type="button" class="btn-quick primary-outline" onclick="cloneOrderToNew('${escapeHtml(o.orderNo)}')">再派一單</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function populateFormFromOrder(order, resetTimes = false) {
+      document.getElementById('clientName').value = order.client || '';
+      document.getElementById('clientTaxId').value = order.clientNote || '';
+      document.getElementById('dispatchDate').value = resetTimes ? '' : (order.dispatchDate || '');
+
+      document.getElementById('originName').value = order.oName || '';
+      document.getElementById('originAddr').value = order.oAddr || '';
+      document.getElementById('originDock').value = order.oDock || '';
+      document.getElementById('pickupTime').value = resetTimes ? `${getTimeString(0)} (即刻取貨)` : (order.pTime || '');
+      document.getElementById('originContact').value = order.oContact || '依貨單指示';
+      updateOriginTimeBtnsVisibility();
+
+      stops = (Array.isArray(order.stops) && order.stops.length > 0)
+        ? order.stops.map(s => ({
+            action: s.action || '送達',
+            name: s.name || '',
+            addr: s.addr || '',
+            dock: s.dock || '',
+            time: resetTimes ? '即刻送達' : (s.time || '即刻送達'),
+            contact: s.contact || '依貨單指示',
+            isUnknown: Boolean(s.isUnknown || (s.name && s.name.includes('現場確認')))
+          }))
+        : [createEmptyStop()];
+
+      document.getElementById('driverInput').value = order.driverInfo || '';
+      document.getElementById('cargoType').value = order.cargo || '';
+
+      renderDynamicStops();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function loadOrderForEdit(orderNo) {
+      const order = orderHistory.find(o => o.orderNo === orderNo);
+      if (!order) return;
+
+      editingOrderNo = order.orderNo;
+      document.getElementById('editingBanner').classList.add('show');
+      document.getElementById('editingBannerText').textContent = `正在補填／修改單號：${order.orderNo}`;
+      document.getElementById('submitBtn').textContent = `更新單號 ${order.orderNo} 並同步雲端`;
+      document.getElementById('submitBtn').style.background = '#0f766e';
+
+      populateFormFromOrder(order, false);
+    }
+
+    function cloneOrderToNew(orderNo) {
+      const order = orderHistory.find(o => o.orderNo === orderNo);
+      if (!order) return;
+
+      cancelEditMode(false);
+      populateFormFromOrder(order, true);
+      showToast('已複製路線（開立新單）');
+    }
+
+    function cancelEditMode(resetForm = true) {
+      editingOrderNo = null;
+      document.getElementById('editingBanner').classList.remove('show');
+      document.getElementById('submitBtn').textContent = '產出派單並同步雲端';
+      document.getElementById('submitBtn').style.background = '#0284c7';
+      if (resetForm) clearAllForm();
+    }
+
+    function exportToExcel() {
+      if (orderHistory.length === 0) { showToast('目前沒有歷史紀錄可匯出', 'warn'); return; }
+      let csv = "\uFEFF單號,開單時間,執行日期,行程模式,委託客戶,客戶備註,第1站起點,起點地址,取貨時間,起點窗口,第2站,第3站,第4站,第5站,指派司機,貨況備註\n";
+      orderHistory.forEach(o => {
+        const sArr = Array.isArray(o.stops) ? o.stops : [];
+        const fmtStop = (s) => s ? `[${s.action || '送達'}] ${s.name} (${s.time || ''})` : '';
+        const row = [
+          o.orderNo, o.createdAt, o.dispatchDate || '', o.tripModeLabel || '單趟', o.client || '', o.clientNote || '',
+          o.oName, o.oAddr, o.pTime, o.oContact || '',
+          fmtStop(sArr[0]), fmtStop(sArr[1]), fmtStop(sArr[2]), fmtStop(sArr[3]),
+          o.driverInfo || '', o.cargo || ''
+        ].map(val => `"${String(val).replace(/"/g, '""')}"`).join(",");
+        csv += row + "\n";
+      });
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `派單紀錄清冊_${new Date().toISOString().slice(0,10)}.csv`;
+      link.click();
+    }
+
+    let latestAiReport = "";
+    function generateAiWeeklyReport() {
+      const validOrders = orderHistory.filter(o => !o.cancelled && !(o.tripModeLabel && o.tripModeLabel.includes('已取消')));
+      if (validOrders.length === 0) { showToast('尚無有效歷史紀錄', 'warn'); return; }
+      const totalOrders = validOrders.length;
+      const cancelledCount = orderHistory.length - validOrders.length;
+      const driverCounts = {};
+      const routeCounts = {};
+      const clientCounts = {};
+      let roundTripCount = 0;
+
+      validOrders.forEach(o => {
+        const dName = o.driverInfo || '其他外車';
+        driverCounts[dName] = (driverCounts[dName] || 0) + 1;
+        const sNames = (Array.isArray(o.stops) ? o.stops : []).map(s => s.name).filter(Boolean);
+        const route = [o.oName, ...sNames].join(' -> ');
+        routeCounts[route] = (routeCounts[route] || 0) + 1;
+        if (o.client) clientCounts[o.client] = (clientCounts[o.client] || 0) + 1;
+        if (o.isRoundTrip || (o.tripModeLabel && o.tripModeLabel.includes('來回'))) roundTripCount++;
+      });
+
+      const driverRank = Object.entries(driverCounts).sort((a,b) => b[1] - a[1])
+        .map(([name, count]) => `  • ${name}: ${count} 趟 (${Math.round(count/totalOrders*100)}%)`).join("\n");
+      const routeRank = Object.entries(routeCounts).sort((a,b) => b[1] - a[1]).slice(0, 3)
+        .map(([route, count]) => `  • ${route}: ${count} 趟`).join("\n");
+      const clientRank = Object.entries(clientCounts).sort((a,b) => b[1] - a[1]).slice(0, 3)
+        .map(([client, count]) => `  • ${client}: ${count} 趟`).join("\n");
+
+      latestAiReport = `【飛達旺 每週營運分析週報】
+──────────────────────────────
+結算區間：截至 ${new Date().toLocaleDateString('zh-TW')}
+有效派工趟次：${totalOrders} 趟（來回單 ${roundTripCount} 趟／已取消 ${cancelledCount} 筆）
+
+【委託客戶 Top 3】
+${clientRank || '  • 暫無資料'}
+
+【司機出車統計】
+${driverRank}
+
+【三大高頻路線】
+${routeRank}
+──────────────────────────────`;
+
+      document.getElementById('aiReportCard').style.display = 'block';
+      document.getElementById('aiReportText').textContent = latestAiReport;
+    }
+
+    function copyAiReport() {
+      if (!latestAiReport) return;
+      navigator.clipboard.writeText(latestAiReport).then(() => showToast('已複製週報'));
+    }
+
+    function clearHistory() {
+      if (confirm("確定要清空本機快取的歷史紀錄嗎？（雲端試算表紀錄不會被刪除）")) {
+        orderHistory = [];
+        localStorage.removeItem('dispatch_orders');
+        renderHistoryTable();
+        showToast('已清空本機快取');
+      }
+    }
+
+    function sendToLine() {
+      if (!generatedText) { showToast('請先產出派單', 'warn'); return; }
+      navigator.clipboard.writeText(generatedText).catch(() => {});
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        window.location.href = "https://line.me/R/msg/text/?" + encodeURIComponent(generatedText);
+      } else {
+        window.open("line://msg/text/" + encodeURIComponent(generatedText), '_blank');
+        showToast('已喚起 LINE（文字已同步複製）');
+      }
+    }
+
+    function copyText() {
+      if (!generatedText) { showToast('請先產出派單', 'warn'); return; }
+      navigator.clipboard.writeText(generatedText).then(() => showToast('已複製派工訊息'));
+    }
+
+    function clearAllForm() {
+      document.getElementById('dispatchForm').reset();
+      document.getElementById('dispatchDate').value = '';
+      document.getElementById('originContact').value = '依貨單指示';
+      stops = [createEmptyStop()];
+      activeTargetStopIdx = 0;
+      setDefaultTimes();
+      renderDynamicStops();
+      updateClientGateState();
+    }
+
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        submitDispatch();
+      }
+    });
+
+    window.onload = init;
+  </script>
+</body>
+</html>
