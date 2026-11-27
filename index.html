@@ -327,6 +327,11 @@
       border-radius: 4px;
     }
     .roundtrip-badge.show { display: inline-block; }
+    .roundtrip-badge.out-of-county {
+      background: #fef08a;
+      color: #854d0e;
+      border-color: #fde047;
+    }
 
     .editing-banner {
       display: none;
@@ -782,6 +787,7 @@
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             <span><span class="step-label">1</span> 客戶與路線</span>
             <span class="roundtrip-badge" id="headerRoundtripBadge">來回單</span>
+            <span class="roundtrip-badge out-of-county" id="headerOutOfCountyBadge">外縣市</span>
           </div>
           <button type="button" onclick="clearAllForm()" class="btn-quick">清空重填</button>
         </div>
@@ -865,7 +871,7 @@
             <div class="form-grid-2">
               <div class="form-group">
                 <label>詳細地址</label>
-                <input type="text" id="originAddr">
+                <input type="text" id="originAddr" oninput="updateOutOfCountyIndicator()">
               </div>
               <div class="form-group">
                 <label>
@@ -917,6 +923,7 @@
           <div class="fee-toggle-row">
             <button type="button" id="btnEmptyRunFee" class="fee-chip" onclick="toggleExtraFee('emptyRun')">(取消)空趟費</button>
             <button type="button" id="btnWaitFee" class="fee-chip" onclick="toggleExtraFee('waitFee')">(等待)超時費</button>
+            <button type="button" id="btnLiftFee" class="fee-chip" onclick="toggleExtraFee('liftFee')">升高車</button>
           </div>
           <div class="form-grid-2" style="margin-bottom:0;">
             <div class="form-group">
@@ -1033,7 +1040,7 @@
     let originCollapsed = false;
     let editingOrderNo = null;
     let onlyPendingFilter = false;
-    let extraFees = { emptyRun: false, waitFee: false };
+    let extraFees = { emptyRun: false, waitFee: false, liftFee: false };
 
     function getTodayIso() {
       const d = new Date();
@@ -1308,8 +1315,36 @@
       );
     }
 
+    const OUT_OF_COUNTY_REGEX = /(台北|臺北|新北|基隆|桃園|苗栗|台中|臺中|彰化|南投|雲林|嘉義|台南|臺南|高雄|屏東|宜蘭|花蓮|台東|臺東|澎湖|金門|連江|林口|龜山|龍潭|中壢|平鎮|楊梅|大園|蘆竹|觀音|新屋|竹南|頭份|銅鑼|後龍|中科|南科|后里|土城|中和|汐止|內湖|南港|樹林|新莊|五股|泰山)/;
+
+    function isOutOfCountyText(text) {
+      const t = String(text || '').trim();
+      if (!t || t.includes('現場確認') || t.includes('到場後')) return false;
+      return OUT_OF_COUNTY_REGEX.test(t);
+    }
+
+    function isOutOfCountyDetected() {
+      const oName = document.getElementById('originName')?.value || '';
+      const oAddr = document.getElementById('originAddr')?.value || '';
+      if (isOutOfCountyText(oName) || isOutOfCountyText(oAddr)) return true;
+      return stops.some(s => isOutOfCountyText(s.name) || isOutOfCountyText(s.addr));
+    }
+
+    function isOrderOutOfCounty(o) {
+      if (o.isOutOfCounty || (o.tripModeLabel && o.tripModeLabel.includes('外縣市'))) return true;
+      if (isOutOfCountyText(o.oName) || isOutOfCountyText(o.oAddr)) return true;
+      const stopList = Array.isArray(o.stops) ? o.stops : [];
+      return stopList.some(s => isOutOfCountyText(s.name) || isOutOfCountyText(s.addr));
+    }
+
+    function updateOutOfCountyIndicator() {
+      const badge = document.getElementById('headerOutOfCountyBadge');
+      if (badge) badge.classList.toggle('show', isOutOfCountyDetected());
+    }
+
     function updateRoundTripIndicator() {
       document.getElementById('headerRoundtripBadge').classList.toggle('show', isRoundTripDetected());
+      updateOutOfCountyIndicator();
       updateClientGateState();
     }
 
@@ -1413,7 +1448,7 @@
               <div class="form-group">
                 <label>詳細地址</label>
                 <input type="text" id="stopAddr_${idx}" value="${escapeHtml(stop.addr)}"
-                  oninput="updateStopField(${idx}, 'addr', this.value)">
+                  oninput="updateStopField(${idx}, 'addr', this.value); updateOutOfCountyIndicator();">
               </div>
               <div class="form-group">
                 <label>
@@ -1538,12 +1573,14 @@
       extraFees[key] = !extraFees[key];
       document.getElementById('btnEmptyRunFee').classList.toggle('active', extraFees.emptyRun);
       document.getElementById('btnWaitFee').classList.toggle('active', extraFees.waitFee);
+      document.getElementById('btnLiftFee').classList.toggle('active', extraFees.liftFee);
     }
 
     function resetExtraFees() {
-      extraFees = { emptyRun: false, waitFee: false };
+      extraFees = { emptyRun: false, waitFee: false, liftFee: false };
       document.getElementById('btnEmptyRunFee').classList.remove('active');
       document.getElementById('btnWaitFee').classList.remove('active');
+      document.getElementById('btnLiftFee').classList.remove('active');
       document.getElementById('extraFeeAmount').value = '';
       document.getElementById('extraFeeNote').value = '';
       document.getElementById('extraFeeBox').classList.remove('show');
@@ -1712,6 +1749,7 @@
             dispatchDate: getCol('執行日期', 2),
             tripModeLabel,
             isRoundTrip: tripModeLabel.includes('來回'),
+            isOutOfCounty: tripModeLabel.includes('外縣市'),
             cancelled: isCancelled,
             client: getCol('委託客戶', 4),
             clientNote: getCol('客戶備註', 5),
@@ -2182,7 +2220,7 @@
 窗口：${s.contact || '依貨單指示'}`;
       }).join('\n\n');
 
-      const feeLabels = Array.isArray(o.feeLabels) ? o.feeLabels : [];
+      const feeLabels = (Array.isArray(o.feeLabels) ? o.feeLabels : []).filter(l => l !== '升高車');
       const feeLine = feeLabels.length
         ? `\n異常費用：${feeLabels.join('、')}${o.feeAmount ? ` ($${o.feeAmount})` : ''}${o.feeNote ? ` - ${o.feeNote}` : ''}`
         : '';
@@ -2246,9 +2284,12 @@ ${stopBlocks}
       const isRoundTrip = isRoundTripDetected();
       const hasUnknown = cleanStops.some(s => s.isUnknown);
 
+      const isOutOfCounty = isOutOfCountyDetected();
+
       let tripModeLabel = isRoundTrip
         ? '來回單'
         : (cleanStops.length > 1 ? `多點(${cleanStops.length}點)` : '單趟');
+      if (isOutOfCounty) tripModeLabel += '·外縣市';
       if (hasUnknown) tripModeLabel += '·資料待補';
 
       const isUpdate = Boolean(editingOrderNo);
@@ -2273,12 +2314,13 @@ ${stopBlocks}
       if (isUpdate) {
         if (extraFees.emptyRun) feeLabels.push('(取消)空趟費');
         if (extraFees.waitFee) feeLabels.push('(等待)超時費');
+        if (extraFees.liftFee) feeLabels.push('升高車');
       }
       const feeAmount = isUpdate ? document.getElementById('extraFeeAmount').value.trim() : '';
       const feeNote = isUpdate ? document.getElementById('extraFeeNote').value.trim() : '';
 
       const newOrder = {
-        orderNo, createdAt, dispatchDate, tripModeLabel, isRoundTrip,
+        orderNo, createdAt, dispatchDate, tripModeLabel, isRoundTrip, isOutOfCounty,
         cancelled: false,
         client, clientNote,
         oName, oAddr, oDock, pTime, oContact,
@@ -2425,8 +2467,11 @@ ${stopBlocks}
           if (o.isRoundTrip || (o.tripModeLabel && o.tripModeLabel.includes('來回'))) {
             badges += '<span class="trip-badge">來回單</span>';
           } else if (o.tripModeLabel && !o.tripModeLabel.startsWith('單趟')) {
-            const cleanLabel = o.tripModeLabel.replace(/·?(資料待補|待補)/g, '');
+            const cleanLabel = o.tripModeLabel.replace(/·?(資料待補|待補|外縣市)/g, '');
             if (cleanLabel) badges += `<span class="trip-badge" style="background:#e0f2fe; color:#0369a1;">${escapeHtml(cleanLabel)}</span>`;
+          }
+          if (isOrderOutOfCounty(o)) {
+            badges += '<span class="trip-badge fee">外縣市</span>';
           }
           if (isPending) {
             badges += '<span class="trip-badge pending">資料待補</span>';
@@ -2559,10 +2604,12 @@ ${stopBlocks}
 
       extraFees = {
         emptyRun: Array.isArray(order.feeLabels) && order.feeLabels.includes('(取消)空趟費'),
-        waitFee: Array.isArray(order.feeLabels) && order.feeLabels.includes('(等待)超時費')
+        waitFee: Array.isArray(order.feeLabels) && order.feeLabels.includes('(等待)超時費'),
+        liftFee: Array.isArray(order.feeLabels) && order.feeLabels.includes('升高車')
       };
       document.getElementById('btnEmptyRunFee').classList.toggle('active', extraFees.emptyRun);
       document.getElementById('btnWaitFee').classList.toggle('active', extraFees.waitFee);
+      document.getElementById('btnLiftFee').classList.toggle('active', extraFees.liftFee);
       document.getElementById('extraFeeAmount').value = order.feeAmount || '';
       document.getElementById('extraFeeNote').value = order.feeNote || '';
       document.getElementById('extraFeeBox').classList.add('show');
@@ -2732,6 +2779,7 @@ ${routeRank}
       stops = [createEmptyStop()];
       setDefaultTimes();
       renderDynamicStops();
+      updateOutOfCountyIndicator();
       updateClientGateState();
       syncAllClearButtons();
     }
